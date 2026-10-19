@@ -1,0 +1,17 @@
+{
+  "name": "nuxt-ci-starter",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "preview": "nuxt preview",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "nuxt": "^4.1.0"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
+  }
+}
