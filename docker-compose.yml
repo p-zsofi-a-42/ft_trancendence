@@ -28,6 +28,7 @@ services:
     build: ./web
     environment:
       NUXT_USER_SERVICE_URL: http://user:4000
+      NUXT_GAME_SERVICE_URL: http://game:5005
       NUXT_TOKEN_SECRET: ${TOKEN_SECRET}
       NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD}
     ports:
@@ -35,6 +36,33 @@ services:
     depends_on:
       user:
         condition: service_started
+
+  game:
+    build: ./services/game
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      TOKEN_SECRET: ${TOKEN_SECRET}
+    # No ports: only the web service can reach it, on the Compose network.
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Dev variant of the game service with hot-reload: `docker compose --profile dev up game-dev`.
+  game-dev:
+    build:
+      context: ./services/game
+      target: dev
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      TOKEN_SECRET: ${TOKEN_SECRET}
+    volumes:
+      - ./services/game:/app
+      - game_node_modules:/app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - dev
 
   # Dev variant of the user service with hot-reload: `docker compose --profile dev up user-dev`.
   user-dev:
@@ -62,6 +90,7 @@ services:
       target: dev
     environment:
       NUXT_USER_SERVICE_URL: http://user-dev:4000
+      NUXT_GAME_SERVICE_URL: http://game-dev:5005
       NUXT_TOKEN_SECRET: ${TOKEN_SECRET}
       NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD}
       # Bind-mounted source has no inotify events (e.g. over NFS), so make
@@ -75,6 +104,8 @@ services:
     depends_on:
       user-dev:
         condition: service_started
+      game-dev:
+        condition: service_started
     profiles:
       - dev
 
@@ -84,4 +115,6 @@ volumes:
   web_node_modules:
     driver: local
   user_node_modules:
+    driver: local
+  game_node_modules:
     driver: local

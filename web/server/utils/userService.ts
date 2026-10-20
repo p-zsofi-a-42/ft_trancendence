@@ -33,3 +33,25 @@ export async function callUserService<T>(
     })
   }
 }
+
+export async function callGameService<T>(
+  path: string,
+  options: { method?: 'GET' | 'POST'; body?: unknown; gameId?: number } = {},
+): Promise<T> {
+  const headers: Record<string, string> = {}
+  if (options.userId !== undefined) {
+    headers.authorization = `Bearer ${await signServiceToken(options.userId)}`
+  }
+  try {
+    return await $fetch<T>(`http://game-dev:5005${path}`, {
+      method: options.method ?? 'POST',
+      body: options.body,
+      headers,
+    })
+  } catch (err: any) {
+    throw createError({
+      statusCode: err.statusCode ?? 502,
+      statusMessage: err.data?.message ?? 'Game service unavailable',
+    })
+  }
+}
