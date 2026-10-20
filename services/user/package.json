@@ -1,0 +1,20 @@
+{
+  "name": "user",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "nitro dev --port 4000",
+    "build": "nitro build",
+    "start": "node .output/server/index.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@adonisjs/hash": "^10.1.1",
+    "jose": "^6.2.12",
+    "nitropack": "^2.13.5",
+    "pg": "^8.23.1"
+  }
+}
