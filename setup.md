@@ -1,9 +1,9 @@
-## Create env variables (check .env.example)
+## 1. Create env variables (check .env.example)
 
-## make dev
+## 2. make dev
 
-## Database Setup
-After `make dev` run
+## 3. Database Setup (intialize)
+After `make dev`
 ```bash
 docker compose exec -T postgres psql -U your_db_user -d your_db_name < db/schema.sql
 ```
