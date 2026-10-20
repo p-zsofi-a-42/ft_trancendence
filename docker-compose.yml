@@ -1,0 +1,87 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      retries: 5
+
+  user:
+    build: ./services/user
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      TOKEN_SECRET: ${TOKEN_SECRET}
+    # No ports: only the web service can reach it, on the Compose network.
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build: ./web
+    environment:
+      NUXT_USER_SERVICE_URL: http://user:4000
+      NUXT_TOKEN_SECRET: ${TOKEN_SECRET}
+      NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD}
+    ports:
+      - "3000:3000"
+    depends_on:
+      user:
+        condition: service_started
+
+  # Dev variant of the user service with hot-reload: `docker compose --profile dev up user-dev`.
+  user-dev:
+    build:
+      context: ./services/user
+      target: dev
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      TOKEN_SECRET: ${TOKEN_SECRET}
+    volumes:
+      - ./services/user:/app
+      - user_node_modules:/app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - dev
+
+  # Dev variant with hot-reload: `docker compose --profile dev up web-dev`.
+  # Not started by a plain `docker compose up` (profile-gated), since it
+  # binds the same port 3000 as the `web` service.
+  web-dev:
+    build:
+      context: ./web
+      target: dev
+    environment:
+      NUXT_USER_SERVICE_URL: http://user-dev:4000
+      NUXT_TOKEN_SECRET: ${TOKEN_SECRET}
+      NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD}
+      # Bind-mounted source has no inotify events (e.g. over NFS), so make
+      # chokidar-based watchers (Nuxt's builder) poll for changes instead.
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./web:/app
+      - web_node_modules:/app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      user-dev:
+        condition: service_started
+    profiles:
+      - dev
+
+volumes:
+  postgres_data:
+    driver: local
+  web_node_modules:
+    driver: local
+  user_node_modules:
+    driver: local
