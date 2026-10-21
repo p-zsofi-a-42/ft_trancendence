@@ -6,6 +6,7 @@
       <p><strong>Email:</strong> {{ user.email }}</p>
     </div>
   </div>
+  <FriendList />
   <!-- Search for Users here-->
    <div>
      <form @submit.prevent="searchUsers">

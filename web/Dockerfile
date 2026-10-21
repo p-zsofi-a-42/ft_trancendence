@@ -5,7 +5,7 @@ COPY package*.json ./
 # Dev stage: source is bind-mounted in docker-compose.yml, so `npm run dev`
 # picks up file changes and hot-reloads without rebuilding the image.
 FROM base AS dev
-RUN npm ci
+RUN npm ci && chown -R node:node /app/node_modules
 COPY . .
 EXPOSE 3000
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
