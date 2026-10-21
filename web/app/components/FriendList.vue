@@ -1,3 +1,4 @@
+<!-- Component to display the list of friends -->
 <template>
   <div>
     <!-- Friend list content goes here -->
@@ -10,6 +11,7 @@
     </ul>
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { ref } from 'vue'
