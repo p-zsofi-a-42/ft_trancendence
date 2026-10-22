@@ -8,6 +8,9 @@
     <ul>
       <li v-for="friend in friends" :key="friend.id">
         {{ friend.name }}
+        <button :disabled="removing.has(friend.id)" @click="removeFriend(friend.id)">
+          Remove
+        </button>
       </li>
     </ul>
     <p v-if="!friends.length">No friends yet.</p>
@@ -40,14 +43,15 @@
 <script setup lang="ts">
 import type { FriendEntry } from '#shared/types/friends'
 
+// FETCH FRIENDS LIST
 const { data, error, refresh } = useFetch<FriendEntry[]>('/api/friends', { key: 'friends-list', default: () => [] })
 
-const friends = computed(() => (data.value ?? []).filter(f => f.friendship === 'friends'))
-const incoming = computed(() => (data.value ?? []).filter(f => f.friendship === 'incoming'))
-const outgoing = computed(() => (data.value ?? []).filter(f => f.friendship === 'outgoing'))
+const friends = computed(() => (data.value ?? []).filter(f => f.friendship === 'friends')) // Friends list
+const incoming = computed(() => (data.value ?? []).filter(f => f.friendship === 'incoming')) // Incoming friend requests
+const outgoing = computed(() => (data.value ?? []).filter(f => f.friendship === 'outgoing')) // Outgoing friend requests
 
 
-// ACCEPT REQUESTS
+// ACCEPT FRIEND-REQUESTS
 const accepting = ref<Set<string>>(new Set()) // IDs of users whose request is being accepted
 // Accepts a pending request from the given user, then reloads the list
 const acceptRequest = async (id: string) => {
@@ -62,7 +66,7 @@ const acceptRequest = async (id: string) => {
   }
 }
 
-// 
+// DECLINE FRIEND-REQUESTS
 const declining = ref<Set<string>>(new Set()) // IDs of users whose request is being declined
 // Declines a pending request from the given user, then reloads the list
 const declineRequest = async (id: string) => {
@@ -74,6 +78,21 @@ const declineRequest = async (id: string) => {
     alert(err.statusCode === 404 ? 'No pending request from this user' : 'An unexpected error occurred')
   } finally {
     declining.value.delete(id)
+  }
+}
+
+// REMOVE FRIEND
+const removing = ref<Set<string>>(new Set()) // IDs of users whose friendship is being removed
+// Removes a friend, then reloads the list
+const removeFriend = async (id: string) => {
+  removing.value.add(id)
+  try {
+    await $fetch('/api/friends/remove', { method: 'POST', body: { id } })
+    await refresh()
+  } catch (err: any) {
+    alert(err.statusCode === 404 ? 'No friendship with this user' : 'An unexpected error occurred')
+  } finally {
+    removing.value.delete(id)
   }
 }
 </script>
