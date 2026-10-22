@@ -15,6 +15,11 @@ export default defineEventHandler(async (event) => {
   const { rows } = await pool.query(
     `UPDATE friendships SET status = 'accepted', updated_at = now()
      WHERE requester_id = $2 AND addressee_id = $1 AND status = 'pending'
+     AND NOT EXISTS (
+       SELECT 1 FROM blocks
+       WHERE (blocker_id = $1 AND blocked_id = $2)
+          OR (blocker_id = $2 AND blocked_id = $1)
+     )
      RETURNING id`,
     [userId, id],
   )
