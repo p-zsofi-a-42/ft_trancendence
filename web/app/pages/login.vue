@@ -36,7 +36,7 @@ async function login() {
       method: 'POST',
       body: { email: email.value, password: password.value },
     })
-    await navigateTo('/users') // redirect after successful login
+    await navigateTo('/profile') // redirect after successful login
   } catch (err) {
     error.value = (err as { data?: { message?: string } }).data?.message ?? 'Login failed' // set error message if login fails
   } finally {
