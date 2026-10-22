@@ -20,6 +20,12 @@ export interface FriendEntry {
   friendship: ActiveFriendshipStatus
 }
 
+// Represents a user that has been blocked by the authenticated user.
+export interface BlockedUser {
+  id: string
+  name: string
+}
+
 // Response of POST /friends/add and POST /friends/accept.
 export interface FriendshipResult {
   id: string
