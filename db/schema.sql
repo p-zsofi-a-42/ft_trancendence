@@ -26,4 +26,15 @@ CREATE UNIQUE INDEX IF NOT EXISTS friendships_pair_key
 CREATE INDEX IF NOT EXISTS friendships_addressee_idx ON friendships (addressee_id, status);
 CREATE INDEX IF NOT EXISTS friendships_requester_idx ON friendships (requester_id, status);
 
+
+-- BLOCK USERS
+CREATE TABLE IF NOT EXISTS blocks (
+  blocker_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  blocked_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (blocker_id, blocked_id),
+  CHECK (blocker_id <> blocked_id)
+);
+
+CREATE INDEX IF NOT EXISTS blocks_blocked_idx ON blocks (blocked_id, blocker_id);
 -- docker compose exec -T postgres psql -U <db_user> -d <db_name< < db/schema.sql

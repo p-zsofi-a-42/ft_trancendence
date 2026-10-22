@@ -6,7 +6,6 @@ export default defineEventHandler(async (event) => {
     if (typeof id !== 'string' || !/^\d+$/.test(id)) {
         throw createError({ statusCode: 400, statusMessage: 'Invalid friend ID' })
     }
-
     // get the ID of the user making the request
     const ownerId = await getServiceUserId(event)
     // Ensure the user logged in and is not trying to add themselves

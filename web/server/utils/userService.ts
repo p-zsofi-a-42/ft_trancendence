@@ -25,6 +25,7 @@ export async function callUserService<T>(
     headers.authorization = `Bearer ${await signServiceToken(options.userId)}`
   }
   try {
+    // Call the user service with the given path and options
     const res: unknown = await $fetch(`${useRuntimeConfig().userServiceUrl}${path}`, {
       method: options.method ?? 'POST',
       body: options.body,

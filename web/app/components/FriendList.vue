@@ -11,6 +11,9 @@
         <button :disabled="removing.has(friend.id)" @click="removeFriend(friend.id)">
           Remove
         </button>
+        <button :disabled="blocking.has(friend.id)" @click="blockUser(friend.id)">
+          Block
+        </button>
       </li>
     </ul>
     <p v-if="!friends.length">No friends yet.</p>
@@ -93,6 +96,21 @@ const removeFriend = async (id: string) => {
     alert(err.statusCode === 404 ? 'No friendship with this user' : 'An unexpected error occurred')
   } finally {
     removing.value.delete(id)
+  }
+}
+
+// BLOCK USERS
+const blocking = ref<Set<string>>(new Set()) // IDs of users being blocked
+// Blocks a user, then reloads the list
+const blockUser = async (id: string) => {
+  blocking.value.add(id)
+  try {
+    await $fetch('/api/blocks/block', { method: 'POST', body: { id } })
+    await refresh()
+  } catch (err: any) {
+    alert(err.statusCode === 404 ? 'No such user' : 'An unexpected error occurred')
+  } finally {
+    blocking.value.delete(id)
   }
 }
 </script>
