@@ -3,7 +3,7 @@
     <button @click="logout">Logout</button>
 </template>
 
-<script setup>
+<script setup lang="ts">
 
 // Function to handle user logout
 // Sends a POST request to the server to log out the current user and navigates to the login page on success.

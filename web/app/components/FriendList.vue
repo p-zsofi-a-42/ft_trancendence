@@ -19,6 +19,9 @@
         <button :disabled="accepting.has(friend.id)" @click="acceptRequest(friend.id)">
           Accept
         </button>
+        <button :disabled="declining.has(friend.id)" @click="declineRequest(friend.id)">
+          Decline
+        </button>
       </li>
     </ul>
     <p v-if="!incoming.length">No incoming requests.</p>
@@ -43,8 +46,9 @@ const friends = computed(() => (data.value ?? []).filter(f => f.friendship === '
 const incoming = computed(() => (data.value ?? []).filter(f => f.friendship === 'incoming'))
 const outgoing = computed(() => (data.value ?? []).filter(f => f.friendship === 'outgoing'))
 
-const accepting = ref<Set<string>>(new Set()) // IDs of users whose request is being accepted
 
+// ACCEPT REQUESTS
+const accepting = ref<Set<string>>(new Set()) // IDs of users whose request is being accepted
 // Accepts a pending request from the given user, then reloads the list
 const acceptRequest = async (id: string) => {
   accepting.value.add(id)
@@ -55,6 +59,21 @@ const acceptRequest = async (id: string) => {
     alert(err.statusCode === 404 ? 'No pending request from this user' : 'An unexpected error occurred')
   } finally {
     accepting.value.delete(id)
+  }
+}
+
+// 
+const declining = ref<Set<string>>(new Set()) // IDs of users whose request is being declined
+// Declines a pending request from the given user, then reloads the list
+const declineRequest = async (id: string) => {
+  declining.value.add(id)
+  try {
+    await $fetch('/api/friends/decline', { method: 'POST', body: { id } })
+    await refresh()
+  } catch (err: any) {
+    alert(err.statusCode === 404 ? 'No pending request from this user' : 'An unexpected error occurred')
+  } finally {
+    declining.value.delete(id)
   }
 }
 </script>
