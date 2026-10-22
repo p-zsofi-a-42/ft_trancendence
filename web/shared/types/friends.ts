@@ -9,3 +9,19 @@ export interface SearchResult {
   name: string
   friendship: FriendshipStatus
 }
+
+// Friendship states that exist in a stored friendship row (the user-service list and add/accept responses).
+export type ActiveFriendshipStatus = 'friends' | 'outgoing' | 'incoming'
+
+// One row of the friend list returned by GET /friends.
+export interface FriendEntry {
+  id: string
+  name: string
+  friendship: ActiveFriendshipStatus
+}
+
+// Response of POST /friends/add and POST /friends/accept.
+export interface FriendshipResult {
+  id: string
+  friendship: ActiveFriendshipStatus
+}

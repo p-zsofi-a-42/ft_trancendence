@@ -1,3 +1,4 @@
+// Adds a friend request for the authenticated user to the specified user ID
 export default defineEventHandler(async (event) => {
     // Read the friend ID from the request body
     const { id } = await readJsonBody(event)
@@ -28,8 +29,8 @@ export default defineEventHandler(async (event) => {
     if (existing.rows.length > 0) {
         const { status, is_requester } = existing.rows[0]
         // Determine the friendship status based on the existing row and the requester
-        const friendship = status === 'accepted' ? 'friends' : is_requester ? 'not accepted' : 'incoming'
-        return { id, status: friendship }
+        const friendship = status === 'accepted' ? 'friends' : is_requester ? 'outgoing' : 'incoming'
+        return { id, friendship }
     }
 
     // A concurrent request can still slip in between the check and the insert; the unique index rejects it
@@ -45,5 +46,5 @@ export default defineEventHandler(async (event) => {
         throw err
     }
 
-    return { id, status: 'requested friendship' }
+    return { id, friendship: 'outgoing' }
 })

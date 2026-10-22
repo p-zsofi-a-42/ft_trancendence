@@ -44,7 +44,7 @@ if (error.value) {
   await navigateTo('/login')
 }
 
-import type { SearchResult } from '#shared/types/friends'
+import type { FriendshipResult, SearchResult } from '#shared/types/friends'
 const searchResults = ref<SearchResult[]>([]); // Stores the results of the user search
 const searchQuery = ref(''); // Stores the current search query entered by the user
 const loading = ref(false); // Indicates whether a search request is currently in progress
@@ -55,12 +55,14 @@ const addFriend = async (id: string) => {
   sending.value.add(id)
   console.log(`Sending friend request to ${id}`)
   try {
-    await $fetch('/api/friends/add', { method: 'POST', body: { id } })
-    // Update the local search result to reflect the outgoing friend request
+    const { friendship } = await $fetch<FriendshipResult>('/api/friends/add', { method: 'POST', body: { id } })
+    // Show the status the server returned, which can already be a request or a friendship
     const result = searchResults.value.find(r => r.id === id)
     if (result) {
-      result.friendship = 'outgoing'
+      result.friendship = friendship
     }
+    // Reload the friend list so the new request appears under Sent requests
+    await refreshNuxtData('friends-list')
   } catch (err: any) {
     alert(err.statusCode === 409 ? 'Request already exists' : 'An unexpected error occurred')
   } finally {
