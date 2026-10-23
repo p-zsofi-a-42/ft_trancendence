@@ -1,0 +1,130 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme {
+  --font-handwriting: "Playwrite US Modern", cursive;
+}
+
+:root {
+    --color1: #272727;
+    --color2: #FED766;
+    --color3: #009FB7;
+    --color4: #696773;
+    --color5: #EFF1F3;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    padding: 0;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color5);
+    color: var(--color1);
+
+}
+
+header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 1rem;
+  background-color: var(--color1);
+  color: var(--color5);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-self: start;
+    padding: 1rem 1rem;
+    background-color: var(--color3);
+    font-family: var(--font-handwriting);
+}
+
+.topnav {
+    display: flex;
+    align-items: center;
+    justify-self: center;
+    gap: 0.5rem;
+}
+
+.topnav a {
+    text-decoration: none;
+    padding: 1rem;
+}
+
+.topnav a:hover {
+    color: var(--color3);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: 0.5rem;
+}
+
+.header-actions a:hover {
+  color: var(--color5);
+  background-color: var(--color3);
+}
+
+.window {
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+    border-radius: 1rem;
+    padding: 1rem;
+    background-color: white;
+    color: var(--color1);
+    align-items: center;
+    justify-content: center;
+}
+
+.foyer-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+}
+
+.foyer-form label {
+    color: var(--color1)
+}
+
+.foyer-form input {
+    color: var(--color1);
+    background-color: var(--color5);
+}
+
+.foyer-form button {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    margin-inline: 25%;
+    justify-content: center;
+    border-radius: 1rem;
+    background-color: var(--color5);
+}
+
+.foyer-form button:hover {
+  color: var(--color5);
+  background-color: var(--color3);
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+    flex: 1;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+}
