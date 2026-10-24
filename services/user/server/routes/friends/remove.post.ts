@@ -1,5 +1,9 @@
 // @brief Removes a already accepted friend request or pending request for the current user
-
+/*
+  TODO: 
+    - only deletes when caller is addressee. Requester gets 404 if removing friend.
+    - 
+*/
 export default defineEventHandler(async (event) => {
   // The requester's ID, sent by the frontend
   const { id } = await readJsonBody(event)

@@ -14,6 +14,9 @@
         <button :disabled="blocking.has(friend.id)" @click="blockUser(friend.id)">
           Block
         </button>
+        <button :disabled="messaging.has(friend.id)" @click="messageFriend(friend.id)">
+          Message
+        </button>
       </li>
     </ul>
     <p v-if="!friends.length">No friends yet.</p>
@@ -45,6 +48,26 @@
 
 <script setup lang="ts">
 import type { FriendEntry } from '#shared/types/friends'
+import type { ConversationResult } from '#shared/types/chats'
+
+// MESSAGING FRIENDS
+const messaging = ref<Set<string>>(new Set())
+const chatResponse = ref<ConversationResult | null>(null)
+/* Requesting a conversationID for messaging a friend.
+On success, go to /chats/:id */
+const messageFriend = async (id: string) => {
+  messaging.value.add(id)
+  try {
+    chatResponse.value = await $fetch('/api/chats', { method: 'POST', body: { id } })
+    if (chatResponse.value?.id)
+      navigateTo(`/chats/${chatResponse.value.id}`)
+    await refresh()
+  } catch (err: any) {
+    alert(err.statusCode === 404 ? 'No chat with this user' : 'An unexpected error occurred')
+  } finally {
+    messaging.value.delete(id)
+  }
+}
 
 // FETCH FRIENDS LIST
 const { data, error, refresh } = useFetch<FriendEntry[]>('/api/friends', { key: 'friends-list', default: () => [] })
