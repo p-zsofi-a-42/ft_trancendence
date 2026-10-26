@@ -15,5 +15,6 @@ export default defineNuxtConfig({
       watch: { usePolling: true },
     },
   },
+	css: ['~/assets/css/main.css'],
 })
 

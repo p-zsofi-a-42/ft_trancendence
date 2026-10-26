@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  type State = 'setup' | 'view' | 'game'
+  type State = 'foyer' | 'setup' | 'game'
   type Friend = {
     id: number
     name: string
@@ -8,7 +8,7 @@
     joined: boolean
   }
 
-  const state = ref<State>('setup')
+  const state = ref<State>('foyer')
   const foyer = ref({
     name: '',
     companyCount: 3
@@ -21,7 +21,7 @@
 
   function createFoyer(details: { name: string; companyCount: number }) {
     foyer.value = details
-    state.value = 'view'
+    state.value = 'setup'
   }
 
   function inviteFriend(friendId: number) {
@@ -37,12 +37,12 @@
 
 <template>
   <FoyerSetup
-    v-if="state === 'setup'"
+    v-if="state === 'foyer'"
     @create="createFoyer"
   />
 
-  <FoyerView
-    v-else-if="state === 'view'"
+  <GameSetup
+    v-else-if="state === 'setup'"
     :foyer="foyer"
     :friends="friends"
     @invite="inviteFriend"

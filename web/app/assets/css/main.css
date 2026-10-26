@@ -2,129 +2,137 @@
 @import "@nuxt/ui";
 
 @theme {
-  --font-handwriting: "Playwrite US Modern", cursive;
+	--font-handwriting: "Playwrite US Modern", cursive;
+}
+
+@media (max-width: 600px) {
+	.brand-and-nav {
+		flex-direction: column;
+		align-items: flex-start;
+	}
 }
 
 :root {
-    --color1: #272727;
-    --color2: #FED766;
-    --color3: #009FB7;
-    --color4: #696773;
-    --color5: #EFF1F3;
+	--color1: #272727;
+	--color2: #FED766;
+	--color3: #009FB7;
+	--color4: #696773;
+	--color5: #EFF1F3;
 }
 
 * {
-    box-sizing: border-box;
+	box-sizing: border-box;
 }
 
 body {
-    padding: 0;
-    margin: 0;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background-color: var(--color5);
-    color: var(--color1);
-
+	padding: 0;
+	margin: 0;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	background-color: white;
+	color: var(--color1);
 }
 
 header {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  padding: 0 1rem;
-  background-color: var(--color1);
-  color: var(--color5);
+	background-color: var(--color1);
 }
 
-.logo {
-    display: flex;
-    align-items: center;
-    justify-self: start;
-    padding: 1rem 1rem;
-    background-color: var(--color3);
-    font-family: var(--font-handwriting);
+.site-header-left {
+	display: flex;
+	color: var(--color5);
+}
+
+.site-header-right {}
+
+.brand-and-nav {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.site-title {
+	margin-right: 1rem;
+	font-weight: 750;
+	font-size: larger;
 }
 
 .topnav {
-    display: flex;
-    align-items: center;
-    justify-self: center;
-    gap: 0.5rem;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
 }
 
 .topnav a {
-    text-decoration: none;
-    padding: 1rem;
+	padding: 0.25rem;
 }
 
 .topnav a:hover {
-    color: var(--color3);
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  justify-self: end;
-  gap: 0.5rem;
-}
-
-.header-actions a:hover {
-  color: var(--color5);
-  background-color: var(--color3);
+	font-weight: bold;
 }
 
 .window {
-    display: flex;
-    flex-direction: column;
-    width: fit-content;
-    border-radius: 1rem;
-    padding: 1rem;
-    background-color: white;
-    color: var(--color1);
-    align-items: center;
-    justify-content: center;
+	display: flex;
+	flex-direction: column;
+	width: fit-content;
+	border-radius: 1rem;
+	padding: 1rem;
+	background-color: white;
+	color: var(--color1);
+	align-items: center;
+	justify-content: center;
 }
 
 .foyer-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	width: 100%;
 }
 
 .foyer-form label {
-    color: var(--color1)
+	color: var(--color1)
 }
 
 .foyer-form input {
-    color: var(--color1);
-    background-color: var(--color5);
+	color: var(--color1);
+	background-color: var(--color5);
 }
 
 .foyer-form button {
-    margin-top: 0.5rem;
-    padding: 0.5rem;
-    margin-inline: 25%;
-    justify-content: center;
-    border-radius: 1rem;
-    background-color: var(--color5);
+	margin-top: 0.5rem;
+	padding: 0.5rem;
+	margin-inline: 25%;
+	justify-content: center;
+	border-radius: 1rem;
+	background-color: var(--color5);
 }
 
 .foyer-form button:hover {
-  color: var(--color5);
-  background-color: var(--color3);
+	color: var(--color5);
+	background-color: var(--color3);
 }
 
 .app-shell {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+
+#game-setup {
+	width: 60%;
+	max-height: 60rem;
+	min-height: 60vh;
+	background-color: white;
+	align-items: start;
+	justify-content: start;
 }
 
 main {
-    flex: 1;
-    display: grid;
-    place-items: center;
-    padding: 1rem;
+	flex: 1;
+	display: grid;
+	place-items: center;
+	padding: 1rem;
+	background-color: var(--color5);
 }
