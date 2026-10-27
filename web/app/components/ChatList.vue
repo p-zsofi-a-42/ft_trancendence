@@ -1,3 +1,6 @@
+<!-- TODO 
+  blocked and unfriended users handling is not implemented yet.
+-->
 <template>
   <div>
     <h2>ChatList</h2>
