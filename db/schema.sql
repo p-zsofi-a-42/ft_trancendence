@@ -87,3 +87,11 @@ CREATE TABLE IF NOT EXISTS conversation_reads (
 
 -- RUN THE SCHEMA SQL FILE
 -- docker compose exec -T postgres psql -U <db_user> -d <db_name< < db/schema.sql
+
+-- Check user database entries
+-- docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT id, name, email, created_at FROM users;"'
+
+-- Go inside the Postgres container database
+-- docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+-- \dt
+-- \d users - shows the table structure
