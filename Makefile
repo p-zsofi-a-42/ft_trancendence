@@ -1,11 +1,11 @@
-.PHONY: web-dev prod down
+.PHONY: dev dev-view prod down
 
 # run in development mode (hot-reload)
 dev:
-	docker compose --profile dev up -d --build web-dev
+	docker compose --profile dev up --build web-dev
 
 dev-view:
-	docker compose --profile dev run --build --service-ports --rm web-dev
+	docker compose --profile dev run --service-ports --rm --build web-dev
 
 logs:
 	docker compose --profile dev logs -f user-dev postgres

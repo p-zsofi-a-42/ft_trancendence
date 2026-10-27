@@ -61,6 +61,6 @@ TOKEN_KEY=$(openssl rand -hex 16)
 sed -i "s/your_token_secret_here/${TOKEN_KEY}/" ".env"
 sed -i "s/your_token_secret_here/${TOKEN_KEY}/" "web/.env"
 
-make dev
+docker compose exec -T postgres psql -U "$db_user" -d "$db_name" < db/schema.sql
 
-docker compose exec -T postgres psql -U $db_user -d $db_name < db/schema.sql
+make dev-view

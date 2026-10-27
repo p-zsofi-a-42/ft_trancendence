@@ -15,7 +15,7 @@ function submit() {
 </script>
 
 <template>
-	<UCard class="w-full max-w-md window">
+	<UCard>
 		<template #header>
 			<h1>Foyer Configuration</h1>
 		</template>
