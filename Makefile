@@ -1,4 +1,4 @@
-.PHONY: dev prod down
+.PHONY: dev dev-view prod down
 
 # run in development mode (hot-reload)
 dev:
