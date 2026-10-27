@@ -1,4 +1,4 @@
-import type { AllChatsResult } from '#shared/types/chats'
+import type { ConversationEntry } from '#shared/types/chats'
 /**
  * GET /api/chats/all
  * Returns a list of all chats for the authenticated user.
@@ -6,8 +6,8 @@ import type { AllChatsResult } from '#shared/types/chats'
 export default defineEventHandler(async (event) => {
   // Logic to fetch all chats for the authenticated user goes here
   const { user } = await requireUserSession(event)
-  return callUserService<AllChatsResult>(
-    'chats/all', 
+  return callUserService<ConversationEntry[]>(
+    '/chats/all', 
     { method: 'GET',
       userId: user.id 
     }

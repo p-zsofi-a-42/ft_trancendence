@@ -6,7 +6,11 @@
     <NuxtLink to="/chats">
       Back
     </NuxtLink>
-    <h1>Chat</h1>
+    <ChatList />
+    <h1 v-if="friendName">Chat {{ friendName }}</h1>
+    <p v-if="!friendName">
+      Friend not found.
+    </p>
     <!-- Chat messages list -->
     <p v-if="loadError">
       {{ loadError }}
@@ -15,9 +19,12 @@
     <template v-else>
       <ul>
         <li v-for="message in messages" :key="message.id">
-          <strong>{{ message.sender_id === user?.id ? 'You' : 'Them' }}</strong>
-          <p>{{ message.body }}</p>
-          <time :datetime="message.created_at">{{ new Date(message.created_at).toLocaleTimeString() }}</time>
+          <!-- Background color change based on sender -->
+          <div :class="message.sender_id === user?.id ? 'message-mine' : 'message-theirs'">
+          <time :datetime="message.created_at">{{ new Date(message.created_at).toLocaleTimeString() }}</time><br>
+          <!-- <strong>{{ message.sender_id === user?.id ? 'You' : 'Them' }}</strong> -->
+            <p>{{ message.body }}</p>
+          </div>
         </li>
       </ul>
       <!-- Message input form -->
@@ -44,7 +51,7 @@
 <!-- ---------------------------------- -->
 <!-- Script section for chat page logic -->
 <script setup lang="ts">
-import type { ChatMessage } from '#shared/types/chats'
+import type { ChatMessage, ConversationEntry } from '#shared/types/chats'
 // Login check and redirect if not logged in
 const route = useRoute()
 const conversationId = computed(() => String(route.params.id))
@@ -61,6 +68,7 @@ const { data, error } = await useFetch<ChatMessage[]>(
   { key: computed(() => `chat-${conversationId.value}`), default: () => [] },
 )
 const messages = computed(() => [...(data.value ?? [])].reverse())
+await markAsRead()
 
 const text = ref('')
 const sending = ref(false)
@@ -109,7 +117,46 @@ async function send() {
     sendError.value = errorMessage(err)
   }
   finally {
+    await markAsRead()
     sending.value = false
   }
 }
+
+// GET FRIENDS USER NAME
+// Fetches all conversations to find the friend's name for the current chat.
+const { data: conversations } = await useFetch<ConversationEntry[]>(
+  '/api/chats/all',
+  { key: 'chats-all', default: () => [] },
+)
+// Finds the friend's name for the current conversation.
+const friendName = computed(() =>
+  conversations.value.find(c => c.id === conversationId.value)?.friend_name ?? '',
+)
+
+// Marks the conversation as read up to the newest message. Failures are ignored,
+// since a missed read only leaves the unread badge up for longer.
+async function markAsRead() {
+  const newest = data.value?.[0]
+  if (!newest) return
+  try {
+    await $fetch(`/api/chats/${conversationId.value}/read`, {
+      method: 'POST',
+      body: { last_message_id: newest.id },
+    })
+  }
+  catch {
+    // Ignored on purpose, see above
+  }
+}
 </script>
+
+<!-- Styles for chat message backgrounds based on sender -->
+<style scoped>
+.message-mine {
+  background-color: #dbeafe; /* light blue, for messages sent by the logged-in user */
+}
+
+.message-theirs {
+  background-color: #f3f4f6; /* light gray, for messages sent by the other person */
+}
+</style>

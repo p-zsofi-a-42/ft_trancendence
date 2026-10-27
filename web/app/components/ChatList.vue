@@ -1,10 +1,13 @@
 <template>
   <div>
-    <h2>Chats</h2>
+    <h2>ChatList</h2>
     <!-- Chat list will be displayed here -->
-    <ul v-if="chats && chats.conversations.length">
-      <li v-for="conversation in chats.conversations" :key="conversation.id">
+    <ul v-if="chats && chats.length">
+      <li v-for="conversation in chats" :key="conversation.id">
         {{ conversation.friend_name }} - {{ conversation.last_message_body }}
+      <NuxtLink :to="`/chats/${conversation.id}`">
+        Open
+      </NuxtLink>
       </li>
     </ul>
     <p v-else>No chats available.</p>
@@ -13,10 +16,10 @@
 
 <script setup lang="ts">
 // Chat list logic will go here
-import type { AllChatsResult } from '#shared/types/chats'
+import type { ConversationEntry } from '#shared/types/chats'
 import { ref, onMounted } from 'vue'
 
-const chats = ref<AllChatsResult | null>(null)
+const chats = ref<ConversationEntry[] | null>(null)
 
 onMounted(async () => {
   const response = await fetch('/api/chats/all')
@@ -24,4 +27,5 @@ onMounted(async () => {
     chats.value = await response.json()
   }
 })
+
 </script>

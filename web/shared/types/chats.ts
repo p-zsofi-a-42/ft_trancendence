@@ -34,6 +34,6 @@ export interface ReadResult {
   last_read_message_id: string | null
 }
 
-export interface AllChatsResult {
-  conversations: ConversationEntry[]
-}
+// export interface AllChatsResult {
+//   conversations: ConversationEntry[]
+// }
