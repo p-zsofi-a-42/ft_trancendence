@@ -21,7 +21,12 @@
         <li v-for="message in messages" :key="message.id">
           <!-- Background color change based on sender -->
           <div :class="message.sender_id === user?.id ? 'message-mine' : 'message-theirs'">
-          <time :datetime="message.created_at">{{ new Date(message.created_at).toLocaleTimeString() }}</time><br>
+          <ClientOnly>
+            <time :datetime="message.created_at">{{ new Date(message.created_at).toLocaleTimeString() }}</time><br>
+            <template #fallback>
+              <time :datetime="message.created_at"></time>
+            </template>
+          </ClientOnly>
           <!-- <strong>{{ message.sender_id === user?.id ? 'You' : 'Them' }}</strong> -->
             <p>{{ message.body }}</p>
           </div>
@@ -108,6 +113,7 @@ async function send() {
     data.value = [message, ...(data.value ?? [])]
     text.value = ''
     attempt = null
+    console.log('User Id:', user.value?.id)
   }
   catch (err) {
     if ((err as { statusCode?: number }).statusCode === 401) {

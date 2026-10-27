@@ -2,18 +2,18 @@
   <div>
     <h1>Login</h1>
     <form @submit.prevent="login"> <!-- login => triggers the login function defined in the script -->
-        <label>
-            Email:
-            <input type="email" v-model="email" required />
-        </label>
-        <br />
-        <label> 
-            Password:
-            <input type="password" v-model="password" required />
-        </label>
-        <br />
-        <button type="submit" :disabled="loading">Login</button>
-        <p v-if="error" role="alert">{{ error }}</p> <!-- show error message if login fails -->
+      <label>
+        Email:
+        <input type="email" v-model="email" required />
+      </label>
+      <br />
+      <label> 
+        Password:
+        <input type="password" v-model="password" required />
+      </label>
+      <br />
+      <button type="submit" :disabled="loading">Login</button>
+      <p v-if="error" role="alert">{{ error }}</p> <!-- show error message if login fails -->
     </form>
     <br />
     <NuxtLink to="/register">Don't have an account? Register here.</NuxtLink>
@@ -36,6 +36,7 @@ async function login() {
       method: 'POST',
       body: { email: email.value, password: password.value },
     })
+    await useUserSession().fetch() // refresh the user session after login
     await navigateTo('/profile') // redirect after successful login
   } catch (err) {
     error.value = (err as { data?: { message?: string } }).data?.message ?? 'Login failed' // set error message if login fails

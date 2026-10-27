@@ -11,6 +11,7 @@ const logout = async () => {
     // Send logout request to the server
     try {
         await fetch('/api/auth/logout', { method: 'POST' })
+        await useUserSession().clear() // refresh the user session after logout
         await navigateTo('/login')
     } catch (err) {
         console.error('Logout failed', err)
