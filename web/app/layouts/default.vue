@@ -41,18 +41,39 @@ useHead({
 
 			<template #right>
 				<UTooltip text="Profile">
-					<UButton icon="i-lucide-user" size="md" color="neutral" variant="ghost" to="/Profile"  aria-label="Profile" />
+					<UButton
+						icon="i-lucide-user"
+						size="md"
+						color="neutral"
+						variant="ghost"
+						to="/Profile" 
+						aria-label="Profile"
+					/>
 				</UTooltip>
 				<UTooltip text="Settings">
-					<UButton icon="i-lucide-settings" size="md" color="neutral" variant="ghost" to="/Settings"  aria-label="Settings" />
+					<UButton
+						icon="i-lucide-settings"
+						size="md"
+						color="neutral"
+						variant="ghost"
+						to="" 
+						aria-label="Settings" 
+					/>
 				</UTooltip>
 			</template>
 		</UHeader>
 
-		<UMain>
+		<UMain :ui="{
+			base: 'bg-neutral-100'
+		}"
+		>
 			<slot />
 		</UMain>
 
-		<UFooter />
+		<UFooter
+			:ui="{
+				root: 'bg-primary-950 ',
+			}"
+		/>
   </div>
 </template>

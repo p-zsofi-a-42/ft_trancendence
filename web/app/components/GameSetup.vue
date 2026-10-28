@@ -18,14 +18,17 @@ const foyer_view_items = [
 	{
 		slot: 'config',
 		minSize: 20,
-		defaultSize: 50,
-		id: 'foyer-view-config',
+		defaultSize: 100 / 3,
+	},
+	{
+		slot: 'players',
+		minSize: 20,
+		defaultSize: 100 / 3,
 	},
 	{
 		slot: 'invite',
 		minSize: 20,
-		defaultSize: 50,
-		id: 'foyer-view-invite'
+		defaultSize: 100 / 3,
 	}
 ]
 
@@ -39,44 +42,30 @@ defineProps<{
 
 
 <template>
-	<UTabs :items="tab_items" id="game-setup" class="window" :ui="{
-		list: 'game-tabs-list',
-		trigger: 'game-tab',
-		content: 'game-tab-panel'
-	}">	
-		<template #foyer-view>
-			<USplitter :items="foyer_view_items">
-				<template #config>
-					Foyer: {{ foyer.name }}
-					Companies: {{ foyer.companyCount }}
-				</template>
-				<template #invite>
-					Invite
-				</template>
-			</USplitter>
-		</template>
-		<template #business-config>
-
-		</template>
-		<template #game-start>
-
-		</template>
-	</UTabs>
+	<UCard class="w-2/3 items-center bg-neutral-500">
+		<UTabs :items="tab_items" >
+			<template #foyer-view>
+				<USplitter :items="foyer_view_items">
+					<template #config>
+						Foyer: {{ foyer.name }}
+						Companies: {{ foyer.companyCount }}
+					</template>
+					<USeparator orientation="vertical" class="h-48" />
+					<template #players>
+						Players
+					</template>
+					<USeparator orientation="vertical" class="h-48" />
+					<template #invite>
+						Invite
+					</template>
+				</USplitter>
+			</template>
+			<template #business-config>
+	
+			</template>
+			<template #game-start>
+	
+			</template>
+		</UTabs>
+	</UCard>
 </template>
-
-<style lang="css">
-@import url("~/assets/css/main.css");
-
-#game-setup {
-	width: 60%;
-	max-height: 60rem;
-	min-height: 60vh;
-	align-items: start;
-	justify-content: start;
-}
-
-#foyer-view-config {
-	background-color: var(--color5);
-
-}
-</style>

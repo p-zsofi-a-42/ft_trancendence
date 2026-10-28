@@ -1,36 +1,76 @@
 <script setup lang="ts">
-const name = ref('')
-const companyCount = ref(3)
+import type { FormError, FormSubmitEvent } from '@nuxt/ui'
+
+type FormState = {
+	name: string
+	companyCount: number
+}
+
+const state = reactive<FormState>({
+	name: '',
+	companyCount: 3
+})
+
+function validate(state: Partial<FormState>): FormError[] {
+	const errors: FormError[] = []
+
+	if (!state.name?.trim()) errors.push({ name: 'name', message: 'Required' })
+	if (!state.companyCount) errors.push({ name: 'companyCount', message: 'Required' })
+
+	return errors
+}
+
+const toast = useToast()
 
 const emit = defineEmits<{
-	create: [foyer: { name: string, companyCount: number }]
+	create: [foyer: FormState]
 }>()
 
-function submit() {
-	emit('create', {
-		name: name.value,
-		companyCount: Number(companyCount.value)
+async function submit(event: FormSubmitEvent<FormState>) {
+	toast.add({
+		title: 'Success',
+		description: 'The Foyer has been created.',
+		color: 'success'
 	})
+
+	emit('create', event.data)
 }
 </script>
 
 <template>
-	<UCard>
-		<template #header>
-			<h1>Foyer Configuration</h1>
+	<UCard
+		:ui="{
+			root: 'flex flex-col w-fit rounded-2xl bg-neutral-500 p-1',
+			title: 'text-center'
+		}"	
+	>
+		<template #title>
+			Foyer Configuration
 		</template>
 
-		<form class="foyer-form" @submit.prevent="submit">
-			<UFormField label="Foyer Name" name="name" required>
-				<UInput id="foyer-name" v-model="name" name="name" type="text" variant="none" class="w-full" />
-			</UFormField>
+		<UForm
+			:state="state"
+			:validate="validate"
+			@submit="submit"
+		>
+			<FormFieldTooltip label="Foyer name" name="name" required>
+				<UInput
+					v-model="state.name"
+					name="name"
+					type="text"
+					class="w-full"
+				/>
+			</FormFieldTooltip>
+			<FormFieldTooltip label="Number of Companies" name="companyCount" required>
+				<UInput
+					v-model="state.companyCount"
+					name="companyCount"
+					type="number"
+					class="w-full"
+				/>
+			</FormFieldTooltip>
 
-			<UFormField label="Number of Companies" name="companyCount" required>
-				<UInput id="company-count" v-model="companyCount" name="companyCount" type="number" variant="none"
-					class="w-full" />
-			</UFormField>
-			<UButton type="submit">Create</UButton>
-		</form>
-		
+			<UButton type="submit" class="block mx-auto mt-4">Create</UButton>
+		</UForm>
 	</UCard>
 </template>

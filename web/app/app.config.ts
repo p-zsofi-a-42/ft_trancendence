@@ -4,7 +4,7 @@ export default defineAppConfig({
       primary: 'blue',
 			secondary: 'amber',
       success: 'green',
-			info: 'emerald',
+			info: 'black',
 			warning: 'orange',
 			error: 'red',
 			neutral: 'slate'
@@ -15,11 +15,14 @@ export default defineAppConfig({
 			}
 		},
 		main: {
-			base: 'flex-1 grid place-items-center p-4'
+			base: 'flex-1 grid place-items-center'
 		},
-		button: {
+		formField: {
 			slots: {
-
+				root: 'flex items-start justify-between gap-2'
+			},
+			defaultVariants: {
+				orientation: 'horizontal',
 			}
 		},
 		tabs: {
@@ -29,9 +32,9 @@ export default defineAppConfig({
 		},
 		card: {
 			slots: {
-				root: 'flex flex-col w-fit items-center content-center rounded-2xl bg-neutral-500 p-1',
+				root: 'flex flex-col w-fit rounded-2xl p-1',
+				title: 'flex flex-col items-center content-center',
 			}
-		}
+		},
   },
-  
 })

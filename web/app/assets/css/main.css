@@ -1,34 +1,10 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
-@media (max-width: 600px) {
-	.brand-and-nav {
-		flex-direction: column;
-		align-items: flex-start;
-	}
-}
-
 * {
 	box-sizing: border-box;
 }
 
-body {
-	padding: 0;
-	margin: 0;
-	min-height: 100vh;
-	display: flex;
-	flex-direction: column;
-}
-
-.window {
-	display: flex;
-	flex-direction: column;
-	width: fit-content;
-	border-radius: 1rem;
-	padding: 1rem;
-	align-items: center;
-	justify-content: center;
-}
 /*
 .foyer-form {
 	display: flex;
