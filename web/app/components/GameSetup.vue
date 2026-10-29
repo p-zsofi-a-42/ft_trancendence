@@ -1,20 +1,23 @@
 <script setup lang="ts">
-const tab_items = [
+import type { StepperItem } from '@nuxt/ui'
+import type { SplitterItem } from '@nuxt/ui'
+
+const stepper_items = ref<StepperItem[]>([
 	{
-		label: 'Foyer',
+		title: 'Foyer',
 		slot: 'foyer-view'
 	},
 	{
-		label: 'Business Setup',
+		title: 'Business Setup',
 		slot: 'business-setup-view'
 	},
 	{
-		Label: 'Game Start',
+		title: 'Game Start',
 		slot: 'game-start'
 	}
-]
+])
 
-const foyer_view_items = [
+const foyerViewItems: SplitterItem[] = [
 	{
 		slot: 'config',
 		minSize: 20,
@@ -42,30 +45,40 @@ defineProps<{
 
 
 <template>
-	<UCard class="w-2/3 items-center bg-neutral-500">
-		<UTabs :items="tab_items" >
+	<UCard class="w-2/3 h-3/4 items-center bg-neutral-900 ring-neutral-950">
+		<UStepper
+      :items="stepper_items"
+      class="w-full"
+      :ui="{
+        list: 'w-1/2 mx-auto',
+        content: 'w-full mt-4'
+      }">
 			<template #foyer-view>
-				<USplitter :items="foyer_view_items">
+				<USplitter :items="foyerViewItems" class="h-96 w-full">
 					<template #config>
-						Foyer: {{ foyer.name }}
-						Companies: {{ foyer.companyCount }}
+            <UCard class="h-full min-w-0">
+              Foyer: {{ foyer.name }}
+						  Companies: {{ foyer.companyCount }}
+            </UCard>
 					</template>
-					<USeparator orientation="vertical" class="h-48" />
 					<template #players>
-						Players
+						<UCard class="h-full min-w-0">
+              Players
+            </UCard>
 					</template>
-					<USeparator orientation="vertical" class="h-48" />
 					<template #invite>
-						Invite
+						<UCard class="h-full min-w-0">
+              Friends
+            </UCard>
 					</template>
 				</USplitter>
 			</template>
-			<template #business-config>
+			<template #business-setup-view>
 	
 			</template>
 			<template #game-start>
 	
 			</template>
-		</UTabs>
+		</UStepper>
 	</UCard>
 </template>
