@@ -2,9 +2,12 @@
 import { createClient } from 'redis'
 import { verifyWsTicket } from '../../utils/wsTicket'
 
-const sub = createClient({ url: useRuntimeConfig().redisUrl }) // Redis client for subscribing to chat messages
+// Redis client for subscribing to chat messages
+const sub = createClient({ url: useRuntimeConfig().redisUrl })
+// Connect to Redis
 const subReady = sub.connect()
-const peersByConversation = new Map<string, Set<any>>() // Maps conversation IDs to sets of connected peers
+// Maps conversation IDs to sets of connected peers
+const peersByConversation = new Map<string, Set<any>>()
 
 // Adds a peer to a conversation, subscribing to Redis messages if necessary.
 async function addPeer(conversationId: string, peer: any) {
