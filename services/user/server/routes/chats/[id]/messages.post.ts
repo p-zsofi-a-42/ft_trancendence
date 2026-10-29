@@ -1,3 +1,5 @@
+import { redisPub, redisPubReady } from "~/utils/redis"
+
 /**
  * POST /chats/:id/messages
  * Sends a message in a conversation the caller belongs to.
@@ -76,6 +78,9 @@ export default defineEventHandler(async (event) => {
     [conversationId, ownerId, text, clientId]
   )
   if (inserted.rows.length > 0) {
+    // appended in messages.post.ts after a successful insert
+    await redisPubReady
+    await redisPub.publish(`chat:conv:${conversationId}`, JSON.stringify({ type: 'message', message: inserted.rows[0] }))
     return inserted.rows[0]
   }
   // The first send was stored already, so return it. The index is not per
@@ -88,5 +93,6 @@ export default defineEventHandler(async (event) => {
   if (existing.rows.length === 0) {
     throw createError({ statusCode: 409, statusMessage: 'client_id already used in another conversation' })
   }
+
   return existing.rows[0]
 })

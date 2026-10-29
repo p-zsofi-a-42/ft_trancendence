@@ -72,9 +72,66 @@ const { data, error } = await useFetch<ChatMessage[]>(
   () => `/api/chats/${conversationId.value}/messages`,
   { key: computed(() => `chat-${conversationId.value}`), default: () => [] },
 )
+
 const messages = computed(() => [...(data.value ?? [])].reverse())
 await markAsRead()
+// fetch a ticket and open socket, pushing incoming messages -> data.value
+// and close it onBeforeUnmount.
+///////////////////////////////////////
+// WEBSOCKET LOGIC ////////////////////
+// Opens a live WebSocket connection for this conversation so messages sent by
+// the other participant appear without a manual refresh. Client-only: everything
+// above runs during SSR too, where WebSocket doesn't exist.
+let socket: WebSocket | null = null
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+let closedByUs = false
 
+async function connectChatSocket() {
+  // Fresh ticket on every (re)connect - it's short-lived by design, never cache it.
+  const { ticket } = await $fetch<{ ticket: string }>(
+    `/api/chats/${conversationId.value}/ws-ticket`,
+    { method: 'POST' },
+  )
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
+  socket = new WebSocket(`${protocol}//${location.host}/ws/chat?ticket=${ticket}`)
+
+  socket.onmessage = (event) => {
+    const payload = JSON.parse(event.data)
+    if (payload.type !== 'message') return
+    // send() already added our own message optimistically; the fan-out has no
+    // notion of "skip the sender", so dedupe by id.
+    const exists = data.value?.some(m => m.id === payload.message.id)
+    if (!exists) {
+      data.value = [payload.message, ...(data.value ?? [])]
+      markAsRead()
+    }
+  }
+
+  socket.onclose = () => {
+    if (closedByUs) return
+    reconnectTimer = setTimeout(connectChatSocket, 2000)
+  }
+}
+
+onMounted(connectChatSocket)
+
+// Reconnect when navigating between conversations without this component
+// being destroyed.
+watch(conversationId, () => {
+  closedByUs = true
+  socket?.close()
+  closedByUs = false
+  connectChatSocket()
+})
+
+onBeforeUnmount(() => {
+  closedByUs = true
+  if (reconnectTimer) clearTimeout(reconnectTimer)
+  socket?.close()
+})
+
+///////////////////////////////////////
+///////////////////////////////////////
 const text = ref('')
 const sending = ref(false)
 const sendError = ref('')
@@ -159,10 +216,10 @@ async function markAsRead() {
 <!-- Styles for chat message backgrounds based on sender -->
 <style scoped>
 .message-mine {
-  background-color: #dbeafe; /* light blue, for messages sent by the logged-in user */
+  background-color: lightskyblue; /* light blue, for messages sent by the logged-in user */
 }
 
 .message-theirs {
-  background-color: #f3f4f6; /* light gray, for messages sent by the other person */
+  background-color: lightgray; /* light gray, for messages sent by the other person */
 }
 </style>

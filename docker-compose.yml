@@ -19,22 +19,38 @@ services:
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       TOKEN_SECRET: ${TOKEN_SECRET}
+      REDIS_URL: redis://redis:6379
     # No ports: only the web service can reach it, on the Compose network.
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
 
   web:
     build: ./web
+    # Environment variables for the Nuxt web service. Need the 'NUXT_' prefix 
+    # to be recognized by Nuxt.
     environment:
       NUXT_USER_SERVICE_URL: http://user:4000
       NUXT_TOKEN_SECRET: ${TOKEN_SECRET}
       NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD}
+      NUXT_REDIS_URL: redis://redis:6379
     ports:
       - "3000:3000"
     depends_on:
       user:
         condition: service_started
+      redis:
+        condition: service_healthy
+
+  # Redis service for pub/sub and caching
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 5
 
   # Dev variant of the user service with hot-reload: `docker compose --profile dev up user-dev`.
   user-dev:
@@ -42,14 +58,19 @@ services:
     build:
       context: ./services/user
       target: dev
+    container_name: user_dev
+    image: user_dev
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       TOKEN_SECRET: ${TOKEN_SECRET}
+      REDIS_URL: redis://redis:6379
     volumes:
       - ./services/user:/app
       - user_node_modules:/app/node_modules
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     profiles:
       - dev
@@ -62,10 +83,13 @@ services:
     build:
       context: ./web
       target: dev
+    container_name: web_dev
+    image: web_dev
     environment:
       NUXT_USER_SERVICE_URL: http://user-dev:4000
       NUXT_TOKEN_SECRET: ${TOKEN_SECRET}
       NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD}
+      NUXT_REDIS_URL: redis://redis:6379
       # Bind-mounted source has no inotify events (e.g. over NFS), so make
       # chokidar-based watchers (Nuxt's builder) poll for changes instead.
       CHOKIDAR_USEPOLLING: "true"
@@ -77,6 +101,8 @@ services:
     depends_on:
       user-dev:
         condition: service_started
+      redis:
+        condition: service_healthy
     profiles:
       - dev
 
