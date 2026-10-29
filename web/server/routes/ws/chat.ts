@@ -32,7 +32,10 @@ async function removePeer(conversationId: string, peer: any) {
 }
 
 // WebSocket handler for chat conversations, handling upgrade, open, and close events.
+// A peer represents a connected WebSocket client participating in a conversation.
+// Example: chat open in two tabs (same user) => two peers in the same conversation set.
 export default defineWebSocketHandler({
+  // Handles the WebSocket upgrade request, verifying the ticket and setting context. (user ID and conversation ID)
   async upgrade(request) {
     const ticket = new URL(request.url).searchParams.get('ticket')
     if (!ticket) return new Response('Missing ticket', { status: 401 })
@@ -47,10 +50,12 @@ export default defineWebSocketHandler({
       return new Response('Invalid ticket', { status: 401 })
     }
   },
+  // Handles the WebSocket open event, adding the peer to the conversation's peer set.
   async open(peer) {
     const { conversationId } = peer.context as { conversationId: string }
     await addPeer(conversationId, peer)
   },
+  // Handles the WebSocket close event, removing the peer from the conversation's peer set.
   async close(peer) {
     const { conversationId } = peer.context as { conversationId: string }
     await removePeer(conversationId, peer)

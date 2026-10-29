@@ -93,8 +93,10 @@ async function connectChatSocket() {
     { method: 'POST' },
   )
   const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
+  // Connect to the WebSocket server with the ticket
   socket = new WebSocket(`${protocol}//${location.host}/ws/chat?ticket=${ticket}`)
 
+  // Handle incoming messages from the WebSocket server
   socket.onmessage = (event) => {
     const payload = JSON.parse(event.data)
     if (payload.type !== 'message') return
