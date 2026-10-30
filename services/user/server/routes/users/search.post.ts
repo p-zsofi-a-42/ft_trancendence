@@ -21,10 +21,29 @@ export default defineEventHandler(async (event) => {
   const escaped = term.replace(/[\\%_]/g, '\\$&')
 
   // Use the simple query for now, return results matching the beginning of the search term
+  // Return matching users (not yourself) with their friendship status towards you
   const { rows } = await pool.query(
-  'SELECT id, name FROM users WHERE name ILIKE $1 ORDER BY name LIMIT 20',
-  [`${escaped}%`],
-)
+    `SELECT u.id, u.name,
+      CASE
+        WHEN f.status = 'accepted' THEN 'friends'
+        WHEN f.requester_id = $2 THEN 'outgoing'
+        WHEN f.id IS NOT NULL THEN 'incoming'
+        ELSE 'none'
+      END AS friendship
+     FROM users u
+     LEFT JOIN friendships f
+       ON (f.requester_id = $2 AND f.addressee_id = u.id)
+       OR (f.requester_id = u.id AND f.addressee_id = $2)
+     WHERE u.name ILIKE $1 AND u.id <> $2
+      AND NOT EXISTS (
+        SELECT 1 FROM blocks b
+        WHERE (b.blocker_id = $2 AND b.blocked_id = u.id)
+           OR (b.blocker_id = u.id AND b.blocked_id = $2)
+      )
+      ORDER BY u.name
+     LIMIT 20`,
+    [`${escaped}%`, userId],
+  )
   return rows
 })
 // Other Queries
