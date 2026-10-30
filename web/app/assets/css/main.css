@@ -4,38 +4,3 @@
 * {
 	box-sizing: border-box;
 }
-
-/*
-.foyer-form {
-	display: flex;
-	flex-direction: column;
-	gap: 1rem;
-	width: 100%;
-}
-
-.foyer-form label {}
-
-.foyer-form input {}
-
-.foyer-form button {
-	margin-top: 0.5rem;
-	padding: 0.5rem;
-	margin-inline: 25%;
-	justify-content: center;
-	border-radius: 1rem;
-}
-
-.foyer-form button:hover {}
-
-.app-shell {
-	min-height: 100vh;
-	display: flex;
-	flex-direction: column;
-}
-
-main {
-	flex: 1;
-	display: grid;
-	place-items: center;
-	padding: 1rem;
-} */

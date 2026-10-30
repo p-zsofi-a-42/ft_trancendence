@@ -20,7 +20,6 @@ useHead({
 			to="/"
 			:toggle="false"
 			:ui="{
-				root: 'bg-primary-950',
 				left: 'flex items-center gap-2'
 			}">
 			<template #left>
@@ -32,6 +31,7 @@ useHead({
 					<UNavigationMenu
 						:items="navItems"
 						orientation="horizontal"
+						variant="link"
 						:ui="{
 							link: 'px-1 py-1 hover:font-bold'
 						}"
@@ -64,7 +64,7 @@ useHead({
 		</UHeader>
 
 		<UMain :ui="{
-			base: 'bg-neutral-100'
+			base: 'bg-neutral-100 text-primary-950 flex-1 grid place-items-center'
 		}"
 		>
 			<slot />
@@ -72,7 +72,7 @@ useHead({
 
 		<UFooter
 			:ui="{
-				root: 'bg-primary-950 ',
+				root: 'bg-primary-950 text-neutral-100',
 			}"
 		/>
   </div>

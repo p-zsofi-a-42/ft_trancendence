@@ -3,20 +3,7 @@ export default defineAppConfig({
     colors: {
       primary: 'blue',
 			secondary: 'amber',
-      success: 'green',
-			info: 'black',
-			warning: 'orange',
-			error: 'red',
-			neutral: 'slate'
     },
-		header: {
-			slots: {
-				left: 'flex '
-			}
-		},
-		main: {
-			base: 'flex-1 grid place-items-center'
-		},
 		formField: {
 			slots: {
 				root: 'flex items-start justify-between gap-2'
@@ -32,8 +19,15 @@ export default defineAppConfig({
 		},
 		card: {
 			slots: {
-				root: 'flex flex-col w-fit rounded-2xl p-1',
+				root: 'flex flex-col w-fit rounded-2xl p-1 text-inverted',
 				title: 'flex flex-col items-center content-center',
+			},
+			variants: {
+				variant: {
+					foyer: {
+						root: 'bg-elevated/50 text-default h-full w-full min-w-0',
+					},
+				}
 			}
 		},
   },

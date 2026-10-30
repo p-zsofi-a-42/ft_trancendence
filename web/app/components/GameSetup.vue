@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { StepperItem } from '@nuxt/ui'
 import type { SplitterItem } from '@nuxt/ui'
+import type { ListboxItem } from '@nuxt/ui';
 
 const stepper_items = ref<StepperItem[]>([
 	{
@@ -35,7 +36,20 @@ const foyerViewItems: SplitterItem[] = [
 	}
 ]
 
-defineProps<{
+const foyerInfoItems = computed<ListboxItem[]>(() => [
+	{
+		label: `Foyer: ${props.foyer.name}`,
+		value: 'foyer-name',
+		disabled: true
+	},
+	{
+		label: `Companies: ${props.foyer.companyCount}`,
+		value: 'company-count',
+		disabled: true
+	}
+])
+
+const props = defineProps<{
 	foyer: {
 		name: string
 		companyCount: number
@@ -45,39 +59,41 @@ defineProps<{
 
 
 <template>
-	<UCard class="w-2/3 h-3/4 items-center bg-neutral-900 ring-neutral-950">
+	<UCard :ui="{
+		root: 'w-2/3 h-3/4 flex flex-col',
+		body: 'flex flex-1 flex-col min-h-0'
+	}">
 		<UStepper
       :items="stepper_items"
-      class="w-full"
       :ui="{
-        list: 'w-1/2 mx-auto',
-        content: 'w-full mt-4'
+				root: 'w-full flex-1 min-h-0',
+        content: 'w-full my-4 flex-1 min-h-0'
       }">
 			<template #foyer-view>
-				<USplitter :items="foyerViewItems" class="h-96 w-full">
+				<USplitter :items="foyerViewItems" :ui="{
+					root: 'w-full h-full min-h-0',
+					panel: 'h-full min-h-0 p-0 justify-center'
+				}">
 					<template #config>
-            <UCard class="h-full min-w-0">
-              Foyer: {{ foyer.name }}
-						  Companies: {{ foyer.companyCount }}
-            </UCard>
+            <UCard title="Foyer" variant="foyer">
+							<p v-for="item in foyerInfoItems" :key="item.value">
+								{{ item.label }}
+							</p>
+						</UCard>
 					</template>
 					<template #players>
-						<UCard class="h-full min-w-0">
-              Players
-            </UCard>
+						<UListbox :items="[]" class="w-full" />
 					</template>
 					<template #invite>
-						<UCard class="h-full min-w-0">
-              Friends
-            </UCard>
+						<UListbox :items="[]" class="w-full" />
 					</template>
 				</USplitter>
 			</template>
 			<template #business-setup-view>
-	
+				Business Setup
 			</template>
 			<template #game-start>
-	
+				Game Start
 			</template>
 		</UStepper>
 	</UCard>

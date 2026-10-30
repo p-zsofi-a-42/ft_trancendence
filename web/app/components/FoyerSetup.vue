@@ -40,7 +40,7 @@ async function submit(event: FormSubmitEvent<FormState>) {
 <template>
 	<UCard
 		:ui="{
-			root: 'flex flex-col w-fit rounded-2xl bg-neutral-500 p-1',
+			root: 'flex flex-col w-fit rounded-2xl p-1',
 			title: 'text-center'
 		}"	
 	>
