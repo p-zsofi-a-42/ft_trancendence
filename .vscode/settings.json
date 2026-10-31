@@ -6,5 +6,12 @@
     "strings": "on"
   },
   "tailwindCSS.classAttributes": ["class", "ui"],
-  "tailwindCSS.classFunctions": ["defineAppConfig"]
+  "tailwindCSS.classFunctions": ["defineAppConfig"],
+  "[vue]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "editor.formatOnSave": true
 }

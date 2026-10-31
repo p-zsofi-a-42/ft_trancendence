@@ -1,49 +1,52 @@
 <script setup lang="ts">
-  type State = 'foyer' | 'setup' | 'game'
-  type Friend = {
-    id: number
-    name: string
-    status: 'online' | 'offline'
-    invited: boolean
-    joined: boolean
-  }
+import type { Foyer } from "#shared/types/game";
 
-  const state = ref<State>('foyer')
-  const foyer = ref({
-    name: '',
-    companyCount: 3
-  })
+type State = "creation" | "setup" | "game";
 
-  const friends = ref<Friend[]>([
-    { id: 1, name: 'Alex', status: 'online', invited: false, joined: false},
-    { id: 2, name: 'Sam', status: 'offline', invited: false, joined: false},
-  ])
+type Friend = {
+  id: number;
+  name: string;
+  status: "online" | "offline";
+  invited: boolean;
+  joined: boolean;
+};
 
-  function createFoyer(details: { name: string; companyCount: number }) {
-    foyer.value = details
-    state.value = 'setup'
-  }
+const state = ref<State>("creation");
+const foyer = ref<Foyer>({
+  name: "",
+  companyCount: 3,
+});
 
-  function inviteFriend(friendId: number) {
-    friends.value = friends.value.map(friend =>
-      friend.id === friendId ? { ...friend, invited: true } : friend
-    )
-  }
+const friends = ref<Friend[]>([
+  { id: 1, name: "Alex", status: "online", invited: false, joined: false },
+  { id: 2, name: "Sam", status: "offline", invited: false, joined: false },
+]);
 
-  function startGame() {
-    state.value = 'game'
-  }
+function createFoyer(details: Foyer) {
+  foyer.value = details;
+  state.value = "setup";
+}
+
+function inviteFriend(friendId: number) {
+  friends.value = friends.value.map((friend) =>
+    friend.id === friendId ? { ...friend, invited: true } : friend,
+  );
+}
+
+function startGame() {
+  state.value = "game";
+}
+
+const foyerCode = ref("ABC123");
 </script>
 
 <template>
-  <FoyerSetup
-    v-if="state === 'foyer'"
-    @create="createFoyer"
-  />
+  <GameCreation v-if="state === 'creation'" @create="createFoyer" />
 
   <GameSetup
     v-else-if="state === 'setup'"
-    :foyer="foyer"
+    v-model:foyer="foyer"
+    :foyer-code="foyerCode"
     :friends="friends"
     @invite="inviteFriend"
     @start="startGame"
