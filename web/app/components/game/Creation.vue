@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { FormError, FormSubmitEvent } from "@nuxt/ui";
 import type { Foyer } from "#shared/types/game";
+import type { fieldGroup } from "#build/ui";
 
 const state = reactive<Foyer>({
   name: "",
@@ -56,7 +57,13 @@ async function submit(event: FormSubmitEvent<Foyer>) {
         name="companyCount"
         required
       />
-      <UButton class="mx-auto" type="submit" variant="foyer">Create</UButton>
+      <UButton
+        class="mx-auto text-white"
+        size="xl"
+        type="submit"
+        variant="foyer"
+        >Create</UButton
+      >
     </UForm>
   </UCard>
 </template>
