@@ -3,10 +3,13 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   modules:['nuxt-auth-utils'], // adds authentication utilities for Nuxt
   devtools: { enabled: true },
+  nitro: { 
+    experimental: { websocket: true } },
   runtimeConfig: {
     // Server-only; overridden by NUXT_USER_SERVICE_URL and NUXT_TOKEN_SECRET.
     userServiceUrl: '',
     tokenSecret: '',
+    redisUrl: '',
   },
   vite: {
     server: {
