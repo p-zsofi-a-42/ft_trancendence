@@ -4,7 +4,7 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 const navItems: NavigationMenuItem[] = [
 	{ label: 'Home', to: '/' },
 	{ label: 'Game', to: '/game' },
-	{ label: 'Social', to: '/users' },
+	// { label: 'Social', to: '/users' },
 ]
 
 useHead({
