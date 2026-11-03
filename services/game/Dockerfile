@@ -1,24 +1,13 @@
-FROM node:24-alpine AS base
+FROM python:3.15.2-alpine3.24
+
 WORKDIR /app
-COPY package*.json ./
 
-FROM base AS dev
-RUN npm ci
-COPY . .
-ENV HOST=0.0.0.0
-EXPOSE 5005
-CMD ["npm", "run", "dev"]
+COPY ./requirements.txt /app/requirements.txt
 
-FROM base AS build
-RUN npm ci
-COPY . .
-RUN npm run build
+RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 
-FROM node:24-alpine
-WORKDIR /app
-ENV NODE_ENV=production PORT=5005
-COPY package*.json ./
-RUN npm ci --omit=dev
-COPY --from=build /app/.output ./.output
-EXPOSE 5005
-CMD ["node", ".output/server/index.mjs"]
+COPY ./srcs /app/srcs
+
+EXPOSE 81
+
+ENTRYPOINT ["fastapi", "run", "./srcs/main.py", "--port", "81"]
