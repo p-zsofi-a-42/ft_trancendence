@@ -10,3 +10,4 @@ coverage/
 TODO.md
 notes/
 secrets
+.venv/
