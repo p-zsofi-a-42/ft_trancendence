@@ -1,7 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
-  modules:['nuxt-auth-utils'], // adds authentication utilities for Nuxt
+  modules: ['@nuxt/ui', 'nuxt-auth-utils'], // adds authentication utilities for Nuxt
   devtools: { enabled: true },
   nitro: { 
     experimental: { websocket: true } },
@@ -18,5 +18,6 @@ export default defineNuxtConfig({
       watch: { usePolling: true },
     },
   },
+	css: ['~/assets/css/main.css'],
 })
 

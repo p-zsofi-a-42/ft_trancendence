@@ -1,8 +1,13 @@
+<script setup lang="ts">
+useHead({
+	title: "The Beer Game",
+})
+</script>
+
 <template>
-  <div>
-    <!-- <NuxtRouteAnnouncer />
-    <NuxtWelcome /> -->
-    <NavBar />
-    <NuxtPage />
-  </div>
+	<UApp>
+		<NuxtLayout>
+			<NuxtPage />
+		</NuxtLayout>
+	</UApp>
 </template>
