@@ -2,7 +2,7 @@
 
 # run in development mode (hot-reload)
 dev:
-	docker compose --profile dev up --build web-dev
+	docker compose --profile dev up --build -d web-dev
 
 dev-view:
 	docker compose --profile dev run --service-ports --rm --build web-dev
