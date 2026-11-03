@@ -74,6 +74,16 @@ const { data, error } = await useFetch<ChatMessage[]>(
 )
 
 const messages = computed(() => [...(data.value ?? [])].reverse())
+
+// Prepends a message unless its id is already listed. The socket fans out the
+// sender's own message too, and it can arrive before the POST response, so both
+// paths go through here.
+function addMessage(message: ChatMessage): boolean {
+  if (data.value?.some(m => m.id === message.id)) return false
+  data.value = [message, ...(data.value ?? [])]
+  return true
+}
+
 await markAsRead()
 // fetch a ticket and open socket, pushing incoming messages -> data.value
 // and close it onBeforeUnmount.
@@ -100,13 +110,7 @@ async function connectChatSocket() {
   socket.onmessage = (event) => {
     const payload = JSON.parse(event.data)
     if (payload.type !== 'message') return
-    // send() already added our own message optimistically; the fan-out has no
-    // notion of "skip the sender", so dedupe by id.
-    const exists = data.value?.some(m => m.id === payload.message.id)
-    if (!exists) {
-      data.value = [payload.message, ...(data.value ?? [])]
-      markAsRead()
-    }
+    if (addMessage(payload.message)) markAsRead()
   }
 
   socket.onclose = () => {
@@ -169,7 +173,7 @@ async function send() {
       method: 'POST',
       body: { body, client_id: attempt.clientId },
     })
-    data.value = [message, ...(data.value ?? [])]
+    addMessage(message)
     text.value = ''
     attempt = null
     console.log('User Id:', user.value?.id)
