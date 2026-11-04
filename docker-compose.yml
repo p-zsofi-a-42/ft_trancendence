@@ -67,6 +67,7 @@ services:
 
   game:
     build: ./services/game
+    image: game
     environment:
       DATABASE_URL: postgres://${GAME_DB_USER}:${GAME_DB_PASSWORD}@postgres:5432/${POSTGRES_DB}
       TOKEN_SECRET: ${TOKEN_SECRET}
@@ -81,14 +82,12 @@ services:
       target: dev
       context: ./services/game
     container_name: game_dev
+    image: game_dev
     environment:
       DATABASE_URL: postgresql://${GAME_DB_USER}:${GAME_DB_PASSWORD}@game_db:5432/${GAME_DB_NAME}
       TOKEN_SECRET: ${TOKEN_SECRET}
-    volumes:
-      - ./services/game:/app
-      - game_node_modules:/app/node_modules
     ports:
-      - "8081:8081"
+      - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -162,6 +161,4 @@ volumes:
   web_node_modules:
     driver: local
   user_node_modules:
-    driver: local
-  game_node_modules:
     driver: local
