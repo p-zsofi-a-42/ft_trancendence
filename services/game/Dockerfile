@@ -1,16 +1,19 @@
-FROM python:3.15.2-alpine3.24 AS dev
+FROM python:3.12-slim-trixie AS base
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
 
-COPY ./requirements.txt /app/requirements.txt
+COPY srcs ./srcs
 
-RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
+COPY pyproject.toml uv.lock .
 
-# TODO: remove
-RUN pip install --no-cache-dir --upgrade sqlalchemy
+# INFO: with --locked uv.lock stays unchanged
+RUN uv sync --locked
 
-COPY ./srcs /app/srcs
+EXPOSE 8000
 
-EXPOSE 8081
+FROM base AS dev
+ENTRYPOINT ["uv", "run", "fastapi", "dev", "--host", "0.0.0.0", "./srcs/main.py"]
 
-ENTRYPOINT ["fastapi", "run", "./srcs/main.py", "--port", "8081"]
+FROM base AS production
+ENTRYPOINT ["uv", "run", "fastapi", "run", "./srcs/main.py"]
