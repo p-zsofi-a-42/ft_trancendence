@@ -27,7 +27,7 @@ const companyCount = computed({
 
 const overviewItems: SplitterItem[] = [
   {
-    slot: "config",
+    slot: "settings",
     minSize: 20,
     defaultSize: 100 / 3,
   },
@@ -56,8 +56,8 @@ const emit = defineEmits<{
       panel: 'h-full min-h-0',
     }"
   >
-    <template #config>
-      <UCard title="Foyer" variant="foyer">
+    <template #settings>
+      <UCard title="Game Settings" variant="foyer">
         <UFormField label="Code" name="foyerCode">
           <UInput
             :model-value="props.foyerCode"
