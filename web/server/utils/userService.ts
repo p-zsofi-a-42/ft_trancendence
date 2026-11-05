@@ -49,7 +49,7 @@ export async function callGameService<T>(
     headers.authorization = `Bearer ${await signServiceToken(options.userId)}`
   }
   try {
-    return await $fetch<T>(`http://game-dev:5005${path}`, {
+    return await $fetch<T>(`${useRuntimeConfig().gameServiceUrl}${path}`, {
       method: options.method ?? 'POST',
       body: options.body,
       headers,

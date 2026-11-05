@@ -45,7 +45,7 @@ services:
     # to be recognized by Nuxt.
     environment:
       NUXT_USER_SERVICE_URL: http://user:4000
-      NUXT_GAME_SERVICE_URL: http://game:5005
+      NUXT_GAME_SERVICE_URL: http://game:8000
       NUXT_TOKEN_SECRET: ${TOKEN_SECRET}
       NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD}
       NUXT_REDIS_URL: redis://redis:6379
@@ -131,7 +131,7 @@ services:
     image: web_dev
     environment:
       NUXT_USER_SERVICE_URL: http://user-dev:4000
-      NUXT_GAME_SERVICE_URL: http://game-dev:5005
+      NUXT_GAME_SERVICE_URL: http://game-dev:8000
       NUXT_TOKEN_SECRET: ${TOKEN_SECRET}
       NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD}
       NUXT_REDIS_URL: redis://redis:6379

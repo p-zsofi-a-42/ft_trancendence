@@ -31,6 +31,7 @@ async function submit(event: FormSubmitEvent<Foyer>) {
     color: "success",
   });
 
+	const response = await $fetch('/api/game/create', { method: 'POST', body: {name: event.data.name} })
   emit("create", event.data);
 }
 </script>

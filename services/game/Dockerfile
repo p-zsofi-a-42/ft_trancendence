@@ -1,19 +1,25 @@
-FROM python:3.12-slim-trixie AS base
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-
+FROM node:24-alpine AS base
 WORKDIR /app
-
-COPY srcs ./srcs
-
-COPY pyproject.toml uv.lock .
-
-# INFO: with --locked uv.lock stays unchanged
-RUN uv sync --locked
-
-EXPOSE 8000
+COPY package*.json ./
 
 FROM base AS dev
-ENTRYPOINT ["uv", "run", "fastapi", "dev", "--host", "0.0.0.0", "./srcs/main.py"]
+RUN npm ci
+COPY . .
+ENV HOST=0.0.0.0 PORT=8000
+EXPOSE 8000
+CMD ["npm", "run", "dev"]
 
-FROM base AS production
-ENTRYPOINT ["uv", "run", "fastapi", "run", "./srcs/main.py"]
+# ?
+FROM base AS build
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:24-alpine
+WORKDIR /app
+ENV NODE_ENV=production PORT=8000
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY --from=build /app/.output ./.output
+EXPOSE 8000
+CMD ["node", ".output/server/index.mjs"]
