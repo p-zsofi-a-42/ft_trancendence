@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { StepperItem } from "@nuxt/ui";
 import type { Company, Foyer } from "#shared/types/game";
-import type { textarea } from "#build/ui";
 
 const foyer = defineModel<Foyer>("foyer", { required: true });
 
@@ -93,7 +92,7 @@ const stepper = useTemplateRef("stepper");
           :disabled="!stepper?.hasNext"
           @click="stepper?.next()"
         >
-          Next
+          {{ stepper?.hasPrev ? "Start" : "Next" }}
         </UButton>
       </div>
     </div>
