@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from "@nuxt/ui";
 
+const { loggedIn } = useUserSession();
+
 const navItems: NavigationMenuItem[] = [
   { label: "Home", to: "/" },
   { label: "Play", to: "/foyer" },
@@ -47,7 +49,7 @@ useHead({
             size="md"
             color="neutral"
             variant="ghost"
-            to="/Profile"
+            :to="loggedIn ? '/profile' : '/login'"
             aria-label="Profile"
           />
         </UTooltip>
