@@ -42,7 +42,7 @@ export const messages = pgTable('messages', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
-export const conversationeads = pgTable('conversation_reads', {
+export const conversationReads = pgTable('conversation_reads', {
   conversationId: bigint('conversation_id', { mode: 'number' }).notNull().references(() => conversations.id, { onDelete: 'cascade' }),
   userId: bigint('user_id', { mode: 'number' }).notNull().references(() => users.id, { onDelete: 'cascade' }),
   lastReadMessageId: bigint('last_read_message_id', { mode: 'number' }).references(() => messages.id, { onDelete: 'set null' }),
