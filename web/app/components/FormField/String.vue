@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { toDisplayString } from "vue";
-
-defineProps<{
-  label: string;
-  name: string;
-  type?: "text" | "number" | "color";
-  required?: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    label: string;
+    name: string;
+    type?: "text" | "number" | "color";
+    required?: boolean;
+  }>(),
+  { required: false },
+);
 
 const model = defineModel<string>({ required: true });
 </script>

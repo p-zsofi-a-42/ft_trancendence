@@ -1,9 +1,20 @@
 <script setup lang="ts">
+import type { FormError, FormSubmitEvent } from "@nuxt/ui";
 import type { SplitterItem } from "@nuxt/ui";
-import type { ListboxItem } from "@nuxt/ui";
 import type { Company } from "#shared/types/game";
 
-const company = defineModel<Company>("company", { required: true });
+const company = reactive<Company>({
+  name: "",
+  color: "#ffffff",
+});
+
+function validate(state: Partial<Company>): FormError[] {
+  const errors: FormError[] = [];
+
+  if (!state.name?.trim()) errors.push({ name: "name", message: "Required" });
+
+  return errors;
+}
 
 const companyViewItems: SplitterItem[] = [
   {
@@ -19,8 +30,12 @@ const companyViewItems: SplitterItem[] = [
 ];
 
 const emit = defineEmits<{
-  continue: [];
+  start: [];
 }>();
+
+async function submit(event: FormSubmitEvent<Company>) {
+  emit("start");
+}
 </script>
 
 <template>
@@ -36,18 +51,15 @@ const emit = defineEmits<{
     </template>
     <template #config>
       <UCard title="Company Config" variant="foyer">
-        <FormFieldString
-          v-model="company.name"
-          label="Name"
-          name="name"
-          required
-        />
-        <FormFieldColor
-          v-model="company.color"
-          label="Color"
-          name="color"
-          required
-        />
+        <UForm :state="company" :validate="validate" @submit="submit">
+          <FormFieldString
+            v-model="company.name"
+            label="Name"
+            name="name"
+            required
+          />
+          <FormFieldColor v-model="company.color" label="Color" name="color" />
+        </UForm>
       </UCard>
     </template>
   </USplitter>

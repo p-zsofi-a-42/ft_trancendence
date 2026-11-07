@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { FormError, FormSubmitEvent } from "@nuxt/ui";
 import type { Foyer } from "#shared/types/game";
-import type { fieldGroup } from "#build/ui";
 
 const state = reactive<Foyer>({
   name: "",
