@@ -15,16 +15,19 @@ const props = defineProps<{
 
 const stepper_items = ref<StepperItem[]>([
   {
-    title: "Foyer",
+    title: "Foyer Setup",
     slot: "overview",
+    icon: "i-lucide-users",
   },
   {
     title: "Company Setup",
     slot: "company-setup",
+    icon: "i-lucide-building-complex",
   },
   {
     title: "Game Start",
     slot: "game-start",
+    icon: "i-lucide-gamepad-2",
   },
 ]);
 
@@ -58,11 +61,24 @@ const stepper = useTemplateRef("stepper");
         <template #company-setup>
           <GameSetupCompany v-model:company="company" />
         </template>
-        <template #game-start> Game Start </template>
+        <template #game-start>
+          <UCard
+            variant="outline"
+            title="Game starts in"
+            :ui="{
+              root: 'h-full w-full items-center justify-center',
+              title: 'text-2xl',
+              body: 'text-4xl text-white text-center',
+            }"
+          >
+            3
+          </UCard>
+        </template>
       </UStepper>
-      <div class="ml-auto flex">
+      <div v-if="stepper?.hasNext" class="ml-auto flex">
         <UButton
-          class="mx-3 bg-red-500 text-white"
+          class="mx-3 bg-red-500 text-white disabled:opacity-0"
+          :disabled="!stepper?.hasPrev"
           size="xl"
           variant="foyer"
           @click="stepper?.prev()"
@@ -70,12 +86,13 @@ const stepper = useTemplateRef("stepper");
           Back
         </UButton>
         <UButton
-          class="text-white"
+          class="text-white disabled:opacity-0"
           size="xl"
           variant="foyer"
+          :disabled="!stepper?.hasNext"
           @click="stepper?.next()"
         >
-          Next
+          {{ stepper?.hasPrev ? "Start" : "Next" }}
         </UButton>
       </div>
     </div>

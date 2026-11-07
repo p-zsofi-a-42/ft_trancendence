@@ -27,7 +27,7 @@ const companyCount = computed({
 
 const overviewItems: SplitterItem[] = [
   {
-    slot: "config",
+    slot: "settings",
     minSize: 20,
     defaultSize: 100 / 3,
   },
@@ -56,34 +56,37 @@ const emit = defineEmits<{
       panel: 'h-full min-h-0',
     }"
   >
-    <template #config>
-      <UCard title="Foyer" variant="foyer">
-        <UFormField label="Code" name="foyerCode">
-          <UInput
-            :model-value="props.foyerCode"
-            :ui="{ trailing: 'pr-0.5' }"
-            readonly
-          >
-            <UTooltip text="Copy to clipboard" :content="{ side: 'right' }">
-              <UButton
-                :color="copied ? 'success' : 'neutral'"
-                variant="link"
-                size="sm"
-                :icon="copied ? 'i-lucide-copy-check' : 'i-lucide-copy'"
-                aria-label="Copy to clipboard"
-                @click="copy(props.foyerCode)"
-              />
-            </UTooltip>
-          </UInput>
-        </UFormField>
-        <FormFieldString v-model="name" label="Name" name="name" />
+    <template #settings>
+      <UCard title="Game Settings" variant="foyer">
+        <div class="inline-grid grid-rows-3">
+          <UFormField label="Code" name="foyerCode">
+            <UInput
+              :model-value="props.foyerCode"
+              :ui="{ root: 'w-full', trailing: 'pr-0.5' }"
+              readonly
+            >
+              <template #trailing>
+                <UTooltip text="Copy to clipboard" :content="{ side: 'right' }">
+                  <UButton
+                    :color="copied ? 'success' : 'neutral'"
+                    variant="link"
+                    size="sm"
+                    :icon="copied ? 'i-lucide-copy-check' : 'i-lucide-copy'"
+                    aria-label="Copy to clipboard"
+                    @click="copy(props.foyerCode)"
+                  />
+                </UTooltip>
+              </template>
+            </UInput>
+          </UFormField>
+          <FormFieldString v-model="name" label="Name" name="name" />
 
-        <FormFieldNumber
-          v-model="companyCount"
-          label="Number of companies"
-          name="companyCount"
-          type="number"
-        />
+          <FormFieldNumber
+            v-model="companyCount"
+            label="Number of companies"
+            name="companyCount"
+          />
+        </div>
       </UCard>
     </template>
     <template #players>

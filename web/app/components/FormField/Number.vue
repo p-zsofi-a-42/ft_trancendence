@@ -1,9 +1,12 @@
 <script setup lang="ts">
-const props = defineProps<{
-  label: string;
-  name: string;
-  required?: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    label: string;
+    name: string;
+    required?: boolean;
+  }>(),
+  { required: false },
+);
 
 const model = defineModel<number>({ required: true });
 const draft = ref(String(model.value));
