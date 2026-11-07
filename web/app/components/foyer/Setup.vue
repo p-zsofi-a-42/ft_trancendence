@@ -52,14 +52,14 @@ const stepper = useTemplateRef("stepper");
         }"
       >
         <template #overview>
-          <GameSetupOverview
+          <FoyerSetupOverview
             v-model:foyer="foyer"
             :foyer-code="props.foyerCode"
             @continue="stepper?.next()"
           />
         </template>
         <template #company-setup>
-          <GameSetupCompany v-model:company="company" />
+          <FoyerSetupCompany v-model:company="company" />
         </template>
         <template #game-start>
           <UCard
