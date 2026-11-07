@@ -1,3 +1,5 @@
+import { and, or, eq } from 'drizzle-orm'
+
 // @brief BLOCKING USER
 //
 export default defineEventHandler(async (event) => {
@@ -15,21 +17,22 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Cannot block yourself' })
   }
 
-  // remove friendship and block user via a data-modifying CTE (ensures both actions happen atomically)
+  const blockedId = Number(id)
+
+  // Remove any friendship and block the user in one transaction so both happen atomically
   // No friendship -> the DELETE matches zero rows, which is not an error
   try {
-    await pool.query(
-      `WITH removed AS (
-        DELETE FROM Friendships 
-        WHERE (requester_id = $2 AND addressee_id = $1) 
-        OR (requester_id = $1 AND addressee_id = $2)
+    await db.transaction(async (tx) => {
+      await tx.delete(friendships).where(
+        or(
+          and(eq(friendships.requesterId, blockedId), eq(friendships.addresseeId, userId)),
+          and(eq(friendships.requesterId, userId), eq(friendships.addresseeId, blockedId)),
+        ),
       )
-      INSERT INTO Blocks (blocker_id, blocked_id) VALUES ($1, $2)
-      ON CONFLICT DO NOTHING`,
-      [userId, id]
-    )
+      await tx.insert(blocks).values({ blockerId: userId, blockedId }).onConflictDoNothing()
+    })
   } catch (err: any) {
-    if (err.code === '23503') {
+    if ((err.code ?? err.cause?.code) === '23503') {
       throw createError({ statusCode: 404, statusMessage: 'User not found' })
     }
     throw err
