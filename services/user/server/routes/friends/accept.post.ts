@@ -1,3 +1,5 @@
+import { and, or, eq, notExists, sql } from 'drizzle-orm'
+
 // Accepts a pending friend request for the authenticated user from the specified requester ID
 export default defineEventHandler(async (event) => {
   // The requester's ID, sent by the frontend
@@ -11,19 +13,29 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  // Only the addressee can accept, so the caller must be the addressee of a pending request
-  const { rows } = await pool.query(
-    `UPDATE friendships SET status = 'accepted', updated_at = now()
-     WHERE requester_id = $2 AND addressee_id = $1 AND status = 'pending'
-     AND NOT EXISTS (
-       SELECT 1 FROM blocks
-       WHERE (blocker_id = $1 AND blocked_id = $2)
-          OR (blocker_id = $2 AND blocked_id = $1)
-     )
-     RETURNING id`,
-    [userId, id],
-  )
-  if (rows.length === 0) {
+  const friendId = Number(id)
+
+  const [res] = await db
+    .update(friendships)
+    .set({ status: 'accepted' , updatedAt: new Date() })
+    .where(
+      and(
+        eq(friendships.requesterId, friendId),
+        eq(friendships.addresseeId, userId),
+        eq(friendships.status, 'pending'),
+        notExists(
+          db.select({ one: sql`1` }).from(blocks).where(
+            or(
+             and(eq(blocks.blockerId, userId), eq(blocks.blockedId, friendId)),
+             and(eq(blocks.blockerId, friendId), eq(blocks.blockedId, userId)),
+           ),
+          ),
+        ),
+      ),
+    )
+    .returning({ id: friendships.id })
+
+  if (!res) {
     throw createError({ statusCode: 404, statusMessage: 'No pending request from this user' })
   }
 
