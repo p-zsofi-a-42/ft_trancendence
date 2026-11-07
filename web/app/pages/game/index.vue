@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import type { Foyer } from "#shared/types/game";
 
+const foyerCode = ref("ABC123");
+// async function createGame(details: Foyer) {
+//   // Implement the logic to create a game
+//   const code = await $fetch("/api/game", {
+//     method: "POST",
+//     body: details,
+//   });
+//   await navigateTo(`/game/${code}`);
 type State = "creation" | "setup" | "game";
 
 type Friend = {
@@ -37,12 +45,16 @@ function startGame() {
   state.value = "game";
 }
 
-const foyerCode = ref("ABC123");
+
 </script>
 
 <template>
+  <!-- Create a new game: -->
   <GameCreation v-if="state === 'creation'" @create="createFoyer" />
+  
+  <!-- <GameCreation @create="createGame" /> -->
 
+  <!-- Setup the newly created game: -->
   <GameSetup
     v-else-if="state === 'setup'"
     v-model:foyer="foyer"
