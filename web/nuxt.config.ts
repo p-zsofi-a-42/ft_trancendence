@@ -8,6 +8,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // Server-only; overridden by NUXT_USER_SERVICE_URL and NUXT_TOKEN_SECRET.
     userServiceUrl: '',
+    gameServiceUrl: '',
     tokenSecret: '',
     redisUrl: '',
   },
