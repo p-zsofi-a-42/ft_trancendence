@@ -8,7 +8,8 @@
     "preview": "nitro preview"
   },
   "dependencies": {
-    "nitro": "^3.0.261103-rc"
+    "nitro": "^3.0.261103-rc",
+    "pg": "^8.23.1"
   },
   "devDependencies": {
     "@types/node": "latest",

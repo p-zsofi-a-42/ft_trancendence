@@ -5,5 +5,5 @@ export default defineEventHandler(async (event) => {
 	console.log(`body: ${body}`);
 	
 	// validate
-  return callGameService('/api/create', { method: 'POST', body: body})
+  return callGameService('/api/createGame', { method: 'POST', body: body})
 })
