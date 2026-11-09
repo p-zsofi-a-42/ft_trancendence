@@ -24,6 +24,15 @@ const emit = defineEmits<{
 }>();
 
 async function submit(event: FormSubmitEvent<Foyer>) {
+  /* create a new foyer session (game session)
+  */
+  const  codeResponse  = await $fetch("/api/game", {
+    method: "POST",
+    body: event.data,
+  });
+  const code = codeResponse.code;
+  console.log("Game code:", code);
+  
   toast.add({
     title: "Success",
     description: "The Foyer has been created.",
@@ -32,6 +41,8 @@ async function submit(event: FormSubmitEvent<Foyer>) {
 
 	const response = await $fetch('/api/game/create', { method: 'POST', body: {name: event.data.name} })
   emit("create", event.data);
+  // NAVIGATE TO GAME PAGE
+  // navigateTo(`/game/${code}`);
 }
 </script>
 

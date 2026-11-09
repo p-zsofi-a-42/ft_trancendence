@@ -1,3 +1,5 @@
+import { and, or, eq } from 'drizzle-orm'
+
 // Adds a friend request for the authenticated user to the specified user ID
 export default defineEventHandler(async (event) => {
   // Read the friend ID from the request body and validate it
@@ -14,42 +16,48 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'You cannot add yourself' })
   }
   // Check if either user has BLOCKED the other
-  const blocked = await pool.query(
-    `SELECT 1 FROM blocks
-    WHERE (blocker_id = $1 AND blocked_id = $2)
-        OR (blocker_id = $2 AND blocked_id = $1)`,
-    [ownerId, id],
+  const blocked = await db.select({ x: blocks.blockerId }).from(blocks).where(
+    or(
+      and(eq(blocks.blockerId, ownerId), eq(blocks.blockedId, Number(id))),
+      and(eq(blocks.blockerId, Number(id)), eq(blocks.blockedId, ownerId)),
+    ),
   )
-  if (blocked.rows.length > 0) {
-    throw createError({ statusCode: 403, statusMessage: 'Friend request not allowed' })
+  if (blocked.length > 0){
+   /* 403 */ 
+   throw createError({ statusCode: 403, statusMessage: 'Friend request not allowed' })
   }
 
-  // Look for an existing row between the two users, in either direction
-  const existing = await pool.query(
-    `SELECT status, requester_id = $1 AS is_requester
-     FROM friendships
-     WHERE (requester_id = $1 AND addressee_id = $2)
-        OR (requester_id = $2 AND addressee_id = $1)`,
-    [ownerId, id],
-  )
-  // If a friendship already exists, return its status
-  if (existing.rows.length > 0) {
-    const { status, is_requester } = existing.rows[0]
-    // Determine the friendship status based on the existing row and the requester
-    const friendship = status === 'accepted' ? 'friends' : is_requester ? 'outgoing' : 'incoming'
+  const friendId = Number(id)
+
+  // Look for an existing friendship row between the two users, in either direction
+  const [existing] = await db
+    .select({ status: friendships.status, requesterId: friendships.requesterId })
+    .from(friendships)
+    .where(
+      or(
+        and(eq(friendships.requesterId, ownerId), eq(friendships.addresseeId, friendId)),
+        and(eq(friendships.requesterId, friendId), eq(friendships.addresseeId, ownerId)),
+      ),
+    )
+    .limit(1)
+
+  // IF a friendship already exists, return its status
+  if (existing) {
+    const isRequester = existing.requesterId === ownerId
+    const friendship = existing.status === 'accepted' ? 'friends' : isRequester ? 'outgoing' : 'incoming'
     return { id, friendship }
   }
+
   // A concurrent request can still slip in between the check and the insert; the unique index rejects it
   try {
-    await pool.query(
-      'INSERT INTO friendships (requester_id, addressee_id) VALUES ($1, $2)',
-      [ownerId, id],
-    )
+    await db.insert(friendships).values({ requesterId: ownerId, addresseeId: Number(id) })
   } catch (err: any) {
-      if (err.code === '23505') {
-        throw createError({ statusCode: 409, statusMessage: 'Friendship already exists' })
-      }
-      throw err
+    const code = err.code ?? err.cause?.code
+    if (code === '23505') { 
+      throw createError({ statusCode: 409, statusMessage: 'Friend request already exists' })
+    }
+    else throw err
   }
+
   return { id, friendship: 'outgoing' }
 })

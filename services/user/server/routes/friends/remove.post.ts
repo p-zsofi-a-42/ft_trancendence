@@ -1,8 +1,8 @@
-// @brief Removes a already accepted friend request or pending request for the current user
-/*
-  TODO: 
-    - only deletes when caller is addressee. Requester gets 404 if removing friend.
-    - 
+import { and, eq, or} from 'drizzle-orm'
+
+/**
+ * @brief Removes a already accepted friend request or pending request for the current user
+
 */
 export default defineEventHandler(async (event) => {
   // The requester's ID, sent by the frontend
@@ -16,14 +16,21 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  // Only the addressee can decline, so the caller must be the addressee of a pending request
-  const { rows } = await pool.query(
-    `DELETE FROM friendships
-     WHERE requester_id = $2 AND addressee_id = $1 AND status = 'accepted'
-     RETURNING id`,
-    [userId, id],
-  )
-  if (rows.length === 0) {
+  const friendId = Number(id)
+  // Remove an accepted friendship between the current user and the specified friend ID
+  const [res] = await db
+    .delete(friendships)
+    .where(
+      and(
+        or(
+          and(eq(friendships.requesterId, userId), eq(friendships.addresseeId, friendId)),
+          and(eq(friendships.requesterId, friendId), eq(friendships.addresseeId, userId)),
+        ),
+        eq(friendships.status, 'accepted')
+      ),
+    )
+    .returning({ id: friendships.id })
+  if (!res) {
     throw createError({ statusCode: 404, statusMessage: 'No accepted friendship with this user' })
   }
 
