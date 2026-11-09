@@ -1,12 +1,54 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from "@nuxt/ui";
+import type { DropdownMenuItem, NavigationMenuItem } from "@nuxt/ui";
 
-const { loggedIn } = useUserSession();
+const { loggedIn, user } = useUserSession();
 
 const navItems: NavigationMenuItem[] = [
   { label: "Home", to: "/" },
   { label: "Play", to: "/foyer" },
   { label: "Social", to: "/users" },
+];
+
+const logout = async () => {
+  // Send logout request to the server
+  try {
+    await fetch("/api/auth/logout", { method: "POST" });
+    await useUserSession().clear(); // refresh the user session after logout
+    await navigateTo("/login");
+  } catch (err) {
+    console.error("Logout failed", err);
+  }
+};
+
+const loggedInItems: DropdownMenuItem[] = [
+  {
+    label: "Profile",
+    to: "/profile",
+  },
+  {
+    label: "Settings",
+  },
+  {
+    label: "Logout",
+    color: "error",
+    onSelect() {
+      logout();
+    },
+  },
+];
+
+const loggedOutItems: DropdownMenuItem[] = [
+  {
+    label: "Login",
+    to: "/login",
+  },
+  {
+    label: "Register",
+    to: "/register",
+  },
+  {
+    label: "Settings",
+  },
 ];
 
 useHead({
@@ -43,26 +85,21 @@ useHead({
       </template>
 
       <template #right>
-        <UTooltip text="Profile">
-          <UButton
-            icon="i-lucide-user"
-            size="md"
-            color="neutral"
-            variant="ghost"
-            :to="loggedIn ? '/profile' : '/login'"
-            aria-label="Profile"
-          />
-        </UTooltip>
-        <UTooltip text="Settings">
-          <UButton
-            icon="i-lucide-settings"
-            size="md"
-            color="neutral"
-            variant="ghost"
-            to=""
-            aria-label="Settings"
-          />
-        </UTooltip>
+        <UDropdownMenu :items="loggedIn ? loggedInItems : loggedOutItems">
+          <UTooltip text="Profile">
+            <UButton
+              class="w-fit"
+              icon="i-lucide-user"
+              color="neutral"
+              variant="soft"
+              block
+              trailing-icon="i-lucide-chevron-down"
+              aria-label="Profile"
+            >
+              {{ loggedIn ? user?.name : "" }}
+            </UButton>
+          </UTooltip>
+        </UDropdownMenu>
       </template>
     </UHeader>
 

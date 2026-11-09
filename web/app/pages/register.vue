@@ -33,19 +33,19 @@ const providers = [
   {
     icon: "i-simple-icons-42",
     onClick: () => {
-      toast.add({ title: "42", description: "Login with 42" });
+      toast.add({ title: "42", description: "Sign up with 42" });
     },
   },
   {
     icon: "i-simple-icons-github",
     onClick: () => {
-      toast.add({ title: "GitHub", description: "Login with GitHub" });
+      toast.add({ title: "GitHub", description: "Sign up with GitHub" });
     },
   },
 ];
 
 const schema = z.object({
-  name: z.string("").min(),
+  name: z.string().trim().min(4, "Name is required"),
   email: z.email("Invalid email"),
   password: z
     .string("Password is required")
@@ -67,9 +67,10 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
     await navigateTo("/login");
   } catch (err) {
     const message =
-      (err as { data?: { message?: string } }).data?.message ?? "Login failed";
+      (err as { data?: { message?: string } }).data?.message ??
+      "Register failed";
 
-    toast.add({ title: "Login failed", description: message });
+    toast.add({ title: "Register failed", description: message });
   } finally {
     loading.value = false;
   }
