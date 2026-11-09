@@ -1,3 +1,10 @@
 {
   "extends": "nitro/tsconfig"
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./*"],
+      "@/*": ["./server/*"]
+    }
+  }
 }
