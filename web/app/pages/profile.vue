@@ -7,6 +7,8 @@
       <p><strong>Name:</strong> {{ user.name }}</p>
       <p><strong>Email:</strong> {{ user.email }}</p>
     </div>
+    <!-- TEMP: for manual testing of the 2FA wizard, pending a dedicated settings page -->
+    <TwoFactAuth />
   </div>
   <!-- Friend list -->
   <FriendList />
