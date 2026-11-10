@@ -6,7 +6,7 @@ const { loggedIn, user } = useUserSession();
 const navItems: NavigationMenuItem[] = [
   { label: "Home", to: "/" },
   { label: "Play", to: "/foyer" },
-  { label: "Social", to: "/users" },
+  { label: "Social", to: "/social" },
 ];
 
 const logout = async () => {
@@ -89,12 +89,17 @@ useHead({
           <UTooltip text="Profile">
             <UButton
               class="w-fit"
-              icon="i-lucide-user"
+              :avatar="{
+                icon: 'i-lucide-user',
+                size: 'xl',
+                chip: { inset: true },
+              }"
               color="neutral"
-              variant="soft"
+              variant="foyer"
               block
               trailing-icon="i-lucide-chevron-down"
               aria-label="Profile"
+              size="md"
             >
               {{ loggedIn ? user?.name : "" }}
             </UButton>
