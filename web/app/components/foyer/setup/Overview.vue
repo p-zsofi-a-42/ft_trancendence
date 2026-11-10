@@ -2,6 +2,7 @@
 import type { SplitterItem } from "@nuxt/ui";
 import type { Foyer } from "#shared/types/game";
 import { useClipboard } from "@vueuse/core";
+import Friends from "~/components/Friends.vue";
 
 const foyer = defineModel<Foyer>("foyer", { required: true });
 
@@ -90,10 +91,12 @@ const emit = defineEmits<{
       </UCard>
     </template>
     <template #players>
-      <UListbox :items="[]" class="w-full" />
+      <Friends />
+      <!-- <UListbox :items="[Friends]" class="w-full" /> -->
     </template>
     <template #invite>
       <UListbox :items="[]" class="w-full" />
     </template>
   </USplitter>
+  <!-- <FriendList/> -->
 </template>

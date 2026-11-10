@@ -1,3 +1,5 @@
+import { and, eq, sql } from 'drizzle-orm'
+
 /**
  * POST /chats/:id/read
  * Marks messages in a conversation as read up to the given message.
@@ -28,29 +30,37 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check membership before touching the read position
-  const membership = await pool.query(
-    `SELECT 1 FROM conversations
-     WHERE id = $1 AND (user_a_id = $2 OR user_b_id = $2)`,
-    [conversationId, ownerId]
-  )
-  if (membership.rowCount === 0) {
+  if (await getConversationPeer(Number(conversationId), ownerId) === null) {
     throw createError({ statusCode: 404, statusMessage: 'Conversation not found' })
   }
 
   // The insert only happens if the message belongs to this conversation.
-  // ON CONFLICT ... DO UPDATE handles the first read and later reads
-  // GREATEST keeps the stored position from moving backwards.
-  const result = await pool.query(
-    `INSERT INTO conversation_reads (conversation_id, user_id, last_read_message_id)
-     SELECT $1::bigint, $2::bigint, id FROM messages
-     WHERE id = $3::bigint AND conversation_id = $1::bigint
-     ON CONFLICT (conversation_id, user_id) DO UPDATE
-       SET last_read_message_id = GREATEST(conversation_reads.last_read_message_id, EXCLUDED.last_read_message_id)
-     RETURNING conversation_id, user_id, last_read_message_id`,
-    [conversationId, ownerId, lastMessageId]
-  )
-  if (result.rows.length === 0) {
+  // On conflict the stored position is updated, and GREATEST keeps it from moving backwards.
+  const [result] = await db
+    .insert(conversationReads)
+    .select(
+      db
+        .select({
+          conversationId: sql<number>`${Number(conversationId)}::bigint`.as('conversation_id'),
+          userId: sql<number>`${ownerId}::bigint`.as('user_id'),
+          lastReadMessageId: messages.id,
+        })
+        .from(messages)
+        .where(and(eq(messages.id, Number(lastMessageId)), eq(messages.conversationId, Number(conversationId)))),
+    )
+    .onConflictDoUpdate({
+      target: [conversationReads.conversationId, conversationReads.userId],
+      set: {
+        lastReadMessageId: sql`GREATEST(${conversationReads.lastReadMessageId}, EXCLUDED.last_read_message_id)`,
+      },
+    })
+    .returning()
+  if (!result) {
     throw createError({ statusCode: 400, statusMessage: 'Message not found in this conversation' })
   }
-  return result.rows[0]
+  return {
+    conversation_id: String(result.conversationId),
+    user_id: String(result.userId),
+    last_read_message_id: result.lastReadMessageId === null ? null : String(result.lastReadMessageId),
+  }
 })

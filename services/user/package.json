@@ -13,9 +13,13 @@
   "type": "module",
   "dependencies": {
     "@adonisjs/hash": "^10.1.1",
+    "drizzle-orm": "^0.45.4",
     "jose": "^6.2.12",
     "nitropack": "^2.13.5",
     "pg": "^8.23.1",
     "redis": "^6.3.1"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.11"
   }
 }

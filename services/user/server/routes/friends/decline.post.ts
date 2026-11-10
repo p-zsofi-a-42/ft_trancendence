@@ -1,3 +1,5 @@
+import { and, eq } from 'drizzle-orm'
+
 // Declines a pending friend request for the authenticated user from the specified requester ID
 // Removes whole db entry in friend table?
 export default defineEventHandler(async (event) => {
@@ -13,12 +15,16 @@ export default defineEventHandler(async (event) => {
   }
 
   // Only the addressee can decline, so the caller must be the addressee of a pending request
-  const { rows } = await pool.query(
-    `DELETE FROM friendships
-     WHERE requester_id = $2 AND addressee_id = $1 AND status = 'pending'
-     RETURNING id`,
-    [userId, id],
-  )
+  const rows = await db
+    .delete(friendships)
+    .where(
+      and(
+        eq(friendships.requesterId, Number(id)),
+        eq(friendships.addresseeId, userId),
+        eq(friendships.status, 'pending'),
+      ),
+    )
+    .returning({ id: friendships.id })
   if (rows.length === 0) {
     throw createError({ statusCode: 404, statusMessage: 'No pending request from this user' })
   }
