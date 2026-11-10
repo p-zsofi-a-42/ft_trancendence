@@ -120,17 +120,17 @@ etc.).
 
 ## Testing
 
-- `db/scripts/totp_smoke_test.sh` — automated E2E regression test covering
+- `tests/totp/totp_smoke_test.sh` — automated E2E regression test covering
   register → setup → enable → logout → login (2FA) → verify → profile →
   recovery code → disable, against the running BFF (`localhost:3000`). Run it
   any time with:
   ```bash
-  ./db/scripts/totp_smoke_test.sh
+  ./tests/totp/totp_smoke_test.sh
   ```
-- `db/scripts/totp_code.mjs` — dependency-free RFC 6238 code generator, used
+- `tests/totp/totp_code.mjs` — dependency-free RFC 6238 code generator, used
   by the smoke test and for manual testing:
   ```bash
-  node db/scripts/totp_code.mjs <base32-secret>
+  node tests/totp/totp_code.mjs <base32-secret>
   ```
 - Full flow has also been manually verified in-browser (QR scan → confirm →
   recovery codes → login prompt → verify/recovery paths → single-use
