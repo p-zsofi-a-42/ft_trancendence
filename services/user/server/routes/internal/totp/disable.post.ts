@@ -8,19 +8,18 @@ import { eq } from 'drizzle-orm'
  * @brief Disables TOTP 2FA for a user. Clears the secret and flag, and deletes all
  *        recovery codes (used or not) so a future `setup` starts from a clean slate.
  * @return 200 { message } - TOTP disabled
- *         400 { message } - missing/invalid userId
+ *         401 { message } - missing/invalid service token
  *         404 { message } - user not found
  *         409 { message } - TOTP is not enabled for this user
  */
 export default defineEventHandler(async (event) => {
-  // Read and validate the request body for userId
-  const { userId } = await readJsonBody(event)
-  if (typeof userId !== 'string' && typeof userId !== 'number') {
-    setResponseStatus(event, 400)
-    return { message: 'Invalid user id' }
+  const userId = await getServiceUserId(event)
+  if (userId === null) {
+    setResponseStatus(event, 401)
+    return { message: 'Unauthorized' }
   }
 
-  const [user] = await db.select().from(users).where(eq(users.id, Number(userId))).limit(1)
+  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
   if (!user) {
     setResponseStatus(event, 404)
     return { message: 'User not found' }
@@ -50,8 +49,8 @@ export default defineEventHandler(async (event) => {
 // 409 Conflict
 { "message": "TOTP is not enabled for this user" }
 
-// 400 Bad Request
-{ "message": "Invalid user id" }
+// 401 Unauthorized
+{ "message": "Unauthorized" }
 
 // 404 Not Found
 { "message": "User not found" }

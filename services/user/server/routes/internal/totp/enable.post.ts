@@ -16,22 +16,25 @@ function generateRecoveryCode(): string {
  *        `setup`, then flips totp_enabled to true and issues a one-time batch of
  *        recovery codes (stored hashed, returned once in plaintext).
  * @return 200 { message, recoveryCodes } - plaintext recovery codes, shown only this once
- *         400 { message } - missing/invalid userId or code, or no pending setup
+ *         400 { message } - missing/invalid code, or no pending setup
+ *         401 { message } - missing/invalid service token
  *         404 { message } - user not found
  *         409 { message } - TOTP already enabled for this user
  *         401 { message } - code did not verify against the pending secret
  */
 export default defineEventHandler(async (event) => {
-  // Read and validate the request body for userId and TOTP code
-  const { userId, code } = await readJsonBody(event)
-  if (
-    (typeof userId !== 'string' && typeof userId !== 'number') ||
-    typeof code !== 'string' || !code
-  ) {
-    setResponseStatus(event, 400)
-    return { message: 'Invalid user id or code' }
+  const userId = await getServiceUserId(event)
+  if (userId === null) {
+    setResponseStatus(event, 401)
+    return { message: 'Unauthorized' }
   }
-  const [user] = await db.select().from(users).where(eq(users.id, Number(userId))).limit(1)
+  // Read and validate the request body for the TOTP code
+  const { code } = await readJsonBody(event)
+  if (typeof code !== 'string' || !code) {
+    setResponseStatus(event, 400)
+    return { message: 'Invalid code' }
+  }
+  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
   if (!user) {
     setResponseStatus(event, 404)
     return { message: 'User not found' }
@@ -93,6 +96,9 @@ export default defineEventHandler(async (event) => {
 
 // 400 Bad Request
 { "message": "No pending TOTP setup for this user" }
+
+// 401 Unauthorized
+{ "message": "Unauthorized" }
 
 // 404 Not Found
 { "message": "User not found" }

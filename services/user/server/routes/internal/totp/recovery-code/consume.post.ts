@@ -5,22 +5,24 @@ import { eq, and, isNull } from 'drizzle-orm'
  *        Checks the submitted code against the user's unused recovery codes, and marks
  *        the matching one as used so it can never be consumed again.
  * @return 200 { message } - code is valid, login may proceed
- *         400 { message } - missing/invalid userId or code
+ *         400 { message } - missing/invalid code
+ *         401 { message } - missing/invalid service token, or code did not match
  *         404 { message } - user not found
  *         409 { message } - TOTP is not enabled for this user
- *         401 { message } - code did not match any unused recovery code
  */
 export default defineEventHandler(async (event) => {
-  // Read and validate the request body for userId and recovery code
-  const { userId, code } = await readJsonBody(event)
-  if (
-    (typeof userId !== 'string' && typeof userId !== 'number') ||
-    typeof code !== 'string' || !code
-  ) {
-    setResponseStatus(event, 400)
-    return { message: 'Invalid user id or code' }
+  const userId = await getServiceUserId(event)
+  if (userId === null) {
+    setResponseStatus(event, 401)
+    return { message: 'Unauthorized' }
   }
-  const [user] = await db.select().from(users).where(eq(users.id, Number(userId))).limit(1)
+  // Read and validate the request body for the recovery code
+  const { code } = await readJsonBody(event)
+  if (typeof code !== 'string' || !code) {
+    setResponseStatus(event, 400)
+    return { message: 'Invalid code' }
+  }
+  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
   if (!user) {
     setResponseStatus(event, 404)
     return { message: 'User not found' }
@@ -70,7 +72,7 @@ export default defineEventHandler(async (event) => {
 { "message": "TOTP is not enabled for this user" }
 
 // 400 Bad Request
-{ "message": "Invalid user id or code" }
+{ "message": "Invalid code" }
 
 // 404 Not Found
 { "message": "User not found" }

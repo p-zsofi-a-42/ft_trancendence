@@ -7,18 +7,18 @@ import * as OTPAuth from 'otpauth'
  *        totp_enabled still false). Blocked if TOTP is already enabled; repeat calls
  *        while unconfirmed simply overwrite the pending secret (e.g. user lost the QR code).
  * @return 200 { message, secret, otpauthUrl } - secret (base32) and otpauth:// URL for the FE QR code
- *         400 { message } - missing/invalid userId
+ *         401 { message } - missing/invalid service token
  *         404 { message } - user not found
  *         409 { message } - TOTP already enabled for this user
  */
 export default defineEventHandler(async (event) => {
-  const { userId } = await readJsonBody(event)
-  if (typeof userId !== 'string' && typeof userId !== 'number') {
-    setResponseStatus(event, 400)
-    return { message: 'Invalid user id' }
+  const userId = await getServiceUserId(event)
+  if (userId === null) {
+    setResponseStatus(event, 401)
+    return { message: 'Unauthorized' }
   }
 
-  const [user] = await db.select().from(users).where(eq(users.id, Number(userId))).limit(1)
+  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
   if (!user) {
     setResponseStatus(event, 404)
     return { message: 'User not found' }
@@ -62,8 +62,8 @@ export default defineEventHandler(async (event) => {
 //   "otpauthUrl": "otpauth://totp/ft_transcendence:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=ft_transcendence"
 // }
 
-// 400 Bad Request
-// { "message": "Invalid user id" }
+// 401 Unauthorized
+// { "message": "Unauthorized" }
 // 404 Not Found
 // { "message": "User not found" }
 // 409 Conflict
