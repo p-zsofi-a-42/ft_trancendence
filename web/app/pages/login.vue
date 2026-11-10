@@ -1,95 +1,116 @@
-<template>
-  <div>
-    <h1>Login</h1>
-
-    <!-- Step 1: email + password -->
-    <form v-if="!totpPending" @submit.prevent="login">
-      <label>
-        Email:
-        <input type="email" v-model="email" required />
-      </label>
-      <br />
-      <label>
-        Password:
-        <input type="password" v-model="password" required />
-      </label>
-      <br />
-      <button type="submit" :disabled="loading">Login</button>
-      <p v-if="error" role="alert">{{ error }}</p>
-    </form>
-
-    <!-- Step 2: TOTP code (or recovery code) -->
-    <form v-else @submit.prevent="submitTotp">
-      <p>Enter the 6-digit code from your authenticator app.</p>
-      <label>
-        <template v-if="!useRecovery">Code:</template>
-        <template v-else>Recovery code:</template>
-        <input
-          type="text"
-          v-model="code"
-          autocomplete="one-time-code"
-          required
-          autofocus
-        />
-      </label>
-      <br />
-      <button type="submit" :disabled="loading">Verify</button>
-      <button type="button" @click="useRecovery = !useRecovery">
-        {{ useRecovery ? 'Use authenticator code instead' : 'Use a recovery code instead' }}
-      </button>
-      <p v-if="error" role="alert">{{ error }}</p>
-    </form>
-
-    <br />
-    <NuxtLink to="/register">Don't have an account? Register here.</NuxtLink>
-  </div>
-</template>
-
-
-<!-- Logic for handling login and TOTP verification forms -->
 <script setup lang="ts">
-const email = ref('')
-const password = ref('')
-const code = ref('')
-const loading = ref(false)
-const error = ref('')
-const totpPending = ref(false)
-const useRecovery = ref(false)
+// @ts-ignore -- Zod is installed in web-dev
+import * as z from "zod";
+import type { FormSubmitEvent, AuthFormField } from "@nuxt/ui";
 
-async function login() {
-  error.value = ''
-  loading.value = true
+const toast = useToast();
+
+const fields: AuthFormField[] = [
+  { name: "email", type: "email", label: "Email", placeholder: "Enter your email", required: true },
+  { name: "password", type: "password", label: "Password", placeholder: "Enter your password", required: true },
+  { name: "remember", label: "Remember me", type: "checkbox" },
+];
+
+const providers = [
+  { icon: "i-simple-icons-42", onClick: () => toast.add({ title: "42", description: "Login with 42" }) },
+  { icon: "i-simple-icons-github", onClick: () => toast.add({ title: "GitHub", description: "Login with GitHub" }) },
+];
+
+const schema = z.object({
+  email: z.email("Invalid email"),
+  password: z.string("Password is required").min(8, "Must be at least 8 characters"),
+});
+type Schema = z.output<typeof schema>;
+
+// 2FA code / recovery-code fields
+const totpFields: AuthFormField[] = [
+  { name: "code", type: "text", label: "Code", placeholder: "123456", required: true },
+];
+const totpSchema = z.object({ code: z.string().min(6, "Enter the code") });
+type TotpSchema = z.output<typeof totpSchema>;
+
+const loading = ref(false);
+const totpPending = ref(false);
+const useRecovery = ref(false);
+
+async function onSubmit(payload: FormSubmitEvent<Schema>) {
+  loading.value = true;
   try {
-    const result = await $fetch('/api/auth/login', {
-      method: 'POST',
-      body: { email: email.value, password: password.value },
-    })
-    if ('totpRequired' in result && result.totpRequired) {
-      totpPending.value = true
-      return
+    const result = await $fetch("/api/auth/login", {
+      method: "POST",
+      body: payload.data,
+    });
+    if ("totpRequired" in result && result.totpRequired) {
+      totpPending.value = true;
+      return;
     }
-    await useUserSession().fetch()
-    await navigateTo('/profile')
+    await useUserSession().fetch();
+    await navigateTo("/profile");
   } catch (err) {
-    error.value = (err as { data?: { message?: string } }).data?.message ?? 'Login failed'
+    const message = (err as { data?: { message?: string } }).data?.message ?? "Login failed";
+    toast.add({ title: "Login failed", description: message });
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
-// Handles submission of the TOTP or recovery code form.
-async function submitTotp() {
-  error.value = ''
-  loading.value = true
+async function onSubmitTotp(payload: FormSubmitEvent<TotpSchema>) {
+  loading.value = true;
   try {
-    const endpoint = useRecovery.value ? '/api/auth/totp/recovery' : '/api/auth/totp/verify'
-    await $fetch(endpoint, { method: 'POST', body: { code: code.value } })
-    await useUserSession().fetch()
-    await navigateTo('/profile')
+    const endpoint = useRecovery.value ? "/api/auth/totp/recovery" : "/api/auth/totp/verify";
+    await $fetch(endpoint, { method: "POST", body: { code: payload.data.code } });
+    await useUserSession().fetch();
+    await navigateTo("/profile");
   } catch (err) {
-    error.value = (err as { data?: { message?: string } }).data?.message ?? 'Invalid code'
+    const message = (err as { data?: { message?: string } }).data?.message ?? "Invalid code";
+    toast.add({ title: "Verification failed", description: message });
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 </script>
+
+<template>
+  <div class="flex flex-col items-center justify-center gap-4 p-4">
+    <UPageCard v-if="!totpPending">
+      <UAuthForm
+        :schema="schema"
+        :fields="fields"
+        :providers="providers"
+        :loading="loading"
+        title="Login"
+        icon="i-lucide-user"
+        @submit="onSubmit"
+        :ui="{ leadingIcon: 'text-white' }"
+      >
+        <template #description>
+          <p>Enter your credentials to access your account.</p>
+          <p>
+            Don't have an account?
+            <ULink to="/register" class="text-primary">Sign Up</ULink>
+          </p>
+        </template>
+      </UAuthForm>
+    </UPageCard>
+
+    <UPageCard v-else>
+      <UAuthForm
+        :schema="totpSchema"
+        :fields="totpFields"
+        :loading="loading"
+        title="Two-factor authentication"
+        icon="i-lucide-shield-check"
+        @submit="onSubmitTotp"
+      >
+        <template #description>
+          <p>{{ useRecovery ? 'Enter one of your recovery codes.' : 'Enter the 6-digit code from your authenticator app.' }}</p>
+          <p>
+            <ULink as="button" class="text-primary" @click="useRecovery = !useRecovery">
+              {{ useRecovery ? 'Use authenticator code instead' : 'Use a recovery code instead' }}
+            </ULink>
+          </p>
+        </template>
+      </UAuthForm>
+    </UPageCard>
+  </div>
+</template>

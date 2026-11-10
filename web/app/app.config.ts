@@ -4,14 +4,6 @@ export default defineAppConfig({
       primary: "blue",
       secondary: "amber",
     },
-    formField: {
-      slots: {
-        root: "flex items-start justify-between gap-2",
-      },
-      defaultVariants: {
-        orientation: "horizontal",
-      },
-    },
     card: {
       slots: {
         root: "flex flex-col w-fit rounded-2xl p-1 text-inverted",
