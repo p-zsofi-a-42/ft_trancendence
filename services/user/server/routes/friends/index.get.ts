@@ -1,4 +1,8 @@
-// Returns the list of friends and friend requests for the authenticated user
+import { and, or, eq, notExists, sql } from 'drizzle-orm'
+
+/**
+ * @Returns the list of friends and friend requests for the authenticated user
+ */
 export default defineEventHandler(async (event) => {
   const userId = await getServiceUserId(event)
   if (userId === null) {
@@ -6,24 +10,31 @@ export default defineEventHandler(async (event) => {
   }
 
   // One row per friendship involving the caller, with the other user's name
-  const { rows } = await pool.query(
-    `SELECT u.id, u.name, f.status, f.requester_id = $1 AS is_requester
-    FROM friendships f
-    JOIN users u
-      ON u.id = CASE WHEN f.requester_id = $1 THEN f.addressee_id ELSE f.requester_id END
-    WHERE $1 IN (f.requester_id, f.addressee_id)
-    AND NOT EXISTS (
-      SELECT 1 FROM blocks b
-      WHERE (b.blocker_id = $1 AND b.blocked_id = u.id)
-         OR (b.blocker_id = u.id AND b.blocked_id = $1)
+  const rows = await db
+    .select({ id: users.id, name: users.name, status: friendships.status, requesterId: friendships.requesterId })
+    .from(friendships)
+    .innerJoin(
+      users,
+      sql`${users.id} = CASE WHEN ${friendships.requesterId} = ${userId} THEN ${friendships.addresseeId} ELSE ${friendships.requesterId} END`,
     )
-    ORDER BY u.name`,
-    [userId],
-  )
+    .where(
+      and(
+        or(eq(friendships.requesterId, userId), eq(friendships.addresseeId, userId)),
+        notExists(
+          db.select({ one: sql`1` }).from(blocks).where(
+            or(
+              and(eq(blocks.blockerId, userId), eq(blocks.blockedId, users.id)),
+              and(eq(blocks.blockerId, users.id), eq(blocks.blockedId, userId)),
+            ),
+          ),
+        ),
+      ),
+    )
+    .orderBy(users.name)
 
   return rows.map((row) => ({
-    id: row.id,
+    id: String(row.id),
     name: row.name,
-    friendship: row.status === 'accepted' ? 'friends' : row.is_requester ? 'outgoing' : 'incoming',
+    friendship: row.status === 'accepted' ? 'friends' : row.requesterId === userId ? 'outgoing' : 'incoming',
   }))
 })

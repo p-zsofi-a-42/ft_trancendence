@@ -1,3 +1,4 @@
+import { and, or, eq, sql } from "drizzle-orm"
 import { redisPub, redisPubReady } from "~/utils/redis"
 
 /**
@@ -38,61 +39,80 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check membership before sending any messages
-  const conversation = await pool.query(
-    `SELECT CASE WHEN user_a_id = $2 THEN user_b_id ELSE user_a_id END AS other_id
-    FROM conversations
-    WHERE id = $1 AND (user_a_id = $2 OR user_b_id = $2)`,
-    [conversationId, ownerId]
-  )
-  if (conversation.rowCount === 0) {
+  const otherId = await getConversationPeer(Number(conversationId), ownerId)
+  if (otherId === null) {
     throw createError({ statusCode: 404, statusMessage: 'Conversation not found' })
   }
-  const otherId = conversation.rows[0].other_id
 
   // Only accepted friends can message each other
-  const friendship = await pool.query(
-    `SELECT 1 FROM friendships
-     WHERE ((requester_id = $1 AND addressee_id = $2) OR (requester_id = $2 AND addressee_id = $1))
-       AND status = 'accepted'`,
-    [ownerId, otherId]
-  )
-  if (friendship.rowCount === 0) {
+  const [friendship] = await db
+    .select({ id: friendships.id })
+    .from(friendships)
+    .where(
+      and(
+        or(
+          and(eq(friendships.requesterId, ownerId), eq(friendships.addresseeId, otherId)),
+          and(eq(friendships.requesterId, otherId), eq(friendships.addresseeId, ownerId)),
+        ),
+        eq(friendships.status, 'accepted'),
+      ),
+    )
+    .limit(1)
+  if (!friendship) {
     throw createError({ statusCode: 403, statusMessage: 'You must be friends to send messages' })
   }
   // A block in either direction stops sending
-  const blocked = await pool.query(
-    `SELECT 1 FROM blocks
-     WHERE (blocker_id = $1 AND blocked_id = $2) OR (blocker_id = $2 AND blocked_id = $1)`,
-    [ownerId, otherId]
-  )
-  if (blocked.rowCount > 0) {
+  const [blocked] = await db
+    .select({ id: blocks.blockerId })
+    .from(blocks)
+    .where(
+      or(
+        and(eq(blocks.blockerId, ownerId), eq(blocks.blockedId, otherId)),
+        and(eq(blocks.blockerId, otherId), eq(blocks.blockedId, ownerId)),
+      ),
+    )
+    .limit(1)
+  if (blocked) {
     throw createError({ statusCode: 403, statusMessage: 'Cannot send messages to this user' })
   }
 
+  const columns = {
+    id: messages.id,
+    senderId: messages.senderId,
+    body: messages.body,
+    clientId: messages.clientId,
+    createdAt: messages.createdAt,
+  }
   // A retry with the same client_id matches the partial unique index and inserts nothing
-  const inserted = await pool.query(
-    `INSERT INTO messages (conversation_id, sender_id, body, client_id)
-     VALUES ($1, $2, $3, $4)
-     ON CONFLICT (sender_id, client_id) WHERE client_id IS NOT NULL DO NOTHING
-     RETURNING id, sender_id, body, client_id, created_at`,
-    [conversationId, ownerId, text, clientId]
-  )
-  if (inserted.rows.length > 0) {
-    // appended in messages.post.ts after a successful insert
+  const [inserted] = await db
+    .insert(messages)
+    .values({ conversationId: Number(conversationId), senderId: ownerId, body: text, clientId })
+    .onConflictDoNothing({
+      target: [messages.senderId, messages.clientId],
+      where: sql`${messages.clientId} IS NOT NULL`,
+    })
+    .returning(columns)
+  if (inserted) {
+    const message = toMessageResponse(inserted)
     await redisPubReady
-    await redisPub.publish(`chat:conv:${conversationId}`, JSON.stringify({ type: 'message', message: inserted.rows[0] }))
-    return inserted.rows[0]
+    await redisPub.publish(`chat:conv:${conversationId}`, JSON.stringify({ type: 'message', message }))
+    return message
   }
   // The first send was stored already, so return it. The index is not per
   // conversation, so the same client_id in another conversation finds nothing here.
-  const existing = await pool.query(
-    `SELECT id, sender_id, body, client_id, created_at FROM messages
-     WHERE sender_id = $1 AND client_id = $2 AND conversation_id = $3`,
-    [ownerId, clientId, conversationId]
-  )
-  if (existing.rows.length === 0) {
+  const [existing] = await db
+    .select(columns)
+    .from(messages)
+    .where(
+      and(
+        eq(messages.senderId, ownerId),
+        eq(messages.clientId, clientId),
+        eq(messages.conversationId, Number(conversationId)),
+      ),
+    )
+  if (!existing) {
     throw createError({ statusCode: 409, statusMessage: 'client_id already used in another conversation' })
   }
 
-  return existing.rows[0]
+  return toMessageResponse(existing)
 })
