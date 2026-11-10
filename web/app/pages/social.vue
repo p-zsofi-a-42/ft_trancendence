@@ -1,5 +1,14 @@
 <script setup lang="ts">
 import type { FriendshipResult, SearchResult } from "#shared/types/friends";
+import type { TabsItem } from "@nuxt/ui";
+import RequestList from "~/components/social/RequestList.vue";
+import SendRequest from "~/components/social/SendRequest.vue";
+
+const { data: user, error } = await useFetch("/api/auth/profile");
+if (error.value) {
+  await navigateTo("/login");
+}
+
 const searchResults = ref<SearchResult[]>([]); // Stores the results of the user search
 const searchQuery = ref(""); // Stores the current search query entered by the user
 const loading = ref(false); // Indicates whether a search request is currently in progress
@@ -52,45 +61,48 @@ const searchUsers = async () => {
     loading.value = false;
   }
 };
+
+const socialItems: TabsItem[] = [
+  {
+    label: "Friends",
+    slot: "friends",
+  },
+  {
+    label: "Requests",
+    slot: "requests",
+  },
+  {
+    label: "Blocked",
+    slot: "blocks",
+  },
+  {
+    label: "Add a Friend",
+    slot: "add",
+  },
+];
 </script>
+
 <template>
-  <!-- Friend list -->
-  <FriendList />
-  <!-- Search for Users here-->
-  <div>
-    <form @submit.prevent="searchUsers">
-      <input
-        type="text"
-        placeholder="Search for users..."
-        v-model="searchQuery"
-        required
-      />
-      <button type="submit" :disabled="loading">Search</button>
-    </form>
-    <div v-if="searchResults.length">
-      <h2>Search Results</h2>
-      <ul>
-        <li v-for="result in searchResults" :key="result.id">
-          {{ result.name }}
-          <!-- <template v-if="result.id !== user?.id"> -->
-          <span v-if="result.friendship === 'friends'">Friends</span>
-          <span v-else-if="result.friendship === 'outgoing'">Request sent</span>
-          <span v-else-if="result.friendship === 'incoming'"
-            >Request pending</span
-          >
-          <button
-            v-else
-            :disabled="sending.has(result.id)"
-            @click="addFriend(result.id)"
-          >
-            Add friend
-          </button>
-          <!-- <button  @click="addFriend(result.id)"> -->
-          <!-- </template> -->
-          <!-- <button @click="addFriend(result.id)">Add Friend</button> -->
-        </li>
-      </ul>
-    </div>
-    <BlockedUsers />
-  </div>
+  <UContainer class="h-full py-4">
+    <UTabs
+      :items="socialItems"
+      :ui="{
+        root: 'bg-neutral-900 rounded-2xl p-4 h-full',
+        content: 'h-full text-white text-center m-2',
+      }"
+    >
+      <template #friends>
+        <Friends />
+      </template>
+      <template #requests>
+        <SocialRequestList />
+      </template>
+      <template #blocks>
+        <BlockedUsers />
+      </template>
+      <template #add>
+        <SocialSendRequest />
+      </template>
+    </UTabs>
+  </UContainer>
 </template>
