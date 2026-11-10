@@ -1,3 +1,5 @@
+import { and, eq } from 'drizzle-orm'
+
 // @brief UNBLOCKING USER
 //
 export default defineEventHandler(async (event) => {
@@ -16,10 +18,8 @@ export default defineEventHandler(async (event) => {
   }
 
   // QUERY TO REMOVE BLOCK ENTRY FROM DATABASE
-  await pool.query(
-    `DELETE FROM Blocks 
-    WHERE blocker_id = $1 AND blocked_id = $2`,
-    [userId, id]
+  await db.delete(blocks).where(
+    and(eq(blocks.blockerId, userId), eq(blocks.blockedId, Number(id))),
   )
   return { id, friendship: 'none' }
 })

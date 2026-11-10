@@ -101,3 +101,7 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
     </UPageCard>
   </div>
 </template>
+<!-- Inputs with v-model hold the email and password in refs. ref is auto-imported-->
+<!-- Submit handler, sends values to server with $fetch. The @submit.prevent stops browser from reloading the page. -->
+<!-- Loading and error state, button is disabled when loading and error message is shown if login fails -->
+<!-- redirect with navigateTo after successful login -->

@@ -1,3 +1,5 @@
+import { and, or, eq, ne, ilike, notExists, sql } from 'drizzle-orm'
+
 export default defineEventHandler(async (event) => {
   // Get the ID of the service user making the request
   const userId = await getServiceUserId(event)
@@ -22,29 +24,48 @@ export default defineEventHandler(async (event) => {
 
   // Use the simple query for now, return results matching the beginning of the search term
   // Return matching users (not yourself) with their friendship status towards you
-  const { rows } = await pool.query(
-    `SELECT u.id, u.name,
-      CASE
-        WHEN f.status = 'accepted' THEN 'friends'
-        WHEN f.requester_id = $2 THEN 'outgoing'
-        WHEN f.id IS NOT NULL THEN 'incoming'
-        ELSE 'none'
-      END AS friendship
-     FROM users u
-     LEFT JOIN friendships f
-       ON (f.requester_id = $2 AND f.addressee_id = u.id)
-       OR (f.requester_id = u.id AND f.addressee_id = $2)
-     WHERE u.name ILIKE $1 AND u.id <> $2
-      AND NOT EXISTS (
-        SELECT 1 FROM blocks b
-        WHERE (b.blocker_id = $2 AND b.blocked_id = u.id)
-           OR (b.blocker_id = u.id AND b.blocked_id = $2)
-      )
-      ORDER BY u.name
-     LIMIT 20`,
-    [`${escaped}%`, userId],
-  )
-  return rows
+  const rows = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      status: friendships.status,
+      requesterId: friendships.requesterId,
+      friendshipId: friendships.id,
+    })
+    .from(users)
+    .leftJoin(
+      friendships,
+      or(
+        and(eq(friendships.requesterId, userId), eq(friendships.addresseeId, users.id)),
+        and(eq(friendships.requesterId, users.id), eq(friendships.addresseeId, userId)),
+      ),
+    )
+    .where(
+      and(
+        ilike(users.name, `${escaped}%`),
+        ne(users.id, userId),
+        notExists(
+          db.select({ one: sql`1` }).from(blocks).where(
+            or(
+              and(eq(blocks.blockerId, userId), eq(blocks.blockedId, users.id)),
+              and(eq(blocks.blockerId, users.id), eq(blocks.blockedId, userId)),
+            ),
+          ),
+        ),
+      ),
+    )
+    .orderBy(users.name)
+    .limit(20)
+
+  return rows.map((row) => ({
+    id: String(row.id),
+    name: row.name,
+    friendship:
+      row.status === 'accepted' ? 'friends'
+      : row.requesterId === userId ? 'outgoing'
+      : row.friendshipId !== null ? 'incoming'
+      : 'none',
+  }))
 })
 // Other Queries
   // Names starting with the term sort first, then the rest alphabetically.

@@ -1,3 +1,5 @@
+import { and, eq, lt, desc } from 'drizzle-orm'
+
 /**
  * GET /chats/:id/messages
  * Returns one page of messages from a conversation the caller belongs to, newest first.
@@ -35,24 +37,26 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check membership before reading any messages
-  const membership = await pool.query(
-    `SELECT 1 FROM conversations
-     WHERE id = $1
-       AND (user_a_id = $2 OR user_b_id = $2)`,
-    [conversationId, ownerId]
-  )
-  if (membership.rowCount === 0) {
+  if (await getConversationPeer(Number(conversationId), ownerId) === null) {
     throw createError({ statusCode: 404, statusMessage: 'Conversation not found' })
   }
   // Load one page of messages
-  const messages = await pool.query(
-    `SELECT id, sender_id, body, client_id, created_at
-     FROM messages
-     WHERE conversation_id = $1
-       AND ($2::bigint IS NULL OR id < $2::bigint)
-     ORDER BY id DESC
-     LIMIT $3`,
-    [conversationId, before, limit]
-  )
-  return messages.rows
+  const rows = await db
+    .select({
+      id: messages.id,
+      senderId: messages.senderId,
+      body: messages.body,
+      clientId: messages.clientId,
+      createdAt: messages.createdAt,
+    })
+    .from(messages)
+    .where(
+      and(
+        eq(messages.conversationId, Number(conversationId)),
+        before === null ? undefined : lt(messages.id, Number(before)),
+      ),
+    )
+    .orderBy(desc(messages.id))
+    .limit(limit)
+  return rows.map(toMessageResponse)
 })

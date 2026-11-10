@@ -1,3 +1,5 @@
+import { eq } from 'drizzle-orm'
+
 export default defineEventHandler(async (event) => {
   const userId = await getServiceUserId(event)
   if (userId === null) {
@@ -5,10 +7,14 @@ export default defineEventHandler(async (event) => {
     return { message: 'Unauthorized' }
   }
 
-  const { rows } = await pool.query('SELECT id, name, email FROM users WHERE id = $1', [userId])
-  if (rows.length === 0) {
+  const [user] = await db
+    .select({ id: users.id, name: users.name, email: users.email })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1)
+  if (!user) {
     setResponseStatus(event, 401)
     return { message: 'Unauthorized' }
   }
-  return rows[0]
+  return { ...user, id: String(user.id) }
 })

@@ -1,0 +1,1 @@
+export const idStr = (n: number | null | undefined) => (n == null ? null : String(n))

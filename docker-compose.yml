@@ -5,12 +5,24 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      retries: 5
+
+  game-db:
+    container_name: game_db
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${GAME_DB_USER}
+      POSTGRES_PASSWORD: ${GAME_DB_PASSWORD}
+      POSTGRES_DB: ${GAME_DB_NAME}
+    volumes:
+      - game_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$GAME_DB_USER -d $$GAME_DB_NAME"]
       interval: 5s
       retries: 5
 
@@ -33,6 +45,7 @@ services:
     # to be recognized by Nuxt.
     environment:
       NUXT_USER_SERVICE_URL: http://user:4000
+      NUXT_GAME_SERVICE_URL: http://game:8000
       NUXT_TOKEN_SECRET: ${TOKEN_SECRET}
       NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD}
       NUXT_REDIS_URL: redis://redis:6379
@@ -51,6 +64,40 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       retries: 5
+
+  game:
+    build: ./services/game
+    image: game
+    environment:
+      DATABASE_URL: postgres://${GAME_DB_USER}:${GAME_DB_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      TOKEN_SECRET: ${TOKEN_SECRET}
+    # No ports: only the web service can reach it, on the Compose network.
+    depends_on:
+      game-db:
+        condition: service_healthy
+
+  # Dev variant of the game service with hot-reload: `docker compose --profile dev up game-dev`.
+  game-dev:
+    build:
+      target: dev
+      context: ./services/game
+    container_name: game_dev
+    image: game_dev
+    environment:
+      DATABASE_URL: postgresql://${GAME_DB_USER}:${GAME_DB_PASSWORD}@game_db:5432/${GAME_DB_NAME}
+      TOKEN_SECRET: ${TOKEN_SECRET}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./services/game:/app
+      - game_node_modules:/app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      game-db:
+        condition: service_healthy
+    profiles:
+      - dev
 
   # Dev variant of the user service with hot-reload: `docker compose --profile dev up user-dev`.
   user-dev:
@@ -87,6 +134,7 @@ services:
     image: web_dev
     environment:
       NUXT_USER_SERVICE_URL: http://user-dev:4000
+      NUXT_GAME_SERVICE_URL: http://game-dev:8000
       NUXT_TOKEN_SECRET: ${TOKEN_SECRET}
       NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD}
       NUXT_REDIS_URL: redis://redis:6379
@@ -101,6 +149,8 @@ services:
     depends_on:
       user-dev:
         condition: service_started
+      game-dev:
+        condition: service_started
       redis:
         condition: service_healthy
     profiles:
@@ -109,7 +159,11 @@ services:
 volumes:
   postgres_data:
     driver: local
+  game_data:
+    driver: local
   web_node_modules:
     driver: local
   user_node_modules:
+    driver: local
+  game_node_modules:
     driver: local
