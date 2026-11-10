@@ -1,49 +1,101 @@
-<template>
-  <div>
-    <h1>Register</h1>
-    <form @submit.prevent="register">
-        <label>
-            Name:
-            <input type="text" v-model="name" required />
-        </label>
-        <br />
-        <label>
-            Email:
-            <input type="email" v-model="email" required />
-        </label>
-        <br />
-        <label>
-            Password:
-            <input type="password" v-model="password" required />
-        </label>
-        <br />
-        <button type="submit" :disabled="loading">Register</button>
-        <p v-if="error" role="alert">{{ error }}</p>
-    </form>
-  </div>
-</template>
-
-<!-- Registration script -->
 <script setup lang="ts">
-const name = ref(''); // holds the name input
-const email = ref(''); // holds the email input
-const password = ref(''); // holds the password input
-const loading = ref(false); // indicates if the registration request is in progress
-const error = ref(''); // holds the error message if registration fails
+// @ts-ignore -- Zod is installed in web-dev
+import * as z from "zod";
+import type { FormSubmitEvent, AuthFormField } from "@nuxt/ui";
 
-async function register() {
-  error.value = '' // reset error message
-  loading.value = true // set loading state
+const toast = useToast();
+
+const fields: AuthFormField[] = [
+  {
+    name: "name",
+    type: "text",
+    label: "Username",
+    placeholder: "Enter your username",
+    required: true,
+  },
+  {
+    name: "email",
+    type: "email",
+    label: "Email",
+    placeholder: "Enter your email",
+    required: true,
+  },
+  {
+    name: "password",
+    type: "password",
+    label: "Password",
+    placeholder: "Enter your password",
+    required: true,
+  },
+];
+
+const providers = [
+  {
+    icon: "i-simple-icons-42",
+    onClick: () => {
+      toast.add({ title: "42", description: "Sign up with 42" });
+    },
+  },
+  {
+    icon: "i-simple-icons-github",
+    onClick: () => {
+      toast.add({ title: "GitHub", description: "Sign up with GitHub" });
+    },
+  },
+];
+
+const schema = z.object({
+  name: z.string().trim().min(4, "Name is required"),
+  email: z.email("Invalid email"),
+  password: z
+    .string("Password is required")
+    .min(8, "Must be at least 8 characters"),
+});
+
+type Schema = z.output<typeof schema>;
+
+const loading = ref(false);
+
+async function onSubmit(payload: FormSubmitEvent<Schema>) {
+  loading.value = true;
+
   try {
-    await $fetch('/api/auth/register', {
-      method: 'POST',
-      body: { name: name.value, email: email.value, password: password.value },
-    })
-    await navigateTo('/login') // redirect after successful registration
+    await $fetch("/api/auth/register", {
+      method: "POST",
+      body: payload.data, // Contains email and password
+    });
+    await navigateTo("/login");
   } catch (err) {
-    error.value = (err as { data?: { message?: string } }).data?.message ?? 'Registration failed' // set error message if registration fails
+    const message =
+      (err as { data?: { message?: string } }).data?.message ??
+      "Register failed";
+
+    toast.add({ title: "Register failed", description: message });
   } finally {
-    loading.value = false // reset loading state
+    loading.value = false;
   }
 }
 </script>
+
+<template>
+  <div class="flex flex-col items-center justify-center gap-4 p-4">
+    <UPageCard>
+      <UAuthForm
+        :schema="schema"
+        :fields="fields"
+        :providers="providers"
+        :loading="loading"
+        title="Sign Up"
+        icon="i-lucide-user"
+        @submit="onSubmit"
+        :ui="{
+          leadingIcon: 'text-white',
+        }"
+      >
+        <template #description>
+          <p>Enter your credentials to create your account.</p>
+        </template>
+      </UAuthForm>
+    </UPageCard>
+  </div>
+</template>
