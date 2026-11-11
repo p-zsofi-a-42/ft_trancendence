@@ -16,5 +16,6 @@ export default defineEventHandler(async (event) => {
   return {
     message: 'Login successful',
     user: { id: String(user.id), name: user.name, email: user.email },
+    totpRequired: user.totpEnabled, // BFF must call verify.post.ts before issuing a session if true
   }
 })

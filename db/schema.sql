@@ -7,8 +7,27 @@ CREATE TABLE IF NOT EXISTS users (
   name       TEXT NOT NULL,
   email      TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  totp_secret TEXT NULL,
+  totp_enabled BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+-- -----------------------------------------------------------------------------
+-- TOTP RECOVERY CODES -----------------------------------------------------------
+-- -----------------------------------------------------------------------------
+-- Backup/recovery codes for 2FA, issued in a batch when TOTP is enabled.
+-- Codes are stored as hashes (never plaintext) and are single-use.
+CREATE TABLE IF NOT EXISTS totp_recovery_codes (
+  id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  code_hash  TEXT NOT NULL,
+  used_at    TIMESTAMPTZ NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE INDEX IF NOT EXISTS totp_recovery_codes_user_idx ON totp_recovery_codes (user_id);
+-- A user can't have the same hashed code stored twice
+CREATE UNIQUE INDEX IF NOT EXISTS totp_recovery_codes_user_code_key ON totp_recovery_codes (user_id, code_hash);
 
 -- -----------------------------------------------------------------------------
 -- FRIENDSHIPS -----------------------------------------------------------------

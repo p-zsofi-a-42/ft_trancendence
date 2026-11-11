@@ -1,13 +1,23 @@
 /**
  * Database schema definitions for the user service.
  */
-import { pgTable, bigint, text, timestamp, uuid, primaryKey } from 'drizzle-orm/pg-core'
+import { pgTable, bigint, text, timestamp, uuid, boolean, primaryKey } from 'drizzle-orm/pg-core'
 
 export const users = pgTable('users', {
   id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  totpSecret: text('totp_secret'),
+  totpEnabled: boolean('totp_enabled').notNull().default(false),
+})
+
+export const totpRecoveryCodes = pgTable('totp_recovery_codes', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+  userId: bigint('user_id', { mode: 'number' }).notNull().references(() => users.id, { onDelete: 'cascade' }),
+  codeHash: text('code_hash').notNull(),
+  usedAt: timestamp('used_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
