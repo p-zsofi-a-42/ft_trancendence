@@ -4,3 +4,4 @@ import { games } from "@db/schema/games"
 
 export const db = drizzle(process.env.DATABASE_URL!);
 export { games };
+export type Game = typeof games.$inferSelect;
