@@ -18,7 +18,7 @@ const fields: AuthFormField[] = [
     type: "email",
     label: "Email",
     placeholder: "Enter your email",
-    required: true,
+    required: false,
   },
   {
     name: "password",
@@ -46,7 +46,7 @@ const providers = [
 
 const schema = z.object({
   name: z.string().trim().min(4, "Name is required"),
-  email: z.email("Invalid email"),
+  email: z.string().email("Invalid email").optional(),
   password: z
     .string("Password is required")
     .min(8, "Must be at least 8 characters"),
