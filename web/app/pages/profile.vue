@@ -19,8 +19,10 @@
       <p><strong>ID:</strong> {{ user.id }}</p>
       <p><strong>Name:</strong> {{ user.name }}</p>
       <p><strong>Email:</strong> {{ user.email }}</p>
-    </UCard>
-  </div>
+  </UCard>
+</div>
+<!-- TEMP: for manual testing of the 2FA wizard, pending a dedicated settings page -->
+<TwoFactAuth />
 </template>
 
 <script setup lang="ts">

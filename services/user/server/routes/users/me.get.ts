@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const [user] = await db
-    .select({ id: users.id, name: users.name, email: users.email })
+    .select({ id: users.id, name: users.name, email: users.email, totpEnabled: users.totpEnabled })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1)
