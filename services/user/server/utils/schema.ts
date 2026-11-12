@@ -1,17 +1,39 @@
 /**
  * Database schema definitions for the user service.
  */
-import { pgTable, bigint, text, timestamp, uuid, boolean, primaryKey } from 'drizzle-orm/pg-core'
+import { pgTable, bigint, text, timestamp, uuid, boolean, primaryKey, uniqueIndex, index } from 'drizzle-orm/pg-core'
 
 export const users = pgTable('users', {
   id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
   name: text('name').notNull().unique(),
-  email: text('email').notNull().default(''),
-  passwordHash: text('password_hash').notNull(),
+  email: text('email'),
+  passwordHash: text('password_hash'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   totpSecret: text('totp_secret'),
   totpEnabled: boolean('totp_enabled').notNull().default(false),
 })
+
+// providers table
+export const providers = pgTable('providers', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+  name: text('name').notNull().unique(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+// oauth table
+export const oauth = pgTable('oauth', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+  userId: bigint('user_id', { mode: 'number' }).notNull().references(() => users.id, { onDelete: 'cascade' }),
+  providerId: bigint('provider_id', { mode: 'number' }).notNull().references(() => providers.id, { onDelete: 'restrict' }),
+  providerUserId: text('provider_user_id').notNull(),
+  accessTokenEnc: text('access_token_enc').notNull(),
+  accessTokenExpiresAt: timestamp('access_token_expires_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  uniqueIndex('oauth_provider_user_key').on(t.providerId, t.providerUserId),
+  uniqueIndex('oauth_user_provider_key').on(t.userId, t.providerId),
+  index('oauth_user_idx').on(t.userId),
+])
 
 export const totpRecoveryCodes = pgTable('totp_recovery_codes', {
   id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
