@@ -9,9 +9,9 @@ const validParams = z.object({
 });
 
 const validInput = z.strictObject({
-	n_players: z.number().int().min(1).max(5),
-	n_rounds: z.number().int().min(1).max(40),
-	seed_capital: z.bigint().min(100_000).max(10_000_000)
+	nPlayers: z.number().int().min(1).max(5),
+	nRounds: z.number().int().min(1).max(40),
+	seedCapital: z.bigint().min(100_000).max(10_000_000)
 }).partial();
 
 // identify
@@ -33,7 +33,7 @@ export default defineHandler(async (event) => {
 			.set(body)
 			.where(and(
 				eq(games.id, routerParams.gameId),
-				eq(games.creator_id, userId)))
+				eq(games.creatorId, userId)))
 			.returning();
 		if (!row)
 			throw Error("incorrect game- or userId");

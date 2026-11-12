@@ -1,24 +1,15 @@
-import { pgTable, bigint, text, smallint, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, bigint, text, smallint, pgEnum, timestamp } from "drizzle-orm/pg-core";
 
-
-// CREATE TABLE IF NOT EXISTS games (
-//   id						BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, -- TODO: ?
-//   id_code				TEXT NOT NULL UNIQUE,
-//   n_players			SMALLINT NOT NULL CHECK (n_players BETWEEN 2 AND 5),
-//   n_rounds			SMALLINT NOT NULL,
-// 	current_round	SMALLINT NOT NULL DEFAULT 0,
-// 	seed_capital	BIGINT NOT NULL,
-// 	creator_id		BIGINT NOT NULL, -- points to a user in the users db
-//   created_at		TIMESTAMPTZ NOT NULL DEFAULT now()
-// );
+export const gameStatusEnum = pgEnum("status", ["created", "ongoing", "done"]);
 
 export const games = pgTable("games", {
-  id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
-  id_code: text().notNull().unique(),
-	n_players: smallint().notNull(),
-	n_rounds: smallint().notNull(),
-	current_round: smallint().notNull().default(0),
-	seed_capital: bigint({ mode: "number" }).notNull(),
-	creator_id: bigint({ mode: "number" }).notNull(),
-	created_at: timestamp().notNull().defaultNow(),
+  id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+  idCode: text("id_code").notNull().unique(),
+	nPlayers: smallint("n_players").notNull(),
+	nRounds: smallint("n_rounds").notNull(),
+	currentRound: smallint("current_round").notNull().default(0),
+	seedCapital: bigint("seed_capital", { mode: "number" }).notNull(),
+	creatorId: bigint("creator_id", { mode: "number" }).notNull(),
+	status: gameStatusEnum().notNull().default("created"),
+	createdAt: timestamp("created_at").notNull().defaultNow(),
 });

@@ -15,9 +15,9 @@ import { genCode } from "@utils/genGameCode";
 
 // expects body = { creator_id, n_players, n_rounds, seed_capital }
 const validInput = z.strictObject({
-	n_players: z.number().int().min(3).max(5),
-	n_rounds: z.number().int().min(1).max(40),
-	seed_capital: z.number().int().min(100_000).max(10_000_000)
+	nPlayers: z.number().int().min(3).max(5),
+	nRounds: z.number().int().min(1).max(40),
+	seedCapital: z.number().int().min(100_000).max(10_000_000)
 });
 
 export default defineHandler(async (event) => {
@@ -25,7 +25,7 @@ export default defineHandler(async (event) => {
 	const body = await readValidatedBody(event, validInput.parse);
 
 	try {
-		const newGame = await insertGame({ ...body, creator_id: userId });
+		const newGame = await insertGame({ ...body, creatorId: userId });
 		console.log(`created game(${newGame.id}): ${JSON.stringify(newGame)}`);
 		return { success: true, game: newGame };
 	} catch (error) {
@@ -44,12 +44,12 @@ export default defineHandler(async (event) => {
  * If it's not possible to create a unique code with the current length within 5 attampts, increase the length and repeat.
 **/
 async function insertGame(newGame: Omit<Game,
-	"id" | "id_code" | "current_round" | "created_at">): Promise<Game> {
+	"id" | "idCode" | "currentRound" | "createdAt">): Promise<Game> {
 	for (let length = 6; length <= 12; length++) {
 		for (let attempt = 0; attempt < 5; attempt++) {
 			const [row] = await db.insert(games)
-				.values({ ...newGame, id_code: genCode(length) })
-				.onConflictDoNothing({ target: games.id_code })
+				.values({ ...newGame, idCode: genCode(length) })
+				.onConflictDoNothing({ target: games.idCode })
 				.returning();
 			if (row) return row;
 		}
