@@ -1,0 +1,1 @@
+// Detach a provider account/link from a logged-in user

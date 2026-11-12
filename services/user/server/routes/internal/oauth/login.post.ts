@@ -1,0 +1,1 @@
+// Find or create the user from a provider identity, and return the same shape as /internal/login
