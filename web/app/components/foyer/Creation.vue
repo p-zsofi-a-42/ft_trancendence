@@ -29,7 +29,7 @@ async function submit(event: FormSubmitEvent<Foyer>) {
 	try {
 		const  response = await $fetch("/api/foyer/create", {
 			method: "POST",
-			body: {n_players: 3, n_rounds: 12, seed_capital: 100000},
+			body: {nPlayers: 3, nRounds: 12, seedCapital: 100000},
 		});
 		const code = response.id_code;
 		console.log("Game code:", code);
@@ -42,6 +42,7 @@ async function submit(event: FormSubmitEvent<Foyer>) {
 
 		emit("create", event.data);
 	} catch (error) {
+		console.log(`error: ${error.message}`)
 		toast.add({
 			title: "Failure",
 			description: "Failed to create a new Foyer.",
