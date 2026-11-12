@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS providers (
   name       TEXT NOT NULL UNIQUE,    -- e.g. 'github', lowercase
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+INSERT INTO providers (name) VALUES ('42'), ('github') ON CONFLICT (name) DO NOTHING;
 
 -- OAUTH
 -- Stores all OAuth authentication records for users
@@ -34,8 +35,11 @@ CREATE TABLE IF NOT EXISTS oauth (
   provider_user_id TEXT NOT NULL,  -- provider's stable user ID
   access_token_enc TEXT NOT NULL,  -- encrypted in the app
   access_token_expires_at TIMESTAMPTZ NULL,
+  refresh_token_enc TEXT NULL,     -- encrypted in the app; NULL if the provider issues none
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- For databases created before refresh_token_enc existed
+ALTER TABLE oauth ADD COLUMN IF NOT EXISTS refresh_token_enc TEXT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS oauth_provider_user_key ON oauth (provider_id, provider_user_id);
 CREATE UNIQUE INDEX IF NOT EXISTS oauth_user_provider_key ON oauth (user_id, provider_id);
 CREATE INDEX IF NOT EXISTS oauth_user_idx ON oauth (user_id);

@@ -28,6 +28,7 @@ export const oauth = pgTable('oauth', {
   providerUserId: text('provider_user_id').notNull(),
   accessTokenEnc: text('access_token_enc').notNull(),
   accessTokenExpiresAt: timestamp('access_token_expires_at', { withTimezone: true }),
+  refreshTokenEnc: text('refresh_token_enc'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   uniqueIndex('oauth_provider_user_key').on(t.providerId, t.providerUserId),
