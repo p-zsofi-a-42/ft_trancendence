@@ -26,21 +26,28 @@ const emit = defineEmits<{
 async function submit(event: FormSubmitEvent<Foyer>) {
   /* create a new foyer session (game session)
   */
-  const  codeResponse  = await $fetch("/api/game", {
-    method: "POST",
-    body: event.data,
-  });
-  const code = codeResponse.code;
-  console.log("Game code:", code);
-  
-  toast.add({
-    title: "Success",
-    description: "The Foyer has been created.",
-    color: "success",
-  });
+	try {
+		const  response = await $fetch("/api/foyer/create", {
+			method: "POST",
+			body: {n_players: 3, n_rounds: 12, seed_capital: 100000},
+		});
+		const code = response.id_code;
+		console.log("Game code:", code);
+		
+		toast.add({
+			title: "Success",
+			description: "The Foyer has been created.",
+			color: "success",
+		});
 
-	// const response = await $fetch('/api/game/create', { method: 'POST', body: {name: event.data.name} })
-  emit("create", event.data);
+		emit("create", event.data);
+	} catch (error) {
+		toast.add({
+			title: "Failure",
+			description: "Failed to create a new Foyer.",
+			color: "danger",
+		});
+	}
   // NAVIGATE TO GAME PAGE
   // navigateTo(`/game/${code}`);
 }

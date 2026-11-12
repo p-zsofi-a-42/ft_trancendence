@@ -16,11 +16,11 @@ const validInput = z.strictObject({
 
 // identify
 //  - the game via the route param
-//  - and the user by the header variable x-user-id
+//  - and the user by the header variable user-id
 // the request body represents all the fields that the user wants to update
 export default defineHandler(async (event) => {
 	const routerParams = await getValidatedRouterParams(event, validParams);
-	const userId = z.coerce.bigint().min(1).parse(getRequestHeader(event, "x-user-id"));
+	const userId = z.coerce.bigint().min(1).parse(getRequestHeader(event, "user-id"));
 	const body = await readValidatedBody(event, validInput.parse);
 
 	console.log(`userId: ${userId}, gameId: ${routerParams.gameId}`);
