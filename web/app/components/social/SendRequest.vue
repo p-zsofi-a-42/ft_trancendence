@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { select, selectMenu } from "#build/ui";
 import type { FriendshipResult, SearchResult } from "#shared/types/friends";
 
 const searchResults = ref<SearchResult[]>([]); // Stores the results of the user search
