@@ -49,8 +49,14 @@ services:
       NUXT_TOKEN_SECRET: ${TOKEN_SECRET}
       NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD}
       NUXT_REDIS_URL: redis://redis:6379
+      NUXT_OAUTH_42_CLIENT_ID: ${NUXT_OAUTH_42_CLIENT_ID}
+      NUXT_OAUTH_42_CLIENT_SECRET: ${NUXT_OAUTH_42_CLIENT_SECRET}
+      NUXT_OAUTH_GITHUB_CLIENT_ID: ${NUXT_OAUTH_GITHUB_CLIENT_ID}
+      NUXT_OAUTH_GITHUB_CLIENT_SECRET: ${NUXT_OAUTH_GITHUB_CLIENT_SECRET}
+      NUXT_OAUTH_REDIRECT_URI: ${NUXT_OAUTH_REDIRECT_URI}
+      NUXT_OAUTH_TOKEN_KEY: ${NUXT_OAUTH_TOKEN_KEY}
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     depends_on:
       user:
         condition: service_started
@@ -138,6 +144,12 @@ services:
       NUXT_TOKEN_SECRET: ${TOKEN_SECRET}
       NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD}
       NUXT_REDIS_URL: redis://redis:6379
+      NUXT_OAUTH_42_CLIENT_ID: ${NUXT_OAUTH_42_CLIENT_ID}
+      NUXT_OAUTH_42_CLIENT_SECRET: ${NUXT_OAUTH_42_CLIENT_SECRET}
+      NUXT_OAUTH_GITHUB_CLIENT_ID: ${NUXT_OAUTH_GITHUB_CLIENT_ID}
+      NUXT_OAUTH_GITHUB_CLIENT_SECRET: ${NUXT_OAUTH_GITHUB_CLIENT_SECRET}
+      NUXT_OAUTH_REDIRECT_URI: ${NUXT_OAUTH_REDIRECT_URI}
+      NUXT_OAUTH_TOKEN_KEY: ${NUXT_OAUTH_TOKEN_KEY}
       # Bind-mounted source has no inotify events (e.g. over NFS), so make
       # chokidar-based watchers (Nuxt's builder) poll for changes instead.
       CHOKIDAR_USEPOLLING: "true"
@@ -145,7 +157,7 @@ services:
       - ./web:/app
       - web_node_modules:/app/node_modules
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     depends_on:
       user-dev:
         condition: service_started
