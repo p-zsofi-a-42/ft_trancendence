@@ -32,7 +32,7 @@ export default defineHandler(async (event) => {
 		console.log(`Error at /api/foyer/create.post: ${error.message}`);
 		throw createError({
 			statusCode: 500,
-			statusMessage: "Game creation failed" + error.message
+			statusMessage: "Game creation failed"
 		});
 	}
 });
