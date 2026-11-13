@@ -89,19 +89,13 @@ useHead({
           <UTooltip text="Profile">
             <UButton
               class="w-fit"
-              :avatar="{
-                icon: 'i-lucide-user',
-                size: 'xl',
-                chip: { inset: true },
-              }"
               color="neutral"
               variant="foyer"
               block
               trailing-icon="i-lucide-chevron-down"
               aria-label="Profile"
-              size="md"
             >
-              {{ loggedIn ? user?.name : "" }}
+              <CustomUser :user="user" size="xl" />
             </UButton>
           </UTooltip>
         </UDropdownMenu>

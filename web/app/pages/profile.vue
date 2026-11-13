@@ -6,15 +6,7 @@
       }"
     >
       <template #header>
-        <UUser
-          :name="user.name"
-          :avatar="{
-            loading: 'lazy',
-            icon: 'i-lucide-user',
-          }"
-          chip
-          size="3xl"
-        />
+        <CustomUser :user="user" size="3xl" />
       </template>
       <p><strong>ID:</strong> {{ user.id }}</p>
       <p><strong>Name:</strong> {{ user.name }}</p>

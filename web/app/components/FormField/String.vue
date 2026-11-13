@@ -1,10 +1,11 @@
 <script setup lang="ts">
 const props = withDefaults(
   defineProps<{
-    label: string;
     name: string;
-    type?: "text" | "number" | "color";
+    label?: string;
     required?: boolean;
+    placeholder?: string;
+    orientation?: "horizontal" | "vertical";
   }>(),
   { required: false },
 );
@@ -17,6 +18,7 @@ const model = defineModel<string>({ required: true });
     :label="label"
     :name="name"
     :required="required"
+    :orientation="orientation"
     :ui="{ root: 'pb-3 items-center', error: 'hidden' }"
   >
     <template #default="{ error }">
@@ -28,7 +30,7 @@ const model = defineModel<string>({ required: true });
         :ui="{ text: 'text-error' }"
         :content="{ side: 'right' }"
       >
-        <UInput v-model="model" :type="type ?? 'text'" class="w-full" />
+        <UInput v-model="model" :placeholder="placeholder" class="w-full" />
       </UTooltip>
     </template>
   </UFormField>
