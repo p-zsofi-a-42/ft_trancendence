@@ -37,13 +37,13 @@ const socialItems: TabsItem[] = [
       }"
     >
       <template #friends>
-        <FriendList />
+        <SocialFriendList />
       </template>
       <template #requests>
         <SocialGetRequest />
       </template>
       <template #blocks>
-        <BlockedUsers />
+        <SocialBlockedList />
       </template>
       <template #add>
         <SocialSendRequest />

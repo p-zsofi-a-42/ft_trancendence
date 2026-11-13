@@ -76,30 +76,32 @@ const blockUser = async (id: string) => {
 </script>
 
 <template>
-  <div>
-    <ul>
-      <li v-for="friend in friends" :key="friend.id">
-        {{ friend.name }}
+  <UCard
+    :ui="{
+      root: 'w-full h-full text-white',
+      body: 'text-center items-start',
+    }"
+    variant="subtle"
+  >
+    <CustomUserList :list="friends">
+      <template #trailing="{ user }">
         <UButton
-          :disabled="removing.has(friend.id)"
-          @click="removeFriend(friend.id)"
+          :disabled="removing.has(user.id)"
+          @click="removeFriend(user.id)"
         >
           Remove
         </UButton>
-        <UButton
-          :disabled="blocking.has(friend.id)"
-          @click="blockUser(friend.id)"
-        >
+        <UButton :disabled="blocking.has(user.id)" @click="blockUser(user.id)">
           Block
         </UButton>
         <UButton
-          :disabled="messaging.has(friend.id)"
-          @click="messageFriend(friend.id)"
+          :disabled="messaging.has(user.id)"
+          @click="messageFriend(user.id)"
         >
           Message
         </UButton>
-      </li>
-    </ul>
+      </template>
+    </CustomUserList>
     <p v-if="!friends.length">No friends yet.</p>
-  </div>
+  </UCard>
 </template>

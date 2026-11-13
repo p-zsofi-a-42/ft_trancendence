@@ -58,46 +58,50 @@ const searchUsers = async () => {
 
 <template>
   <UContainer class="justify-center items-center">
-    <UForm @submit.prevent="searchUsers">
-      <UInput
-        placeholder="Search for users..."
-        v-model="searchQuery"
-        name="searchQuery"
-        required
-      />
-      <UButton type="submit" :disabled="loading">Search</UButton>
-    </UForm>
-    <div class="py-4" v-if="searchResults.length">
-      <h2 class="pb-4">Search Results</h2>
-      <UListbox :items="searchResults" value-key="id" class="w-full">
-        <template #item-label="{ item }">
-          <UUser
-            :name="item.name"
-            :avatar="{
-              loading: 'lazy',
-              icon: 'i-lucide-user',
-            }"
-            chip
-            size="xl"
-          />
-        </template>
-        <template #item-trailing="{ item }">
-          <UButton v-if="item.friendship === 'friends'">Friends</UButton>
-          <UButton v-else-if="item.friendship === 'outgoing'"
+    <UCard
+      :ui="{
+        root: 'w-full h-full text-white',
+        body: 'text-center items-start',
+      }"
+      variant="subtle"
+    >
+      <UForm @submit.prevent="searchUsers">
+        <UInput
+          placeholder="Search for users..."
+          v-model="searchQuery"
+          name="searchQuery"
+          required
+        />
+        <UButton type="submit" :disabled="loading">Search</UButton>
+      </UForm>
+    </UCard>
+    <UCard
+      title="Search Results"
+      :ui="{
+        root: 'w-full h-full text-white mt-4 py-4',
+        body: 'text-center items-start',
+      }"
+      variant="subtle"
+      v-if="searchResults.length"
+    >
+      <CustomUserList :list="searchResults">
+        <template #trailing="{ user }">
+          <UButton v-if="user.friendship === 'friends'">Friends</UButton>
+          <UButton v-else-if="user.friendship === 'outgoing'"
             >Request sent</UButton
           >
-          <UButton v-else-if="item.friendship === 'incoming'">
+          <UButton v-else-if="user.friendship === 'incoming'">
             Request pending
           </UButton>
           <UButton
             v-else
-            :disabled="sending.has(item.id)"
-            @click.stop="addFriend(item.id)"
+            :disabled="sending.has(user.id)"
+            @click.stop="addFriend(user.id)"
           >
             Add friend
           </UButton>
         </template>
-      </UListbox>
-    </div>
+      </CustomUserList>
+    </UCard>
   </UContainer>
 </template>

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { card, pageBody } from "#build/ui";
 import type { FriendEntry } from "#shared/types/friends";
 import type { SplitterItem } from "@nuxt/ui";
 
@@ -56,7 +55,7 @@ const declineRequest = async (id: string) => {
 
 const splitterItems: SplitterItem[] = [
   {
-    slot: "incomming",
+    slot: "incoming",
     minSize: 20,
     defaultSize: 50,
   },
@@ -69,49 +68,30 @@ const splitterItems: SplitterItem[] = [
 </script>
 
 <template>
-  <USplitter
-    :items="splitterItems"
-    :ui="{
-      root: 'w-full min-h-0 pt-4',
-      panel: 'h-full min-h-0 justify-center',
-    }"
-  >
-    <template #incomming>
+  <USplitter :items="splitterItems">
+    <template #incoming>
       <UCard
-        title="Incomming Requests"
+        title="incoming Requests"
         :ui="{
-          root: 'w-full text-white',
+          root: 'w-full h-full text-white',
           body: 'text-center items-start',
         }"
         variant="subtle"
       >
-        <ul>
-          <li
-            v-for="friend in incoming"
-            :key="friend.id"
-            class="border border-neutral-800 bg-neutral-900 rounded-xl p-2 mb-1 flex"
-          >
-            <UUser
-              :name="friend.name"
-              chip
-              :avatar="{
-                icon: 'i-lucide-user',
-              }"
-            >
-            </UUser>
+        <CustomUserList :list="incoming">
+          <template #trailing="{ user }">
             <UButton
-              :disabled="accepting.has(friend.id)"
-              @click="acceptRequest(friend.id)"
+              :disabled="accepting.has(user.id)"
+              @click="acceptRequest(user.id)"
               leading-icon="i-lucide-check"
             />
-
             <UButton
-              :disabled="declining.has(friend.id)"
-              @click="declineRequest(friend.id)"
+              :disabled="declining.has(user.id)"
+              @click="declineRequest(user.id)"
               leading-icon="i-lucide-x"
             />
-          </li>
-        </ul>
+          </template>
+        </CustomUserList>
         <p v-if="!incoming.length">No incoming requests.</p>
       </UCard>
     </template>
@@ -124,21 +104,7 @@ const splitterItems: SplitterItem[] = [
         }"
         variant="subtle"
       >
-        <ul>
-          <li
-            v-for="friend in outgoing"
-            :key="friend.id"
-            class="border border-neutral-800 bg-neutral-900 rounded-xl p-2 mb-1"
-          >
-            <UUser
-              :name="friend.name"
-              chip
-              :avatar="{
-                icon: 'i-lucide-user',
-              }"
-            />
-          </li>
-        </ul>
+        <CustomUserList :list="outgoing" />
         <p v-if="!outgoing.length">No sent requests.</p>
       </UCard>
     </template>
