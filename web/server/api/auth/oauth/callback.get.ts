@@ -95,9 +95,9 @@ export default defineEventHandler(async (event) => {
       // 409: this provider is already linked to this account, or the identity belongs to another user
       if (err.statusCode !== 409)
         throw err;
-      return sendRedirect(event, "/profile?oauth=link_conflict", 302);
+      return sendRedirect(event, `/profile?oauth=link_conflict&provider=${provider}`, 302);
     }
-    return sendRedirect(event, "/profile?oauth=linked", 302);
+    return sendRedirect(event, `/profile?oauth=linked&provider=${provider}`, 302);
   }
 
   // Not a link: login, or register on first use
