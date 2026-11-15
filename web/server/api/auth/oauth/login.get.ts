@@ -1,9 +1,10 @@
 import { randomBytes } from "node:crypto";
 
-/* TODECIDE: PKCE implementation for enhanced security */
+/* TO_DECIDE: PKCE implementation for enhanced security */
+
 // This endpoint initiates the OAuth login flow by redirecting the user to the
 // provider's authorization URL.
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
   // Get the runtime configuration for OAuth credentials and redirect URI
   const config = useRuntimeConfig(event);
 
@@ -21,7 +22,7 @@ export default defineEventHandler((event) => {
     },
   };
   // Extract the provider from the query parameters and validate it
-  const { provider } = getQuery(event);
+  const { provider, intent } = getQuery(event);
   // Validate the provider name; hasOwn ignores inherited properties like "constructor"
   if (typeof provider !== "string" || !Object.hasOwn(PROVIDERS, provider)) {
     throw createError({ statusCode: 400, statusMessage: "Unknown provider" });
@@ -30,6 +31,13 @@ export default defineEventHandler((event) => {
   if (!providerConfig) {
     throw createError({ statusCode: 400, statusMessage: "Unknown provider" });
   }
+
+  // Linking attaches a provider to the current account, so it requires an active session
+  const isLink = intent === "link";
+  if (isLink) {
+    await requireUserSession(event);
+  }
+
   // Generate a random state (unique per login attempt) to prevent CSRF attacks
   const state = randomBytes(32).toString("base64url");
   // Both cookies are read by the callback: the same attributes apply to each
@@ -42,6 +50,8 @@ export default defineEventHandler((event) => {
   };
   setCookie(event, "oauth_state", state, cookieOptions);
   setCookie(event, "oauth_provider", provider, cookieOptions);
+  setCookie(event, "oauth_intent", isLink ? "link" : "login", cookieOptions);
+  
   // Generate the authorization URL with the required query parameters
   const url = new URL(providerConfig.authorizeUrl);
   url.search = new URLSearchParams({

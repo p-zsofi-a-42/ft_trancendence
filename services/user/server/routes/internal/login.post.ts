@@ -9,7 +9,8 @@ export default defineEventHandler(async (event) => {
   }
 
   const [user] = await db.select().from(users).where(eq(users.name, username.toLowerCase())).limit(1)
-  if (!user || !(await passwordHasher.verify(user.passwordHash, password))) {
+  // OAuth-only accounts have no password; reject them here instead of hashing against null
+  if (!user || !user.passwordHash || !(await passwordHasher.verify(user.passwordHash, password))) {
     setResponseStatus(event, 401)
     return { message: 'Invalid username or password' }
   }

@@ -1,7 +1,7 @@
 /**
  * callback has to finish a login that started in login.get.ts
  * Provider redirects us with:
-    On success: https://localhost:3000/api/auth/oauth/callback?code=<one-time code>&state=<state>
+    On success: http://localhost:3000/api/auth/oauth/callback?code=<one-time code>&state=<state>
     On denial: ...callback?error=access_denied&state=<state>
 */
 import { timingSafeEqual } from "node:crypto";
@@ -12,10 +12,12 @@ export default defineEventHandler(async (event) => {
 
   const expectedState = getCookie(event, "oauth_state");
   const provider = getCookie(event, "oauth_provider");
+  const intent = getCookie(event, "oauth_intent");
   // One-time use of the state and provider cookies, clear to prevent reuse
   deleteCookie(event, "oauth_state", { path: "/api/auth/oauth" });
   deleteCookie(event, "oauth_provider", { path: "/api/auth/oauth" });
-
+  deleteCookie(event, "oauth_intent", { path: "/api/auth/oauth" });
+  
   // Handle error returned by the provider (e.g., user denied access)
   if (error) {
     throw createError({ statusCode: 400, statusMessage: `Provider returned error: ${error}` });
@@ -70,19 +72,44 @@ export default defineEventHandler(async (event) => {
 
   // Link the provider identity to a local user; the tokens are stored encrypted, never in plaintext
   const accessTokenExpiresAt = token.expires_in ? new Date(Date.now() + token.expires_in * 1000).toISOString() : null;
-  const { user, totpRequired } = await callUserService<{
+  // Prepare the payload for the internal OAuth login/register calls
+  const oauthPayload = {
+    provider,
+    providerUserId: String(profile.id),
+    accessTokenEnc: encryptToken(token.access_token),
+    refreshTokenEnc: token.refresh_token ? encryptToken(token.refresh_token) : null,
+    accessTokenExpiresAt,
+    login: profile.login,
+    email: profile.email,
+  };
+  // If the intent is to link, handle it and exit early
+  if (intent === "link") {
+    // Attach the provider to the logged-in account; the existing session stays as it is
+    const { user: current } = await requireUserSession(event);
+    await callUserService("/internal/oauth/link", {
+      userId: Number(current.id),
+      body: oauthPayload,
+    });
+    return sendRedirect(event, "/profile", 302);
+  }
+
+  // Not a link: login, or register on first use
+  type OAuthUserResult = {
     message: string;
     user: { id: string; name: string; email: string | null };
     totpRequired: boolean;
-  }>("/internal/oauth/login", {
-    body: {
-      provider,
-      providerUserId: String(profile.id),
-      accessTokenEnc: encryptToken(token.access_token),
-      refreshTokenEnc: token.refresh_token ? encryptToken(token.refresh_token) : null,
-      accessTokenExpiresAt,
-    },
-  });
+  };
+
+  let result: OAuthUserResult;
+  try {
+    result = await callUserService<OAuthUserResult>("/internal/oauth/login", { body: oauthPayload });
+  } catch (err: any) {
+    // 404 means no local account is linked yet: create one
+    if (err.statusCode !== 404)
+      throw err;
+    result = await callUserService<OAuthUserResult>("/internal/oauth/register", { body: oauthPayload });
+  }
+  const { user, totpRequired } = result;
 
   // The 2FA step lives on the login page, not in this redirect flow, so refuse instead of skipping it
   if (totpRequired) {

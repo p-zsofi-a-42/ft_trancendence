@@ -12,8 +12,18 @@ const fields: AuthFormField[] = [
 ];
 
 const providers = [
-  { icon: "i-simple-icons-42", onClick: () => toast.add({ title: "42", description: "Login with 42" }) },
-  { icon: "i-simple-icons-github", onClick: () => toast.add({ title: "GitHub", description: "Login with GitHub" }) },
+  {
+    icon: "i-simple-icons-42",
+    onClick: () => {
+      window.location.href = "/api/auth/oauth/login?provider=42";
+    },
+  },
+  {
+    icon: "i-simple-icons-github",
+    onClick: () => {
+      window.location.href = "/api/auth/oauth/login?provider=github";
+    },
+  },
 ];
 
 const schema = z.object({
