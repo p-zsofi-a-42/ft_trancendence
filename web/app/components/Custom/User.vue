@@ -1,8 +1,8 @@
-<script setup lang="ts" generic="T extends UserSummary">
+<script setup lang="ts">
 import type { UserSummary } from "~~/shared/types/friends";
 
 const props = defineProps<{
-  user: T;
+  user: UserSummary | null;
   size?:
     | "2xl"
     | "md"
@@ -19,7 +19,7 @@ const props = defineProps<{
 
 <template>
   <UUser
-    :name="user.name"
+    :name="user?.name ?? 'Guest'"
     :size="size"
     chip
     :avatar="{
