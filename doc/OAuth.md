@@ -27,7 +27,7 @@
 6. **WebApp → Provider `/token` (server-to-server)**: sends `code`, `client_id`, `client_secret`, `redirect_uri`, and the PKCE verifier. This is the only place the client secret is used.
 7. **Provider → WebApp**: `access_token`, and `id_token` if OIDC, plus `refresh_token` if requested.
 8. **WebApp → Provider `/userinfo`**: gets the stable provider user ID (`sub`), email, and name.
-9. **WebApp → user-service `oauth/login`**: no link for this `sub`, so it returns "not linked". The BFF then runs the register flow from OAuth.md.
+9. **WebApp → user-service `oauth/login`**: no link for this `sub`, so it returns 404 "not linked". The BFF then calls `oauth/register`, which creates the account (see *Register on first use*).
 
 
 ### Returning user (consent and tokens already exist)
@@ -36,6 +36,21 @@
 * **Browser path without a refresh token**: the provider may skip the consent screen and, if its own session is still active, the login screen too. The redirect comes back quickly, but steps 5–8 still run, including the client secret at `/token`.
 * **Link exists**: step 9 finds the linked user through sub and goes to the login path. No register step.
 * **Revoked access**: if the user removed the app at the provider, the refresh call returns `invalid_grant`. The BFF should fall back to the first-contact flow.
+
+
+### Register on first use
+
+If `oauth/login` returns 404, the callback calls user-service `oauth/register`. In one transaction it creates a user with no password and the `oauth` row. The username is the provider login, lowercased, with allowed characters only. A numeric suffix (`-2`, `-3`, ...) is added if the name is taken. The response has the same shape as login, so the session is set the same way.
+
+Accounts created this way have no password. Password login rejects them with 401.
+
+
+### Linking a provider to an existing account
+
+1. **Profile page**: loads the linked provider names through `GET /api/auth/oauth/accounts`, which proxies to user-service `GET /internal/oauth/accounts`. The "Link GitHub" button shows only when `github` isn't in that list.
+2. **Browser → BFF**: the button goes to `/api/auth/oauth/login?provider=github&intent=link`. Without a session, the BFF redirects to `/login`. With one, it sets the `oauth_intent=link` cookie next to the state and provider cookies.
+3. **Callback**: with `intent=link`, the BFF requires the session and calls user-service `oauth/link`. The user ID comes from the service token, never from the request body. The session is not changed.
+4. **Result**: success redirects to `/profile?oauth=linked`. A 409 redirects to `/profile?oauth=link_conflict`. A 409 means either this account already has that provider, or the identity belongs to another user. The profile page shows a toast for either parameter and then clears the query string.
 
 
 ### What each side holds
@@ -71,19 +86,18 @@
 ### Points to keep in mind
 
 - Browser only sees redirects and cookies. The client_secret, the provider's access token, and the profile fetch all stay between the BFF and the provider.
-- Unlinked accounts stop at step 6. user-service returns 404, so no session is created. The register flow doesn't exist yet.
+- Unlinked accounts are registered on first use (see *Register on first use*), so they no longer stop at step 6.
 - 2FA accounts stop at step 6 too, with 403, until the TOTP step is wired in.
 - Possible bug in step 4 with GitHub: GitHub's token endpoint can return HTTP 200 with an error body, for example for a bad or reused code. $fetch won't throw in that case, so token.access_token is undefined and encryptToken fails with a 500. Checking for token.error before step 5 would give a clear 400 instead.
 
 ### TODO & TODECIDE
 
 #### Missing features
-* `Register flow for unlinked accounts`: user-service returns 404 for a provider identity that isn't linked, and the callback doesn't create an account yet.
 * `2FA for OAuth logins`: accounts with TOTP enabled get a 403. The TOTP step has to be added to the redirect flow.
 * `Refresh and revocation`: refresh_token_enc is stored, but nothing uses it. Expired tokens, invalid_grant on refresh, and decryption are all still missing.
 * `PKCE`: still undecided. I haven't confirmed that 42 accepts PKCE parameters.
-* `User-service stubs`: accounts.get.ts, link.post.ts and unlink.post.ts are still comment-only.
-* `Error UI`: errors come back as raw JSON or 400/403 responses. There's no error page or toast on the login page.
+* `Unlink`: unlink.post.ts is still comment-only. Listing and linking providers are implemented.
+* `Error UI`: errors from the OAuth routes come back as raw JSON or 400/403 responses. Only link results have a UI so far (a toast on `/profile`).
 
 ## ASCII DIAGRAM (Flow)
 ```text

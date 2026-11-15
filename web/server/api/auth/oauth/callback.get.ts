@@ -86,11 +86,18 @@ export default defineEventHandler(async (event) => {
   if (intent === "link") {
     // Attach the provider to the logged-in account; the existing session stays as it is
     const { user: current } = await requireUserSession(event);
-    await callUserService("/internal/oauth/link", {
-      userId: Number(current.id),
-      body: oauthPayload,
-    });
-    return sendRedirect(event, "/profile", 302);
+    try {
+      await callUserService("/internal/oauth/link", {
+        userId: Number(current.id),
+        body: oauthPayload,
+      });
+    } catch (err: any) {
+      // 409: this provider is already linked to this account, or the identity belongs to another user
+      if (err.statusCode !== 409)
+        throw err;
+      return sendRedirect(event, "/profile?oauth=link_conflict", 302);
+    }
+    return sendRedirect(event, "/profile?oauth=linked", 302);
   }
 
   // Not a link: login, or register on first use

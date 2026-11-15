@@ -35,7 +35,11 @@ export default defineEventHandler(async (event) => {
   // Linking attaches a provider to the current account, so it requires an active session
   const isLink = intent === "link";
   if (isLink) {
-    await requireUserSession(event);
+    // Anonymous visitors go to the login page instead of getting a raw 401
+    const { user } = await getUserSession(event);
+    if (!user) {
+      return sendRedirect(event, "/login", 302);
+    }
   }
 
   // Generate a random state (unique per login attempt) to prevent CSRF attacks
