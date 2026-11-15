@@ -56,6 +56,24 @@ services:
         condition: service_started
       redis:
         condition: service_healthy
+  
+  web-tester:
+    container_name: 42web-tester
+    build:
+      context: ./web
+      target: tester
+    # Environment variables for the Nuxt web service. Need the 'NUXT_' prefix 
+    # to be recognized by Nuxt.
+    environment:
+      NUXT_USER_SERVICE_URL: http://user:4000
+      NUXT_TOKEN_SECRET: ${TOKEN_SECRET}
+      NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD}
+      NUXT_REDIS_URL: redis://redis:6379
+    depends_on:
+      user:
+        condition: service_started
+      redis:
+        condition: service_healthy
 
   # Redis service for pub/sub and caching
   redis:
