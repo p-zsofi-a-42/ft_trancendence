@@ -1,7 +1,3 @@
-# Nuxt CI starter
-
-A tiny Nuxt app for testing the team's GitHub PR and CI workflow.
-
 ## Requirements
 
 - Node.js 24
