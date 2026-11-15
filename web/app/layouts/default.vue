@@ -95,7 +95,8 @@ useHead({
               trailing-icon="i-lucide-chevron-down"
               aria-label="Profile"
             >
-              <CustomUser :user="user" size="xl" />
+              <CustomUser v-if="loggedIn && user" :user="user" size="xl" />
+              <span v-else>Account</span>
             </UButton>
           </UTooltip>
         </UDropdownMenu>
