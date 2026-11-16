@@ -1,20 +1,5 @@
 # OAuth implemention
 
-## Change current code
-- login -> via username and not email
-- registration -> email becomes optional
-- Database -> user TABLE -> 
-	- username -> UNIQUE
-	- email -> gets optional
-
-*Typescript* -> for password and email -> `string | null`.
-
-## Infrastructure to store OAuth
-- [] **Client Id & client secret**
-	- [] register to provider app
-	- [] lives in env-config || `secrets/`
-
-
 ## FLOW
 
 ### First contact (no prior consent, no stored tokens)
@@ -75,12 +60,6 @@ Accounts created this way have no password. Password login rejects them with 401
 3. **Send only the challenge**: the `/authorize` redirect includes `code_challenge` and `code_challenge_method=S256`. The verifier never leaves the BFF at this step.
 4. **Prove possession**: at `/token`, the BFF sends the raw `code_verifier`. The provider hashes it, compares the result with the stored challenge, and issues tokens only if they match.
 
-
----
-
-- [] db/schema.sql
-- [] utils/schema.ts (user-service)
-
 --- 
 
 ### Points to keep in mind
@@ -96,7 +75,6 @@ Accounts created this way have no password. Password login rejects them with 401
 * `2FA for OAuth logins`: accounts with TOTP enabled get a 403. The TOTP step has to be added to the redirect flow.
 * `Refresh and revocation`: refresh_token_enc is stored, but nothing uses it. Expired tokens, invalid_grant on refresh, and decryption are all still missing.
 * `PKCE`: still undecided. I haven't confirmed that 42 accepts PKCE parameters.
-* `Unlink`: unlink.post.ts is still comment-only. Listing and linking providers are implemented.
 * `Error UI`: errors from the OAuth routes come back as raw JSON or 400/403 responses. Only link results have a UI so far (a toast on `/profile`).
 
 ## ASCII DIAGRAM (Flow)
