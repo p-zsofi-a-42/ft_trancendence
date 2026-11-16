@@ -4,13 +4,47 @@
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
   id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  name       TEXT NOT NULL,
-  email      TEXT NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL,
+  name       TEXT NOT NULL UNIQUE,
+  email      TEXT NULL,
+  password_hash TEXT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   totp_secret TEXT NULL,
   totp_enabled BOOLEAN NOT NULL DEFAULT FALSE
 );
+
+-- -----------------------------------------------------------------------------
+-- OAuth2.0 TABLES -------------------------------------------------------------
+-- -----------------------------------------------------------------------------
+
+-- PROVIDERS -------------------------------------------------------------------
+-- Stores all OAuth providers that can be used for authentication 
+-- e.g., Google, Github, 42
+CREATE TABLE IF NOT EXISTS providers (
+  id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name       TEXT NOT NULL UNIQUE,    -- e.g. 'github', lowercase
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+INSERT INTO providers (name) VALUES ('42'), ('github') ON CONFLICT (name) DO NOTHING;
+
+-- OAUTH
+-- Stores all OAuth authentication records for users
+CREATE TABLE IF NOT EXISTS oauth (
+  id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  provider_id BIGINT NOT NULL REFERENCES providers(id) ON DELETE RESTRICT,
+  provider_user_id TEXT NOT NULL,  -- provider's stable user ID
+  access_token_enc TEXT NOT NULL,  -- encrypted in the app
+  access_token_expires_at TIMESTAMPTZ NULL,
+  refresh_token_enc TEXT NULL,     -- encrypted in the app; NULL if the provider issues none
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+-- For databases created before refresh_token_enc existed
+ALTER TABLE oauth ADD COLUMN IF NOT EXISTS refresh_token_enc TEXT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS oauth_provider_user_key ON oauth (provider_id, provider_user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS oauth_user_provider_key ON oauth (user_id, provider_id);
+CREATE INDEX IF NOT EXISTS oauth_user_idx ON oauth (user_id);
+
+
 
 -- -----------------------------------------------------------------------------
 -- TOTP RECOVERY CODES -----------------------------------------------------------

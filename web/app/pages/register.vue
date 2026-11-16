@@ -18,7 +18,7 @@ const fields: AuthFormField[] = [
     type: "email",
     label: "Email",
     placeholder: "Enter your email",
-    required: true,
+    required: false,
   },
   {
     name: "password",
@@ -29,24 +29,25 @@ const fields: AuthFormField[] = [
   },
 ];
 
+// OAuth providers for social login (e.g., 42, GitHub)
 const providers = [
   {
     icon: "i-simple-icons-42",
     onClick: () => {
-      toast.add({ title: "42", description: "Sign up with 42" });
+      window.location.href = "/api/auth/oauth/login?provider=42";
     },
   },
   {
     icon: "i-simple-icons-github",
     onClick: () => {
-      toast.add({ title: "GitHub", description: "Sign up with GitHub" });
+      window.location.href = "/api/auth/oauth/login?provider=github";
     },
   },
 ];
 
 const schema = z.object({
   name: z.string().trim().min(4, "Name is required"),
-  email: z.email("Invalid email"),
+  email: z.string().email("Invalid email").optional(),
   password: z
     .string("Password is required")
     .min(8, "Must be at least 8 characters"),
