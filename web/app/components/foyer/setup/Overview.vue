@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import type { SplitterItem } from "@nuxt/ui";
+import type { FormError, FormSubmitEvent, SplitterItem } from "@nuxt/ui";
 import type { Foyer } from "#shared/types/game";
-import { useClipboard } from "@vueuse/core";
-import Friends from "~/components/Friends.vue";
 
 // FETCH FRIENDS LIST
-const { data, error, refresh } = useFetch<FriendEntry[]>("/api/friends", {
+const { data } = useFetch<FriendEntry[]>("/api/friends", {
   key: "friends-list",
   default: () => [],
 });
@@ -22,21 +20,37 @@ const props = defineProps<{
   foyerCode: string;
 }>();
 
-const { copy, copied } = useClipboard();
+const toast = useToast();
 
-const name = computed({
-  get: () => foyer.value.name,
-  set: (name: string) => {
-    foyer.value = { ...foyer.value, name };
-  },
-});
+function validateFoyer(values: Partial<Foyer>): FormError[] {
+  const errors: FormError[] = [];
+  const count = values.companyCount;
 
-const companyCount = computed({
-  get: () => foyer.value.companyCount,
-  set: (companyCount: number) => {
-    foyer.value = { ...foyer.value, companyCount };
-  },
-});
+  if (!values.name?.trim()) errors.push({ name: "name", message: "Required" });
+
+  if (
+    typeof count !== "number" ||
+    !Number.isInteger(count) ||
+    count < 1 ||
+    count > 5
+  )
+    errors.push({
+      name: "companyCount",
+      message: "Choose a value from 1 to 5",
+    });
+
+  return errors;
+}
+
+function saveSettings(event: FormSubmitEvent<Foyer>) {
+  const settings = { ...event.data };
+  console.log("Overview settings ready to save:", settings);
+
+  toast.add({
+    title: "Settings saved",
+    description: "The Game settings have been saved.",
+  });
+}
 
 const overviewItems: SplitterItem[] = [
   {
@@ -55,10 +69,6 @@ const overviewItems: SplitterItem[] = [
     defaultSize: 100 / 3,
   },
 ];
-
-const emit = defineEmits<{
-  continue: [];
-}>();
 </script>
 
 <template>
@@ -70,52 +80,81 @@ const emit = defineEmits<{
     }"
   >
     <template #settings>
-      <UCard title="Game Settings" variant="foyer">
-        <div class="inline-grid grid-rows-3">
-          <UFormField label="Code" name="foyerCode">
-            <UInput
-              :model-value="props.foyerCode"
-              :ui="{ root: 'w-full', trailing: 'pr-0.5' }"
-              readonly
-            >
-              <template #trailing>
-                <UTooltip text="Copy to clipboard" :content="{ side: 'right' }">
-                  <UButton
-                    :color="copied ? 'success' : 'neutral'"
-                    variant="link"
-                    size="sm"
-                    :icon="copied ? 'i-lucide-copy-check' : 'i-lucide-copy'"
-                    aria-label="Copy to clipboard"
-                    @click="copy(props.foyerCode)"
-                  />
-                </UTooltip>
-              </template>
-            </UInput>
-          </UFormField>
-          <FormFieldString v-model="name" label="Name" name="name" />
+      <UCard
+        title="Game Settings"
+        variant="foyer"
+        :ui="{
+          header: 'border-b-2 border-neutral-600',
+          body: 'flex flex-col gap-2',
+        }"
+      >
+        <UFormField label="Code">
+          <CustomCopyField :text="foyerCode" label="Code" />
+        </UFormField>
+        <UForm
+          id="foyer-settings-form"
+          :state="foyer"
+          :validate="validateFoyer"
+          @submit="saveSettings"
+        >
+          <FormFieldString
+            v-model="foyer.name"
+            label="City Name"
+            name="name"
+            placeholder="Baguette City"
+            required
+          />
 
           <FormFieldNumber
-            v-model="companyCount"
+            v-model="foyer.companyCount"
             label="Number of companies"
             name="companyCount"
+            slider
+            :min="1"
+            :max="5"
+            required
           />
-        </div>
+        </UForm>
+        <template #footer>
+          <div class="flex justify-center">
+            <UButton
+              form="foyer-settings-form"
+              type="submit"
+              size="lg"
+              variant="foyer"
+              class="text-white"
+            >
+              Save
+            </UButton>
+          </div>
+        </template>
       </UCard>
     </template>
+
     <template #players>
-      <UCard title="Players" variant="foyer">
-        <CustomUserList :list="players"> </CustomUserList>
+      <UCard
+        title="Players"
+        variant="foyer"
+        :ui="{ body: 'text-center', header: 'border-b-2 border-neutral-600' }"
+      >
+        <CustomUserList :list="players" />
+        <p v-if="!players.length">No Players</p>
       </UCard>
     </template>
+
     <template #invite>
-      <UCard title="Friends" variant="foyer">
+      <UCard
+        title="Friends"
+        variant="foyer"
+        :ui="{ body: 'text-center', header: 'border-b-2 border-neutral-600' }"
+      >
         <CustomUserList :list="friends">
           <template #trailing>
             <UButton> Invite </UButton>
           </template>
         </CustomUserList>
+        <p v-if="!friends.length">No Friends :(</p>
       </UCard>
     </template>
   </USplitter>
-  <!-- <FriendList/> -->
 </template>
