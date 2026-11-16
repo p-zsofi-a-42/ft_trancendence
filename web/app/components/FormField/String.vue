@@ -6,6 +6,7 @@ const props = withDefaults(
     required?: boolean;
     placeholder?: string;
     orientation?: "horizontal" | "vertical";
+    inputUi?: Record<string, string>;
   }>(),
   { required: false },
 );
@@ -30,7 +31,16 @@ const model = defineModel<string>({ required: true });
         :ui="{ text: 'text-error' }"
         :content="{ side: 'right' }"
       >
-        <UInput v-model="model" :placeholder="placeholder" class="w-full" />
+        <UInput
+          v-model="model"
+          :placeholder="placeholder"
+          class="w-full"
+          :ui="inputUi"
+        >
+          <template #trailing>
+            <slot name="input-trailing" />
+          </template>
+        </UInput>
       </UTooltip>
     </template>
   </UFormField>
