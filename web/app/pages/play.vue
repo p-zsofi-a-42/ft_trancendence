@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Form, FormError, FormSubmitEvent } from "@nuxt/ui";
+import { capitalize } from "vue";
 
 const toast = useToast();
 
@@ -71,6 +72,7 @@ async function join(event: FormSubmitEvent<typeof codeState>) {
         placeholder="ABC123"
         :input-ui="{ trailing: 'pe-0' }"
         size="xl"
+        error-side="bottom"
         required
       >
         <template #input-trailing>
