@@ -5,7 +5,7 @@ const { loggedIn, user } = useUserSession();
 
 const navItems: NavigationMenuItem[] = [
   { label: "Home", to: "/" },
-  { label: "Play", to: "/foyer" },
+  { label: "Play", to: "/play" },
   { label: "Social", to: "/social" },
 ];
 
