@@ -22,16 +22,6 @@ const foyerCode = ref("ABC123");
 </script>
 
 <template>
-  <FoyerCreation v-if="state === 'creation'" @create="createFoyer" />
+  <FoyerCreation />
 
-  <FoyerSetup
-    v-else-if="state === 'setup'"
-    v-model:foyer="foyer"
-    :foyer-code="foyerCode"
-    @start="startGame"
-  />
-
-  <section v-else>
-    <h2>Game started</h2>
-  </section>
 </template>

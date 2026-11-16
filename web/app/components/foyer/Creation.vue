@@ -31,7 +31,8 @@ async function submit(event: FormSubmitEvent<Foyer>) {
 			method: "POST",
 			body: {nPlayers: 3, nRounds: 12, seedCapital: 100000},
 		});
-		const code = response.id_code;
+		const game = response.game;
+		const code = game.idCode;
 		console.log("Game code:", code);
 		
 		toast.add({
@@ -41,6 +42,9 @@ async function submit(event: FormSubmitEvent<Foyer>) {
 		});
 
 		emit("create", event.data);
+		console.log(`foyer: ${JSON.stringify(event.data)}`)
+		// NAVIGATE TO GAME PAGE
+		navigateTo(`/foyer/${code}`);
 	} catch (error) {
 		console.log(`error: ${error.message}`)
 		toast.add({
@@ -49,8 +53,6 @@ async function submit(event: FormSubmitEvent<Foyer>) {
 			color: "danger",
 		});
 	}
-  // NAVIGATE TO GAME PAGE
-  // navigateTo(`/game/${code}`);
 }
 </script>
 

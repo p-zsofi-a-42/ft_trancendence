@@ -70,6 +70,7 @@ services:
     image: game
     environment:
       DATABASE_URL: postgres://${GAME_DB_USER}:${GAME_DB_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379
       TOKEN_SECRET: ${TOKEN_SECRET}
     # No ports: only the web service can reach it, on the Compose network.
     depends_on:
@@ -85,6 +86,7 @@ services:
     image: game_dev
     environment:
       DATABASE_URL: postgresql://${GAME_DB_USER}:${GAME_DB_PASSWORD}@game_db:5432/${GAME_DB_NAME}
+      REDIS_URL: redis://redis:6379
       TOKEN_SECRET: ${TOKEN_SECRET}
     ports:
       - "8000:8000"
