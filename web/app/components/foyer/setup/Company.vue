@@ -18,7 +18,7 @@ function validate(state: Partial<Company>): FormError[] {
 
 const companyViewItems: SplitterItem[] = [
   {
-    slot: "preview",
+    slot: "company-list",
     minSize: 30,
     defaultSize: 50,
   },
@@ -46,8 +46,8 @@ async function submit(event: FormSubmitEvent<Company>) {
       panel: 'h-full min-h-0 p-0 justify-center',
     }"
   >
-    <template #preview>
-      <UCard title="Preview" variant="foyer" />
+    <template #company-list>
+      <UCard title="List of Companies" variant="foyer"> </UCard>
     </template>
     <template #config>
       <UCard title="Company Config" variant="foyer">
