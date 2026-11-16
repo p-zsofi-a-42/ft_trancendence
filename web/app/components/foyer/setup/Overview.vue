@@ -4,6 +4,18 @@ import type { Foyer } from "#shared/types/game";
 import { useClipboard } from "@vueuse/core";
 import Friends from "~/components/Friends.vue";
 
+// FETCH FRIENDS LIST
+const { data, error, refresh } = useFetch<FriendEntry[]>("/api/friends", {
+  key: "friends-list",
+  default: () => [],
+});
+
+const friends = computed(() =>
+  (data.value ?? []).filter((f) => f.friendship === "friends"),
+); // Friends list
+
+const players: UserSummary[] = [];
+
 const foyer = defineModel<Foyer>("foyer", { required: true });
 
 const props = defineProps<{
@@ -91,11 +103,18 @@ const emit = defineEmits<{
       </UCard>
     </template>
     <template #players>
-      <Friends />
-      <!-- <UListbox :items="[Friends]" class="w-full" /> -->
+      <UCard title="Players" variant="foyer">
+        <CustomUserList :list="players"> </CustomUserList>
+      </UCard>
     </template>
     <template #invite>
-      <UListbox :items="[]" class="w-full" />
+      <UCard title="Friends" variant="foyer">
+        <CustomUserList :list="friends">
+          <template #trailing>
+            <UButton> Invite </UButton>
+          </template>
+        </CustomUserList>
+      </UCard>
     </template>
   </USplitter>
   <!-- <FriendList/> -->

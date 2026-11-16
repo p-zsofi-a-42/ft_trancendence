@@ -4,8 +4,12 @@ const props = withDefaults(
     label: string;
     name: string;
     required?: boolean;
+    slider?: boolean;
+    min?: number;
+    max?: number;
+    default?: number;
   }>(),
-  { required: false },
+  { required: false, slider: false, min: 0, max: 50, default: 3 },
 );
 
 const model = defineModel<number>({ required: true });
@@ -31,6 +35,19 @@ watch(draft, (value) => {
     :name="props.name"
     :required="props.required"
   >
-    <UInput v-model="draft" type="number" step="1" class="w-full" />
+    <div v-if="slider">
+      <USlider
+        v-model="model"
+        :default-value="default"
+        :step="1"
+        :min="min"
+        :max="max"
+      />
+      <div class="flex justify-between text-sm text-muted select-none mt-1.5">
+        <span v-for="n in max - min + 1">{{ n + min - 1 }}</span>
+      </div>
+    </div>
+
+    <UInput v-else v-model="draft" type="number" step="1" class="w-full" />
   </UFormField>
 </template>
