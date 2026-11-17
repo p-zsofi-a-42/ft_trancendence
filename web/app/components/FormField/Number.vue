@@ -42,8 +42,11 @@ watch(draft, (value) => {
         :step="1"
         :min="min"
         :max="max"
+        class="mt-3"
       />
-      <div class="flex justify-between text-sm text-muted select-none mt-1.5">
+      <div
+        class="flex justify-between text-sm text-muted select-none mt-1.5 mx-1.25"
+      >
         <span v-for="n in max - min + 1">{{ n + min - 1 }}</span>
       </div>
     </div>

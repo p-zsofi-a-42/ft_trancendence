@@ -21,7 +21,7 @@ const model = defineModel<string>({ required: true });
     :name="name"
     :required="required"
     :orientation="orientation"
-    :ui="{ root: 'pb-3 items-center', error: 'hidden' }"
+    :ui="{ root: 'items-center', error: 'hidden' }"
   >
     <template #default="{ error }">
       <UTooltip
