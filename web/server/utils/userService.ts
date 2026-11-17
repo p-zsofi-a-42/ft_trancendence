@@ -40,13 +40,15 @@ export async function callUserService<T>(
   }
 }
 
+// TODO: set user-id header
 export async function callGameService<T>(
   path: string,
   options: { method?: 'GET' | 'POST'; body?: unknown; gameId?: number } = {},
 ): Promise<T> {
   const headers: Record<string, string> = {}
   if (options.userId !== undefined) {
-    headers.authorization = `Bearer ${await signServiceToken(options.userId)}`
+		headers["user-id"] = options.userId;
+    // headers.authorization = `Bearer ${await signServiceToken(options.userId)}`
   }
   try {
     return await $fetch<T>(`${useRuntimeConfig().gameServiceUrl}${path}`, {

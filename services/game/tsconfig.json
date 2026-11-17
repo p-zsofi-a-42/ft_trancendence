@@ -1,3 +1,16 @@
 {
-  "extends": "nitro/tsconfig"
+	"extends": "nitro/tsconfig",
+	"compilerOptions": {
+		"paths": {
+			"@db/*": [
+				"/app/db/*"
+			],
+			"@core/*": [
+				"/app/core/*"
+			],
+			"@utils/*": [
+				"/app/utils/*"
+			]
+		}
+	}
 }

@@ -60,7 +60,9 @@ export default defineWebSocketHandler({
     await removePeerFromSession(sessionId, peer)
   },
   async open(peer) {
+		
     const { sessionId } = peer.context as { sessionId: string }
+		console.log(`sessionId: ${JSON.stringify(peer.context)}`);
     await addPeerToSession(sessionId, peer)
   }
 })

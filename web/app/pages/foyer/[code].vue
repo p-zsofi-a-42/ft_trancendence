@@ -1,15 +1,63 @@
+<template>
+  <div class="max-w-md mx-auto mt-16 p-6">
+    <h1 class="text-2xl font-bold mb-2">Join Game</h1>
+    <p class="text-sm text-gray-500 mb-6">
+      Game Code: <span class="font-mono font-semibold text-black">{{ gameCode }}</span>
+    </p>
+
+    <form @submit.prevent="handleSubmit" class="space-y-4">
+      <div>
+        <label for="companyName" class="block text-sm font-medium mb-1">
+          Company Name
+        </label>
+        <input
+          id="companyName"
+          v-model="companyName"
+          type="text"
+          required
+          placeholder="Enter your company name"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-black"
+        />
+      </div>
+
+      <p v-if="errorMessage" class="text-red-600 text-sm">
+        {{ errorMessage }}
+      </p>
+      <ul>
+        <li v-for="company in companies" :key="company.id">
+					<p>{{ company }}</p>
+        </li>
+      </ul>
+
+
+      <button
+        type="submit"
+        :disabled="isLoading"
+        class="w-full py-2 px-4 bg-black text-white rounded-md hover:opacity-80 disabled:opacity-50 transition-opacity"
+      >
+        {{ isLoading ? 'Joining...' : 'Join Game' }}
+      </button>
+    </form>
+  </div>
+</template>
+
 <script setup lang="ts">
+import { ref } from 'vue'
 
 const route = useRoute()
-const gameCode = computed(() => route.params.code)
+const router = useRouter()
 
-const { loggedIn, user } = useUserSession()
-if (!loggedIn.value) {
-  navigateTo('/login')
-}
+// Den dynamischen Parameter [code] aus der URL auslesen
+const gameCode = route.params.code
 
-///////////////////////////////////////
-// WEBSOCKET LOGIC ////////////////////
+const companyName = ref('')
+const isLoading = ref(false)
+const errorMessage = ref(null)
+
+const toast = useToast();
+let companies = ref(await $fetch(`/api/foyer/${gameCode}/companies`, { method: "GET" }));
+
+
 let socket: WebSocket | null = null
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 let closedByUs = false
@@ -17,7 +65,7 @@ let closedByUs = false
 async function connectWebSocket() {
   // Fresh Ticket on every connection attempt
   const ticket = await $fetch<{ ticket: string }>(
-    `/api/game/${gameCode.value}/ws-ticket`,
+    `/api/foyer/${gameCode}/ws-ticket`,
     { method: 'POST' }
   )
   console.log('Obtained WebSocket ticket:', ticket.ticket)
@@ -28,9 +76,9 @@ async function connectWebSocket() {
   // Handle incoming events from the Websocket
   socket.onmessage = (event) => {
     const payloadEvent = JSON.parse(event.data)
-    if (payloadEvent.type !== 'join') // possible other event types?
-      return
-    console.log('Event received:', payloadEvent.type)
+		console.log(`Event received: ${JSON.stringify(payloadEvent)}`);
+		if (payloadEvent.type == "joined")
+			companies.value.push(payloadEvent.company);
   }
 
   // Handle WebSocket close event
@@ -48,9 +96,30 @@ onBeforeUnmount(() => {
   if (reconnectTimer) clearTimeout(reconnectTimer)
   socket?.close()
 })
+
+const handleSubmit = async () => {
+  isLoading.value = true
+  errorMessage.value = null
+
+  try {
+    // Beispiel-Request an deinen Backend-Endpunkt
+    const response = await $fetch("/api/company/create", {
+      method: 'POST',
+      body: {
+        name: companyName.value,
+				gameCode: gameCode
+      }
+    })
+    console.log('Successfully joined:', response)
+  } catch (error) {
+		console.log(`error: ${error.message}`)
+		toast.add({
+			title: "Failure",
+			description: error.statusMessage,
+			color: "danger",
+		});
+  } finally {
+    isLoading.value = false
+  }
+}
 </script>
-
-<template>
-<h1>Foyer - {{ gameCode }}</h1>
-
-</template>

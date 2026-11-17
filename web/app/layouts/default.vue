@@ -8,7 +8,7 @@ watch(loggedIn, (isLoggedIn) => (isLoggedIn ? presence.start() : presence.stop()
 
 const navItems: NavigationMenuItem[] = [
   { label: "Home", to: "/" },
-  { label: "Play", to: "/foyer" },
+  { label: "Play", to: "/play" },
   { label: "Social", to: "/social" },
 ];
 
