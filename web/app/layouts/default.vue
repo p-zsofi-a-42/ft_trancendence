@@ -2,6 +2,9 @@
 import type { DropdownMenuItem, NavigationMenuItem } from "@nuxt/ui";
 
 const { loggedIn, user } = useUserSession();
+// Initialize presence tracking based on user login state
+const presence = usePresence();
+watch(loggedIn, (isLoggedIn) => (isLoggedIn ? presence.start() : presence.stop()), { immediate: true });
 
 const navItems: NavigationMenuItem[] = [
   { label: "Home", to: "/" },
