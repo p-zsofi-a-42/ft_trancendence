@@ -7,7 +7,7 @@ const props = defineProps<{
 </script>
 
 <template>
-  <ul>
+  <ul class="flex-1 min-h-0 overflow-y-auto">
     <li
       v-for="user in list"
       :key="user.id"
