@@ -23,14 +23,12 @@
       <p v-if="errorMessage" class="text-red-600 text-sm">
         {{ errorMessage }}
       </p>
-			<div v-if="!message" class="text-gray-400 text-sm animate-pulse">
-				Warte auf Echtzeit-Daten via WebSocket...
-			</div>
+      <ul>
+        <li v-for="company in companies" :key="company.id">
+					<p>{{ company }}</p>
+        </li>
+      </ul>
 
-			<!-- Sobald Daten da sind, werden sie automatisch angezeigt -->
-			<div v-else class="space-y-2">
-				<p>Spielname: <span class="font-bold">{{ message.msg }}</span></p>
-			</div>
 
       <button
         type="submit"
@@ -40,15 +38,6 @@
         {{ isLoading ? 'Joining...' : 'Join Game' }}
       </button>
     </form>
-		<form @submit.prevent="testWS">
-      <button
-        type="submit"
-        :disabled="isLoading"
-        class="w-full py-2 px-4 bg-black text-white rounded-md hover:opacity-80 disabled:opacity-50 transition-opacity"
-      >
-				testing
-      </button>
-		</form>
   </div>
 </template>
 
@@ -66,7 +55,8 @@ const isLoading = ref(false)
 const errorMessage = ref(null)
 
 const toast = useToast();
-let message = ref(null);
+let companies = ref(await $fetch(`/api/foyer/${gameCode}/companies`, { method: "GET" }));
+
 
 let socket: WebSocket | null = null
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null
@@ -86,8 +76,9 @@ async function connectWebSocket() {
   // Handle incoming events from the Websocket
   socket.onmessage = (event) => {
     const payloadEvent = JSON.parse(event.data)
-		message.value = payloadEvent;
-    console.log('Event received:', payloadEvent.type)
+		console.log(`Event received: ${JSON.stringify(payloadEvent)}`);
+		if (payloadEvent.type == "joined")
+			companies.value.push(payloadEvent.company);
   }
 
   // Handle WebSocket close event
@@ -106,27 +97,6 @@ onBeforeUnmount(() => {
   socket?.close()
 })
 
-const testWS = async () => {
-	try {
-		// Beispiel-Request an deinen Backend-Endpunkt
-		const response = await $fetch("/api/company/test", {
-			method: 'POST',
-			body: {gameCode: gameCode}
-		})
-
-		// Bei Erfolg weiterleiten (z. B. ins eigentliche Spiel oder Dashboard)
-		// router.push(`/game/${gameCode}`)
-		console.log('Successfully joined:', response)
-  } catch (error) {
-		console.log(`error: ${error.message}`)
-		toast.add({
-			title: "Failure",
-			description: "Failed to create a new Foyer.",
-			color: "danger",
-		});
-  } 
-}
-
 const handleSubmit = async () => {
   isLoading.value = true
   errorMessage.value = null
@@ -140,16 +110,12 @@ const handleSubmit = async () => {
 				gameCode: gameCode
       }
     })
-
-		socket.
-    // Bei Erfolg weiterleiten (z. B. ins eigentliche Spiel oder Dashboard)
-    // router.push(`/game/${gameCode}`)
     console.log('Successfully joined:', response)
   } catch (error) {
 		console.log(`error: ${error.message}`)
 		toast.add({
 			title: "Failure",
-			description: "Failed to create a new Foyer.",
+			description: error.message,
 			color: "danger",
 		});
   } finally {
