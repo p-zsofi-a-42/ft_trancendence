@@ -1,61 +1,168 @@
-# How the feature works
-**Presence state, per user**: a Redis sorted set `presence:user:<id>:conns`. Each member is one open browser socket (a `connId`, a UUID). Its score is the time of its last ping. A user is online when at least one member is fresh.
+# Online presence for friends
 
-**Transitions go through one Lua script**. Each action (`connect`, `ping`, `disconnect`, `prune`) runs atomically:
+Logged-in users see a green dot next to each **accepted friend** who is currently online. Only friends are ever sent, so the dot never reveals the status of other users.
 
-1. Remove members older than `now - 90s`.
-2. Record whether the set was non-empty.
-3. Apply the change.
-4.  Publish `online` or `offline` on `presence:user:<id>` only if the online state changed.
+## Overview
 
-Time comes from Redis `TIME`, so all web instances share one clock.
+- **Per-user presence in Redis:** each user has a sorted set of open browser connections. The user is online while at least one connection is fresh.
+- **Atomic transitions:** a Lua script decides when a user goes online or offline, and publishes only real changes.
+- **Push plus snapshots:** friends' changes are pushed over pub/sub. Each connection also gets a full snapshot on open and every 60 s, so stale state is corrected.
+- **Friend changes are applied immediately:** accepting, removing, or blocking a friend updates the affected sockets right away.
 
-**Lifecycle**:
+## How it works
 
-* **Connect**: the client opens `/ws/presence` with a 15 s ticket. The server subscribes to each accepted friend's channel first, then buffers incoming messages, runs connect, sends the snapshot, and flushes the buffer.
-* **Heartbeat**: every 30 s the client sends `ping`, which refreshes its score. If the set had expired while the socket stayed open, `ping` republishes `online`.
-* **Disconnect**: a normal close runs `disconnect` (`ZREM`). Friends see `offline` right away if it was the last socket.
-* **Crash or dead network**: no `disconnect` runs. The entry expires after 90 s. Each web instance that watches a friend runs `prune` every 30 s, which publishes `offline` for that expiry.
+### Redis keys and channels
 
-**TTL**: the 90 s window is the real expiry. Sorted-set members can't expire one by one, so the script trims them by score. The Redis key `PEXPIRE` is 180 s (2× the window). It's only cleanup for idle keys and never removes a live connection. Why 90 s: background tabs can be throttled to about one timer tick per minute, so a 30 s ping with a 90 s window keeps them online.
+| Name | Type | Purpose |
+|------|------|---------|
+| `presence:user:<id>:conns` | sorted set | One member per open socket (`connId`), scored by the time of its last ping |
+| `presence:user:<id>` | pub/sub channel | `{"online":true}` or `{"online":false}` when the user's state changes |
+| `friends:changed:<id>` | pub/sub channel | Sent by the user service when user `<id>`'s friend list changes |
 
-**Snapshots**: pub/sub only carries changes, so a new socket needs the current state. One read-only script runs `ZCOUNT key (now-90000) +inf` for each friend and returns the online IDs, e.g. `{"type":"snapshot","online":["12","15"]}`. The client replaces its whole online set on each snapshot, which corrects stale state. The client also requests one every 60 s. The ordering matters: subscribe, then buffer, then `connect`, then snapshot, then flush. Otherwise an `offline` that arrives between the snapshot read and the send would be overwritten by the stale snapshot. Messages carry the full state, so replaying one is harmless.
+The key and channel names are built in [presence.ts](../web/server/utils/presence.ts).
 
-## Files to change
-* New `web/server/utils/presence.ts` (timings, Lua scripts), `web/server/routes/ws/presence.ts`, and `POST /api/presence/ws-ticket`, modeled on `chat.ts` and `chats/[id]/ws-ticket.post.ts`.
-* `wsTicket.ts`: add the presence scope.
-* User service: publish `friends:changed` from the friend and block routes, e.g. *`accept.post.ts`*.
-* Client: a `usePresence` composable, started from *`default.vue`* when logged in, and a dot in *`FriendList.vue`*.
-* Docs: doc/ws-presence.md still has the old 25/60/120 s values. It's your untracked file, so I'd update it only with your OK. Also tick Online in TODO.md.
----
+### Lua scripts
 
-## TTL (Time To Live)
+Both scripts live in [presence.ts](../web/server/utils/presence.ts):
 
-Design has three timing values, each does a different job:
+- **Write script** (`connect`, `ping`, `disconnect`, `prune`). Each call:
+  1. Reads `TIME` from Redis, so all web instances share one clock.
+  2. Counts the set before pruning, and removes members older than 90 s.
+  3. Applies the action.
+  4. Publishes `online` only if the set went from empty to non-empty, and `offline` only if it went from non-empty to empty.
+- **Snapshot script** (read-only, `EVAL_RO`). For each friend key, it runs `ZCOUNT` on the fresh window and returns the positions of the friends that have at least one fresh connection.
 
-| Value | Where it applies | Purpose |
-|-------|------------------|---------|
-| 25 s | Client ping interval | How often a tab says it's still alive |
-| 60 s | Liveness window | A connection with no ping in the last 60 s counts as gone |
-| 120 s | PEXPIRE on the Redis key | Cleans up an idle key. Not a presence rule |
+### Connection lifecycle
 
-* **The 60 s window is the real TTL**. Redis can't expire individual members of a sorted set, so the Lua script removes entries whose score is older than `now - 60000`. That's why the window is passed as an argument instead of set as a key TTL
-* **The 120 s key expiry is only a safety net**. It stops a user who has been offline for a long time from leaving a key in Redis. It must be longer than the window so it never deletes a live connection. Each script call refreshes it
-* **Why 60 s with a 25 s ping**: a tab can miss about two pings before it's marked offline.
+1. **Ticket:** the client calls `POST /api/presence/ws-ticket` ([ws-ticket.post.ts](../web/server/api/presence/ws-ticket.post.ts)). The ticket is a JWT with scope `presence` that expires after 15 s ([wsTicket.ts](../web/server/utils/wsTicket.ts)).
+2. **Open:** the socket connects to `/ws/presence`. The server runs the steps below in this order:
+   1. Start buffering messages for this socket.
+   2. Fetch the friend list from the user service ([userService.ts](../web/server/utils/userService.ts)), and keep only accepted friends.
+   3. Subscribe to each friend's channel. Subscriptions are shared per web instance, so each friend has one subscription regardless of how many sockets watch them.
+   4. Run `connect`.
+   5. Read the snapshot and send it.
+   6. Send the buffered messages, then pass live messages through.
+3. **Heartbeat:** the client sends `{"type":"ping"}` every 30 s. The server runs `ping`, which refreshes the connection's score.
+4. **Refresh:** the client sends `{"type":"snapshot"}` every 60 s. The server runs the same steps as on open.
+5. **Close:** the server runs `disconnect`, then releases the friend subscriptions and the `friends:changed` subscription.
+6. **Crash or dead network:** no `disconnect` runs. The connection expires after 90 s. Each web instance that watches a friend runs `prune` every 30 s, which publishes `offline` once the last connection expires.
 
-**Problem with current numbers: browse throttle timers in background tabs. Chrome can delay them once a min after tab has been hidden.
-**Better pair** is **30s ping with a 90s window**
+### Friend changes
 
-## Snapshots
-Pub/sub only sends changes. User opens page, client doesn't know current status of its friends, so *SERVER* sends **snapshot**: one message with the full online state of the user's friends.
+The user service publishes to `friends:changed:<id>` for both users involved, after the database change succeeds. The helper is `publishFriendsChanged` in [redis.ts](../services/user/server/utils/redis.ts). It is called from:
 
-How it works:
+- [accept.post.ts](../services/user/server/routes/friends/accept.post.ts)
+- [remove.post.ts](../services/user/server/routes/friends/remove.post.ts)
+- [block.post.ts](../services/user/server/routes/blocks/block.post.ts)
 
-1. The client opens `/ws/presence`.
-2. On open, the server subscribes to each friend's channel
-3. The server gets the friend IDs from the user service, keeping only accepted friends.
-4. The server runs one read-only Lua script that calls TIME and then `ZCOUNT key (now-60000) +inf` for each friend. This reads the same clock as the writes. Stale members are ignored without being deleted
-5. The server sends {"type":"snapshot","online":["12","15"]}
-6. The client **replaces** its whole online set with that array. Replacing, not merging, is what corrects any stale state
-7. After that, `presence` messages update one friend at a time.
+On that event, the web service re-runs the snapshot steps for each open socket of that user. This re-reads the friend list and updates the friend subscriptions, so removed friends stop sending updates.
 
+**Why only these three routes:** the presence set only contains accepted friends. Adding and declining a request only touch pending requests, and unblocking doesn't restore a friendship. Publishing from those routes would cost a Redis message without changing anything.
+
+### Client
+
+- [usePresence.ts](../web/app/composables/usePresence.ts) owns the socket. It replaces its online list on each snapshot, applies `presence` messages one friend at a time, and reconnects with a backoff from 1 s up to 30 s.
+- [default.vue](../web/app/layouts/default.vue) starts the connection when the user is logged in and stops it on logout. The layout is used by every page, so the connection survives navigation.
+- [UserList.vue](../web/app/components/Custom/UserList.vue) shows the green dot for each user in `onlineIds`.
+
+## Message formats
+
+Server to client:
+
+```json
+{"type":"snapshot","online":["12","15"]}
+{"type":"presence","userId":"12","online":true}
+```
+
+Client to server:
+
+```json
+{"type":"ping"}
+{"type":"snapshot"}
+```
+
+A `snapshot` replaces the whole online list. A `presence` message adds or removes one friend.
+
+## Timing
+
+| Value | Where | Purpose |
+|-------|-------|---------|
+| 30 s | Client ping interval | Keeps the connection fresh |
+| 90 s | Liveness window | A connection without a ping in the last 90 s counts as gone |
+| 180 s | Redis key `PEXPIRE` | Cleanup for idle keys. Always longer than the window |
+| 60 s | Client snapshot refresh | Corrects any missed pub/sub message |
+| 30 s | `prune` interval per watched friend, per web instance | Publishes `offline` for expired connections |
+| 15 s | Ticket lifetime | Only needs to cover the socket handshake |
+
+The 90 s window is the real expiry. Redis can't expire individual members of a sorted set, so the scripts remove members whose score is older than `now - 90000`. Chrome can throttle timers in background tabs to about one tick per minute. With a 30 s ping and a 90 s window, a hidden tab still stays online.
+
+The values live in [presence.ts](../web/server/utils/presence.ts).
+
+## Files
+
+**Web service**
+
+- [presence.ts](../web/server/utils/presence.ts): constants, Lua scripts, `runPresence`, `getOnlineFriends`
+- [routes/ws/presence.ts](../web/server/routes/ws/presence.ts): WebSocket handler, friend subscriptions, snapshots, buffering
+- [ws-ticket.post.ts](../web/server/api/presence/ws-ticket.post.ts): ticket endpoint
+- [wsTicket.ts](../web/server/utils/wsTicket.ts): `presence` scope
+- [chat.ts](../web/server/routes/ws/chat.ts): the pattern the presence route follows
+
+**User service**
+
+- [redis.ts](../services/user/server/utils/redis.ts): `publishFriendsChanged`
+- [accept.post.ts](../services/user/server/routes/friends/accept.post.ts), [remove.post.ts](../services/user/server/routes/friends/remove.post.ts), [block.post.ts](../services/user/server/routes/blocks/block.post.ts): publish calls
+
+**Client**
+
+- [usePresence.ts](../web/app/composables/usePresence.ts): connection and online list
+- [default.vue](../web/app/layouts/default.vue): start and stop on login and logout
+- [UserList.vue](../web/app/components/Custom/UserList.vue): green dot
+
+## Design decisions
+
+- **Buffering before the snapshot:** without it, an `offline` that arrives between reading the snapshot and sending it would be overwritten by the stale snapshot. Messages carry full state, so replaying a duplicate is harmless.
+- **Snapshots replace, not merge:** a snapshot always corrects the client's state.
+- **Ticket per connection:** tickets are short-lived and only used for the handshake.
+- **One subscription per friend per instance:** a friend watched by many sockets costs one Redis subscription and one prune timer.
+
+## Known limitations
+
+- **Dead tabs show as online for up to 90 s.** This is the price of tolerating background-tab throttling.
+- **Pub/sub is fire-and-forget.** A missed message is corrected by the 60 s snapshot refresh.
+- **Failed publish:** if Redis is unavailable when a friend change is published, the change still applies, but open sockets only catch up at their next snapshot refresh (up to 60 s later).
+- **Unblocking doesn't restore the friendship.** It has to be re-requested.
+
+## Testing
+
+### Checking Redis
+
+Redis is not exposed on a host port in [docker-compose.yml](../docker-compose.yml), so run the commands through the container:
+
+```bash
+docker compose exec redis redis-cli ZRANGE presence:user:<id>:conns 0 -1 WITHSCORES
+docker compose exec redis redis-cli PUBSUB NUMSUB presence:user:<id>
+docker compose exec redis redis-cli SUBSCRIBE friends:changed:<id>
+```
+
+### Manual checklist
+
+Use two accounts that are accepted friends, in two browser profiles.
+
+- [ ] Logged-out `POST /api/presence/ws-ticket` returns 401
+- [ ] A presence ticket is rejected by `/ws/chat` (403)
+- [ ] An expired ticket is rejected (401)
+- [ ] Opening `/ws/presence` sends a snapshot with the current online friends
+- [ ] A friend going online and offline sends a `presence` message
+- [ ] Multiple tabs for one user keep `PUBSUB NUMSUB` at 1 per watching instance
+- [ ] Closing the last tab sends `offline`
+- [ ] A background tab stays online
+- [ ] A dead tab (network cut, no close) shows offline within about 90 s
+- [ ] Accepting a friend request shows their status without a reload
+- [ ] Removing a friend stops their updates
+- [ ] Blocking a user stops updates in both directions
+- [ ] Unblocking does not restore the friendship
+- [ ] With Redis stopped, a friend change still succeeds and logs `Failed to publish friends:changed`
+- [ ] With the user service stopped, opening the socket closes it, and no connection entry is left in `presence:user:<id>:conns`
+- [ ] Logging out clears the green dots
+- [ ] Web type check passes: `npx tsc -p .nuxt/tsconfig.server.json --noEmit`
