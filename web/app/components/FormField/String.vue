@@ -1,10 +1,13 @@
 <script setup lang="ts">
 const props = withDefaults(
   defineProps<{
-    label: string;
     name: string;
-    type?: "text" | "number" | "color";
+    label?: string;
     required?: boolean;
+    placeholder?: string;
+    orientation?: "horizontal" | "vertical";
+    inputUi?: Record<string, string>;
+    errorSide?: "right" | "left" | "top" | "bottom";
   }>(),
   { required: false },
 );
@@ -17,6 +20,7 @@ const model = defineModel<string>({ required: true });
     :label="label"
     :name="name"
     :required="required"
+    :orientation="orientation"
     :ui="{ root: 'pb-3 items-center', error: 'hidden' }"
   >
     <template #default="{ error }">
@@ -25,10 +29,23 @@ const model = defineModel<string>({ required: true });
         :open="Boolean(error)"
         :disabled="!error"
         :arrow="true"
-        :ui="{ text: 'text-error' }"
-        :content="{ side: 'right' }"
+        :ui="{
+          text: 'text-error',
+          content: 'bg-neutral-800',
+          arrow: 'fill-neutral-800',
+        }"
+        :content="{ side: errorSide ?? 'right' }"
       >
-        <UInput v-model="model" :type="type ?? 'text'" class="w-full" />
+        <UInput
+          v-model="model"
+          :placeholder="placeholder"
+          class="w-full"
+          :ui="inputUi"
+        >
+          <template #trailing>
+            <slot name="input-trailing" />
+          </template>
+        </UInput>
       </UTooltip>
     </template>
   </UFormField>

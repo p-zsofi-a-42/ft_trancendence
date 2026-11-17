@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from "@nuxt/ui";
+import type { Form, FormError, FormSubmitEvent } from "@nuxt/ui";
+import { capitalize } from "vue";
 
 const toast = useToast();
 
@@ -34,6 +35,37 @@ async function create() {
 }
 
 async function join(event: FormSubmitEvent<string>) {}
+  const codeResponse = await $fetch("/api/game", { method: "POST" });
+  const code = codeResponse.code;
+  console.log("Game code:", code);
+
+  toast.add({
+    title: "Success",
+    description: "The Foyer has been created.",
+    color: "success",
+  });
+
+  // NAVIGATE TO GAME PAGE
+  await navigateTo(`/foyer/${code}`);
+}
+
+const codeState = reactive({ code: "" });
+
+function validateCode(values: Partial<typeof codeState>): FormError[] {
+  return values.code?.length === 6
+    ? []
+    : [{ name: "code", message: "Code must be exactly 6 characters" }];
+}
+
+function validate(state: Partial<Foyer>): FormError[] {
+  const errors: FormError[] = [];
+
+  if (!state.name?.trim()) errors.push({ name: "name", message: "Required" });
+  if (!state.companyCount)
+    errors.push({ name: "companyCount", message: "Required" });
+
+  return errors;
+}
 </script>
 
 <template>
@@ -45,9 +77,7 @@ async function join(event: FormSubmitEvent<string>) {}
     }"
   >
     <UForm @click="create">
-      <UButton color="primary" class="text-white" size="xl" type="button">
-        Create
-      </UButton>
+      <UButton class="text-white" size="xl" type="button"> Create </UButton>
     </UForm>
     <USeparator
       color="primary"
@@ -58,8 +88,20 @@ async function join(event: FormSubmitEvent<string>) {}
         label: 'text-lg',
       }"
     />
-    <UForm @submit="join">
-      <UButton type="submit">Join</UButton>
+    <UForm :state="codeState" :validate="validateCode" @submit="join">
+      <FormFieldString
+        name="code"
+        v-model="codeState.code"
+        placeholder="ABC123"
+        :input-ui="{ trailing: 'pe-0' }"
+        size="xl"
+        error-side="bottom"
+        required
+      >
+        <template #input-trailing>
+          <UButton class="text-white" size="xl" type="submit"> Join </UButton>
+        </template>
+      </FormFieldString>
     </UForm>
   </UCard>
 </template>

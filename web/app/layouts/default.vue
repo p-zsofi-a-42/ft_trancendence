@@ -5,7 +5,7 @@ const { loggedIn, user } = useUserSession();
 
 const navItems: NavigationMenuItem[] = [
   { label: "Home", to: "/" },
-  { label: "Play", to: "/foyer" },
+  { label: "Play", to: "/play" },
   { label: "Social", to: "/social" },
 ];
 
@@ -89,19 +89,14 @@ useHead({
           <UTooltip text="Profile">
             <UButton
               class="w-fit"
-              :avatar="{
-                icon: 'i-lucide-user',
-                size: 'xl',
-                chip: { inset: true },
-              }"
               color="neutral"
               variant="foyer"
               block
               trailing-icon="i-lucide-chevron-down"
               aria-label="Profile"
-              size="md"
             >
-              {{ loggedIn ? user?.name : "" }}
+              <CustomUser v-if="loggedIn && user" :user="user" size="xl" />
+              <span v-else>Account</span>
             </UButton>
           </UTooltip>
         </UDropdownMenu>
