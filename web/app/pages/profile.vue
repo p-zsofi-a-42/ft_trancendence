@@ -6,9 +6,24 @@
       }"
     >
       <template #header>
-        <CustomUser :user="user" size="3xl" />
+        <CustomUser :user="user" :avatar-version="avatarVersion" size="3xl" />
       </template>
       <p><strong>ID:</strong> {{ user.id }}</p>
+      <div class="pb-2">
+        <UButton
+          label="Change profile picture"
+          icon="i-lucide-upload"
+          :loading="uploadingAvatar"
+          @click="avatarInput?.click()"
+        />
+        <input
+          ref="avatarInput"
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          class="hidden"
+          @change="uploadAvatar"
+        />
+      </div>
       <UForm v-if="editing" :schema="schema" :state="form" class="pt-2" @submit="saveProfile">
         <FormFieldString name="name" label="Username" v-model="form.name" required />
         <FormFieldString name="email" label="Email" v-model="form.email" placeholder="Leave empty to remove" />
@@ -87,6 +102,32 @@ async function saveProfile(event: FormSubmitEvent<z.output<typeof schema>>) {
     toast.add({ title: "Update failed", description: message });
   } finally {
     saving.value = false;
+  }
+}
+
+// Profile picture upload
+const avatarInput = ref<HTMLInputElement | null>(null);
+const uploadingAvatar = ref(false);
+const avatarVersion = ref(0);
+
+async function uploadAvatar(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+
+  const body = new FormData();
+  body.append("avatar", file);
+  uploadingAvatar.value = true;
+  try {
+    await $fetch("/api/auth/avatar", { method: "POST", body });
+    avatarVersion.value++;
+    toast.add({ title: "Profile picture updated" });
+  } catch (err) {
+    const message = (err as { data?: { message?: string } }).data?.message ?? "Please try again";
+    toast.add({ title: "Upload failed", description: message });
+  } finally {
+    uploadingAvatar.value = false;
+    input.value = "";
   }
 }
 

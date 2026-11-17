@@ -34,7 +34,7 @@ async function create() {
 	}
 }
 
-async function join(event: FormSubmitEvent<string>) {}
+async function join(event: FormSubmitEvent<string>) {
   const codeResponse = await $fetch("/api/game", { method: "POST" });
   const code = codeResponse.code;
   console.log("Game code:", code);
