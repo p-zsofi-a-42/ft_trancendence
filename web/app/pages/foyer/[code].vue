@@ -115,7 +115,7 @@ const handleSubmit = async () => {
 		console.log(`error: ${error.message}`)
 		toast.add({
 			title: "Failure",
-			description: error.message,
+			description: error.statusMessage,
 			color: "danger",
 		});
   } finally {

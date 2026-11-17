@@ -6,5 +6,10 @@ export default defineEventHandler(async (event) => {
 	console.log(`body: ${body}`);
 	
 	// validate
-  return callGameService('/api/foyer/create', { method: 'POST', body: body, userId: user.id});
+	try {
+		return callGameService('/api/foyer/create', { method: 'POST', body: body, userId: user.id});
+	} catch (error) {
+		console.log(`Error at /api/foyer/create.post: ${error.message}`);
+		throw Error("Game creation failed");
+	}
 });
