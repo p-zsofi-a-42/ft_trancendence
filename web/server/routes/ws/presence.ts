@@ -4,10 +4,40 @@ import { callUserService } from '../../utils/userService'
 import type { FriendEntry } from '#shared/types/friends'
 import { createClient } from 'redis'
 
+// friends:changed:<userId>
+const ownChannel = (userId: string) => `friends:changed:${userId}`
+const ownWatchers = new Map<string, { peers: Set<any>, ready: Promise<void> }>()
+
 // Redis subscriber for presence updates
 const sub = createClient({ url: useRuntimeConfig().redisUrl })
 // Connect the Redis subscriber
 const subReady = sub.connect()
+
+
+async function watchOwnFriends(userId: string, peer: any) {
+  let w = ownWatchers.get(userId)
+  if (!w) {
+    const ready = subReady.then(() => sub.subscribe(ownChannel(userId), () => {
+      for (const p of ownWatchers.get(userId)?.peers ?? []) resync(p)
+    }))
+    w = { peers: new Set(), ready }
+    ownWatchers.set(userId, w)
+  }
+  w.peers.add(peer)
+  await w.ready
+}
+
+async function unwatchOwnFriends(userId: string, peer: any) {
+  const w = ownWatchers.get(userId)
+  if (!w) return
+  w.peers.delete(peer)
+  if (w.peers.size > 0) return
+  ownWatchers.delete(userId)
+  await w.ready
+  await sub.unsubscribe(ownChannel(userId))
+}
+
+
 
 // Fetch the friend IDs
 async function fetchFriendIds(userId: string) {
@@ -51,7 +81,7 @@ async function unwatchFriend(friendId: string, peer: any) {
 }
 
 // Per socket state, buffering and forwarding
-const peerState = new Map<any, { userId: string, connId: string, friends: Set<string>, buffering: boolean, buffer: string[] }>()
+const peerState = new Map<any, { userId: string, connId: string, friends: Set<string>, buffering: boolean, buffer: string[], chain: Promise<void>, }>()
 
 function forward(peer: any, friendId: string, raw: string) {
   const st = peerState.get(peer)
@@ -82,7 +112,9 @@ async function syncFriends(peer: any, next: string[]) {
 }
 
 async function sendSnapshot(peer: any) {
-  const st = peerState.get(peer)!
+  const st = peerState.get(peer)
+  if (!st)
+    return
   st.buffering = true
   await syncFriends(peer, await fetchFriendIds(st.userId))
   await runPresence(st.userId, 'connect', st.connId)
@@ -91,6 +123,20 @@ async function sendSnapshot(peer: any) {
   for (const m of st.buffer) peer.send(m)
   st.buffer = []
   st.buffering = false
+}
+
+// returns a promise that resolves when the snapshot has been sent
+function resync(peer: any) {
+  const st = peerState.get(peer)
+  if (!st)
+    return Promise.resolve()
+  st.chain = st.chain
+    .then(() => sendSnapshot(peer))
+    .catch((err) => {
+      console.error('Failed to send snapshot:', err)
+      peer.close()
+    })
+  return st.chain
 }
 
 // WebSocket handler for user presence management
@@ -110,13 +156,9 @@ export default defineWebSocketHandler({
   },
   async open(peer) {
     const { userId, connId } = peer.context as { userId: string, connId: string }
-    peerState.set(peer, { userId, connId, friends: new Set(), buffering: false, buffer: [] })
-    try {
-      await sendSnapshot(peer)
-    } catch (err) {
-      console.error('Failed to send snapshot:', err)
-      peer.close()
-    }
+    peerState.set(peer, { userId, connId, friends: new Set(), buffering: false, buffer: [], chain: Promise.resolve() })
+    await watchOwnFriends(userId, peer)
+    await resync(peer)
   },
   async message(peer, message) {
     let data: { type?: string }
@@ -130,20 +172,19 @@ export default defineWebSocketHandler({
       await runPresence(userId, 'ping', connId)
     }
     if (data.type === 'snapshot') {
-      try {
-        await sendSnapshot(peer)
-      } catch (err) {
-        console.error('Failed to send snapshot:', err)
-        peer.close()
-      }
+      await resync(peer)
     }
   },
   async close(peer) {
     const st = peerState.get(peer)
     if (!st)
       return
-    await runPresence(st.userId, 'disconnect', st.connId)
-    await syncFriends(peer, [])
-    peerState.delete(peer)
+    try {
+      await runPresence(st.userId, 'disconnect', st.connId)
+      await syncFriends(peer, [])
+    } finally {
+      await unwatchOwnFriends(st.userId, peer)
+      peerState.delete(peer)
+    }
   },
 })

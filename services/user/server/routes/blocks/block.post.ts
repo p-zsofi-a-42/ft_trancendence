@@ -1,5 +1,5 @@
 import { and, or, eq } from 'drizzle-orm'
-
+import { publishFriendsChanged } from '~/utils/redis' // for notifying about friends changes
 // @brief BLOCKING USER
 //
 export default defineEventHandler(async (event) => {
@@ -37,5 +37,7 @@ export default defineEventHandler(async (event) => {
     }
     throw err
   }
+  // Notify both users about the change in their friends list
+  await publishFriendsChanged(userId, blockedId)
   return { id, friendship: 'blocked' }
 })
