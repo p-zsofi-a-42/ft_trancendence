@@ -7,6 +7,34 @@ const toast = useToast();
 async function create() {
   /* create a new foyer session (game session)
    */
+	try {
+		const  response = await $fetch("/api/foyer/create", {
+			method: "POST",
+			body: {nPlayers: 3, nRounds: 12, seedCapital: 100000},
+		});
+		const game = response.game;
+		const code = game.idCode;
+		console.log("Game code:", code);
+		
+		toast.add({
+			title: "Success",
+			description: "The Foyer has been created.",
+			color: "success",
+		});
+
+		// NAVIGATE TO GAME PAGE
+		navigateTo(`/foyer/${code}`);
+	} catch (error) {
+		console.log(`error: ${error.message}`)
+		toast.add({
+			title: "Failure",
+			description: "Failed to create a new Foyer.",
+			color: "danger",
+		});
+	}
+}
+
+async function join(event: FormSubmitEvent<string>) {}
   const codeResponse = await $fetch("/api/game", { method: "POST" });
   const code = codeResponse.code;
   console.log("Game code:", code);
@@ -37,11 +65,6 @@ function validate(state: Partial<Foyer>): FormError[] {
     errors.push({ name: "companyCount", message: "Required" });
 
   return errors;
-}
-
-async function join(event: FormSubmitEvent<typeof codeState>) {
-  const code = event.data.code;
-  await navigateTo(`/foyer/${code}`);
 }
 </script>
 
