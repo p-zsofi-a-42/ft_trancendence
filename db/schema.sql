@@ -9,8 +9,11 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   totp_secret TEXT NULL,
-  totp_enabled BOOLEAN NOT NULL DEFAULT FALSE
+  totp_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  avatar_file TEXT NULL  -- file name inside AVATAR_DIR; NULL means the default avatar
 );
+-- For databases created before avatar_file existed
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_file TEXT NULL;
 
 -- -----------------------------------------------------------------------------
 -- OAuth2.0 TABLES -------------------------------------------------------------
