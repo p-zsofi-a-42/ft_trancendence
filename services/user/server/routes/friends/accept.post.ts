@@ -1,4 +1,5 @@
 import { and, or, eq, notExists, sql } from 'drizzle-orm'
+import { publishFriendsChanged } from '~/utils/redis' // for notifying about friends changes
 
 // Accepts a pending friend request for the authenticated user from the specified requester ID
 export default defineEventHandler(async (event) => {
@@ -38,6 +39,7 @@ export default defineEventHandler(async (event) => {
   if (!res) {
     throw createError({ statusCode: 404, statusMessage: 'No pending request from this user' })
   }
-
+  // Notify both users about the change in their friends list
+  await publishFriendsChanged(userId, friendId)
   return { id, friendship: 'friends' }
 })

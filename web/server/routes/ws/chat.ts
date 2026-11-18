@@ -26,7 +26,8 @@ async function addPeer(conversationId: string, peer: any) {
 async function removePeer(conversationId: string, peer: any) {
   await subReady
   const peers = peersByConversation.get(conversationId)
-  if (!peers) return
+  if (!peers)
+    return
   peers.delete(peer)
   if (peers.size === 0) {
     peersByConversation.delete(conversationId)

@@ -1,5 +1,5 @@
 import { and, eq, or} from 'drizzle-orm'
-
+import { publishFriendsChanged } from '~/utils/redis' // for notifying about friends changes
 /**
  * @brief Removes a already accepted friend request or pending request for the current user
 
@@ -33,6 +33,7 @@ export default defineEventHandler(async (event) => {
   if (!res) {
     throw createError({ statusCode: 404, statusMessage: 'No accepted friendship with this user' })
   }
-
+  // Notify both users about the change in their friends list
+  await publishFriendsChanged(userId, friendId)
   return { id, friendship: 'removed' }
 })
