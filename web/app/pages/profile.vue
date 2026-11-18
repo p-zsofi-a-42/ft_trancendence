@@ -8,23 +8,23 @@
       <template #header>
         <CustomUser :user="user" :avatar-version="avatarVersion" size="3xl" />
       </template>
-      <p><strong>ID:</strong> {{ user.id }}</p>
-      <div class="pb-2">
-        <UButton
-          label="Change profile picture"
-          icon="i-lucide-upload"
-          :loading="uploadingAvatar"
-          @click="avatarInput?.click()"
-        />
-        <input
-          ref="avatarInput"
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          class="hidden"
-          @change="uploadAvatar"
-        />
-      </div>
       <UForm v-if="editing" :schema="schema" :state="form" class="pt-2" @submit="saveProfile">
+        <div class="pb-2">
+          <UButton
+            label="Change profile picture"
+            icon="i-lucide-upload"
+            :loading="uploadingAvatar"
+            @click="avatarInput?.click()"
+          />
+          <input
+            ref="avatarInput"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            class="hidden"
+            @change="uploadAvatar"
+          />
+        </div>
+        <p><strong>ID:</strong> {{ user.id }}</p>
         <FormFieldString name="name" label="Username" v-model="form.name" required />
         <FormFieldString name="email" label="Email" v-model="form.email" placeholder="Leave empty to remove" />
         <div class="flex gap-2 pt-2">
@@ -113,7 +113,9 @@ const avatarVersion = ref(0);
 async function uploadAvatar(event: Event) {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
-  if (!file) return;
+  if (!file) {
+    return;
+  }
 
   const body = new FormData();
   body.append("avatar", file);

@@ -24,7 +24,7 @@ const props = defineProps<{
     :size="size"
     chip
     :avatar="{
-      src: `/api/users/${user.id}/avatar?v=${avatarVersion ?? 0}`,
+      src: `/api/users/${user.id}/avatar`,
       loading: 'lazy',
       icon: 'i-lucide-user',
     }"
