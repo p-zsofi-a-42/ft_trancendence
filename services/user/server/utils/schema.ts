@@ -11,6 +11,7 @@ export const users = pgTable('users', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   totpSecret: text('totp_secret'),
   totpEnabled: boolean('totp_enabled').notNull().default(false),
+  role: text('role', { enum: ['user', 'admin'] }).notNull().default('user'),
 })
 
 // providers table

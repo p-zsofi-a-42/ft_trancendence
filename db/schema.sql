@@ -9,8 +9,12 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   totp_secret TEXT NULL,
-  totp_enabled BOOLEAN NOT NULL DEFAULT FALSE
+  totp_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin'))
 );
+ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin'));
+-- Insert a admin into the users table, password is password
+
 
 -- -----------------------------------------------------------------------------
 -- OAuth2.0 TABLES -------------------------------------------------------------
