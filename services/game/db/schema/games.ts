@@ -7,7 +7,7 @@ export const games = pgTable("games", {
   idCode: text("id_code").notNull().unique(),
 	nPlayers: smallint("n_players").notNull(),
 	nRounds: smallint("n_rounds").notNull(),
-	currentRound: smallint("current_round").notNull().default(0),
+	currentRound: smallint("current_round").notNull().default(0), // TODO: redundant, can be derived from rounds table
 	seedCapital: bigint("seed_capital", { mode: "number" }).notNull(),
 	creatorId: bigint("creator_id", { mode: "number" }).notNull(),
 	status: gameStatusEnum().notNull().default("created"),
