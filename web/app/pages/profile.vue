@@ -9,8 +9,19 @@
         <CustomUser :user="user" size="3xl" />
       </template>
       <p><strong>ID:</strong> {{ user.id }}</p>
-      <p><strong>Name:</strong> {{ user.name }}</p>
-      <p><strong>Email:</strong> {{ user.email }}</p>
+      <UForm v-if="editing" :schema="schema" :state="form" class="pt-2" @submit="saveProfile">
+        <FormFieldString name="name" label="Username" v-model="form.name" required />
+        <FormFieldString name="email" label="Email" v-model="form.email" placeholder="Leave empty to remove" />
+        <div class="flex gap-2 pt-2">
+          <UButton type="submit" label="Save" :loading="saving" />
+          <UButton label="Cancel" color="neutral" variant="ghost" :disabled="saving" @click="editing = false" />
+        </div>
+      </UForm>
+      <template v-else>
+        <p><strong>Name:</strong> {{ user.name }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <UButton label="Edit profile" class="mt-2" @click="startEdit" />
+      </template>
       <div v-if="Array.isArray(linkedProviders)" class="pt-4 space-y-3">
         <h3 class="font-semibold">Login providers</h3>
         <div v-for="p in PROVIDERS" :key="p.name" class="flex items-center justify-between">
@@ -37,10 +48,46 @@
 </template>
 
 <script setup lang="ts">
+import * as z from "zod";
+import type { FormSubmitEvent } from "@nuxt/ui";
+
 // Fetch the current user's profile information and handle authentication redirect if not logged in
-const { data: user, error } = await useFetch("/api/auth/profile");
+const { data: user, error, refresh: refreshProfile } = await useFetch("/api/auth/profile");
 if (error.value) {
   await navigateTo("/login");
+}
+
+// Profile editing; the rules match the register form
+const editing = ref(false);
+const saving = ref(false);
+const form = reactive({ name: "", email: "" });
+const schema = z.object({
+  name: z.string().trim().min(4, "Name must be at least 4 characters"),
+  email: z.string().trim().email("Invalid email").or(z.literal("")),
+});
+
+function startEdit() {
+  form.name = user.value?.name ?? "";
+  form.email = user.value?.email ?? "";
+  editing.value = true;
+}
+
+async function saveProfile(event: FormSubmitEvent<z.output<typeof schema>>) {
+  saving.value = true;
+  try {
+    await $fetch("/api/auth/profile", {
+      method: "PATCH",
+      body: { name: event.data.name, email: event.data.email === "" ? null : event.data.email },
+    });
+    await Promise.all([refreshProfile(), useUserSession().fetch()]);
+    editing.value = false;
+    toast.add({ title: "Profile updated" });
+  } catch (err) {
+    const message = (err as { data?: { message?: string } }).data?.message ?? "Please try again";
+    toast.add({ title: "Update failed", description: message });
+  } finally {
+    saving.value = false;
+  }
 }
 
 // Linked providers
