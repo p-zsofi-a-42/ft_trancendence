@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { FormError, FormSubmitEvent, SplitterItem } from "@nuxt/ui";
-import type { Foyer } from "#shared/types/game";
-import { set } from "@nuxt/ui/runtime/utils/index.js";
+import type { FormSubmitEvent, SplitterItem } from "@nuxt/ui";
+import type { GameSettings } from "#shared/types/game";
+import { toDisplayString } from "vue";
+import * as z from "zod";
 
 // FETCH FRIENDS LIST
 const { data } = useFetch<FriendEntry[]>("/api/friends", {
@@ -15,55 +16,13 @@ const friends = computed(() =>
 
 const players: UserSummary[] = [];
 
-interface GameSettingsDraft {
-  cityName: string;
-  companyCount: number;
-  startingCapital: number;
-  rountCount: number;
-}
-
-const settings = reactive<GameSettingsDraft>({
-  cityName: "",
-  companyCount: 3,
-  startingCapital: 100_000,
-  rountCount: 12,
+const settings = defineModel<GameSettings>("settings", {
+  required: true,
 });
 
 const props = defineProps<{
-  foyerCode: string;
+  gameCode: string | string[] | undefined;
 }>();
-
-const toast = useToast();
-
-function validateSettings(values: Partial<GameSettingsDraft>): FormError[] {
-  const errors: FormError[] = [];
-
-  if (!values.cityName?.trim())
-    errors.push({ name: "name", message: "Required" });
-
-  if (
-    typeof values.companyCount !== "number" ||
-    !Number.isInteger(values.companyCount) ||
-    values.companyCount < 1 ||
-    values.companyCount > 5
-  )
-    errors.push({
-      name: "companyCount",
-      message: "Choose a value from 1 to 5",
-    });
-
-  return errors;
-}
-
-function saveSettings(event: FormSubmitEvent<GameSettingsDraft>) {
-  const settings = { ...event.data };
-  console.log("Overview settings ready to save:", settings);
-
-  toast.add({
-    title: "Settings saved",
-    description: "The Game settings have been saved.",
-  });
-}
 
 const overviewItems: SplitterItem[] = [
   {
@@ -82,6 +41,42 @@ const overviewItems: SplitterItem[] = [
     defaultSize: 100 / 3,
   },
 ];
+
+const emit = defineEmits<{
+  continue: [];
+}>();
+
+const limits = {
+  companyCount: { min: 1, max: 5 },
+  startingCapital: { min: 1, max: 1_000_000 },
+  roundCount: { min: 1, max: 34 },
+};
+
+const settingsSchema = z.object({
+  cityName: z.string().trim().min(1, "Required"),
+
+  companyCount: z
+    .number({ error: "Enter a valid number" })
+    .int("Must be a whole number")
+    .min(limits.companyCount.min, "Choose a value from 1 to 5")
+    .max(limits.companyCount.max, "Choose a value from 1 to 5"),
+
+  startingCapital: z
+    .number({ error: "Enter a valid number" })
+    .int("Must be a whole number")
+    .min(limits.startingCapital.min, "Choose a value from 1 to 1.000.000")
+    .max(limits.startingCapital.max, "Choose a value from 1 to 1.000.000"),
+
+  roundCount: z
+    .number({ error: "Enter a valid number" })
+    .int("Must be a whole number")
+    .min(limits.roundCount.min, "Choose a value from 1 to 34")
+    .max(limits.roundCount.max, "Choose a value from 1 to 34"),
+});
+
+async function submit(event: FormSubmitEvent<GameSettings>) {
+  emit("continue");
+}
 </script>
 
 <template>
@@ -104,16 +99,16 @@ const overviewItems: SplitterItem[] = [
         }"
       >
         <UForm
-          class="flex flex-col gap-4"
           id="foyer-settings-form"
+          class="flex flex-col gap-4"
           :state="settings"
-          :validate="validateSettings"
-          @submit="saveSettings"
+          :schema="settingsSchema"
+          @submit="submit"
         >
           <FormFieldString
             v-model="settings.cityName"
             label="City Name"
-            name="name"
+            name="cityName"
             placeholder="Baguette City"
             required
           />
@@ -122,9 +117,9 @@ const overviewItems: SplitterItem[] = [
             v-model="settings.companyCount"
             label="Number of companies"
             name="companyCount"
+            :min="limits.companyCount.min"
+            :max="limits.companyCount.max"
             slider
-            :min="1"
-            :max="5"
             required
           />
 
@@ -132,31 +127,21 @@ const overviewItems: SplitterItem[] = [
             v-model="settings.startingCapital"
             label="Starting capital"
             name="startingCapital"
-            :min="1"
+            :min="limits.startingCapital.min"
+            :max="limits.startingCapital.max"
+            :step="1_000"
             required
           />
 
           <FormFieldNumber
-            v-model="settings.rountCount"
+            v-model="settings.roundCount"
             label="Number of rounds"
             name="roundCount"
-            :min="1"
+            :min="limits.roundCount.min"
+            :max="limits.roundCount.max"
             required
           />
         </UForm>
-        <template #footer>
-          <div class="flex justify-center">
-            <UButton
-              form="foyer-settings-form"
-              type="submit"
-              size="lg"
-              variant="foyer"
-              class="text-white"
-            >
-              Save
-            </UButton>
-          </div>
-        </template>
       </UCard>
     </template>
 
@@ -192,7 +177,7 @@ const overviewItems: SplitterItem[] = [
 
         <template #footer>
           <p class="font-bold mb-2">Foyer Code</p>
-          <CustomCopyField :text="foyerCode" label="Code" />
+          <CustomCopyField :text="toDisplayString(gameCode)" label="Code" />
         </template>
       </UCard>
     </template>

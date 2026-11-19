@@ -1,11 +1,11 @@
-import type { ColorModeSelectProps } from "@nuxt/ui/runtime/components/color-mode/ColorModeSelect.vue.js";
-
-export interface Foyer {
-  name: string;
+export interface GameSettings {
+  cityName: string;
   companyCount: number;
+  startingCapital: number;
+  roundCount: number;
 }
 
 export interface Company {
   name: string;
-  color: string;
+  color: "red" | "blue" | "green" | "yellow" | "purple" | undefined;
 }

@@ -1,71 +1,62 @@
 <script setup lang="ts">
-import type { Form, FormError, FormSubmitEvent } from "@nuxt/ui";
-import { capitalize } from "vue";
+import type { FormError, FormSubmitEvent } from "@nuxt/ui";
+import type { GameSettings } from "#imports";
+import { error } from "#build/ui";
 
 const toast = useToast();
 
 async function create() {
-	/* create a new foyer session (game session)
-	 */
-	try {
-		const response = await $fetch("/api/foyer/create", {
-			method: "POST",
-			body: { nPlayers: 3, nRounds: 12, seedCapital: 100000 },
-		});
-		console.log(`response: ${JSON.stringify(response)}`);
-		const game = response.game;
-		const code = game.idCode;
-		console.log("Game code:", code);
+  /* create a new foyer session (game session)
+   */
+  try {
+    const response = await $fetch("/api/foyer/create", {
+      method: "POST",
+      body: { nPlayers: 3, nRounds: 12, seedCapital: 100000 },
+    });
+    console.log(`response: ${JSON.stringify(response)}`);
+    const game = response.game;
+    const code = game.idCode;
+    console.log("Game code:", code);
 
-		toast.add({
-			title: "Success",
-			description: "The Foyer has been created.",
-			color: "success",
-		});
+    toast.add({
+      title: "Success",
+      description: "The Foyer has been created.",
+      color: "success",
+    });
 
-		// NAVIGATE TO GAME PAGE
-		navigateTo(`/foyer/${code}`);
-	} catch (error) {
-		console.log(`error: ${error.message}`);
-		toast.add({
-			title: "Failure",
-			description: "Failed to create a new Foyer.",
-			color: "error",
-		});
-	}
+    // NAVIGATE TO GAME PAGE
+    navigateTo(`/foyer/${code}`);
+  } catch (error) {
+    console.log(`error: ${error.message}`);
+    toast.add({
+      title: "Failure",
+      description: "Failed to create a new Foyer.",
+      color: "error",
+    });
+  }
 }
 
-async function join(event: FormSubmitEvent<string>) {}
+async function join(event: FormSubmitEvent<string>) {
   const codeResponse = await $fetch("/api/game", { method: "POST" });
   const code = codeResponse.code;
   console.log("Game code:", code);
 
-	toast.add({
-		title: "Success",
-		description: "The Foyer has been created.",
-		color: "success",
-	});
+  toast.add({
+    title: "Success",
+    description: "The Foyer has been created.",
+    color: "success",
+  });
 
-	// NAVIGATE TO GAME PAGE
-	await navigateTo(`/foyer/${code}`);
+  // NAVIGATE TO GAME PAGE
+  await navigateTo(`/foyer/${code}`);
 }
 
 const codeState = reactive({ code: "" });
 
-function validateCode(values: Partial<typeof codeState>): FormError[] {
-	return values.code?.length === 6
-		? []
-		: [{ name: "code", message: "Code must be exactly 6 characters" }];
-}
-
-function validate(state: Partial<Foyer>): FormError[] {
-	const errors: FormError[] = [];
-
-	if (!state.name?.trim()) errors.push({ name: "name", message: "Required" });
-	if (!state.companyCount)
-		errors.push({ name: "companyCount", message: "Required" });
-
-	return errors;
+function validateJoin(values: Partial<typeof codeState>): FormError[] {
+  return values.code?.length === 6
+    ? []
+    : [{ name: "code", message: "Code must be exactly 6 characters" }];
 }
 </script>
 
@@ -89,7 +80,7 @@ function validate(state: Partial<Foyer>): FormError[] {
         label: 'text-lg',
       }"
     />
-    <UForm :state="codeState" :validate="validateCode" @submit="join">
+    <UForm :state="codeState" :validate="validateJoin" @submit="join">
       <FormFieldString
         name="code"
         v-model="codeState.code"

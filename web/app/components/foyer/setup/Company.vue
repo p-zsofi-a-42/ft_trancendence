@@ -3,10 +3,7 @@ import type { FormError, FormSubmitEvent } from "@nuxt/ui";
 import type { SplitterItem } from "@nuxt/ui";
 import type { Company } from "#shared/types/game";
 
-const company = reactive<Company>({
-  name: "",
-  color: "#ffffff",
-});
+const company = defineModel<Company>("company", { required: true });
 
 function validate(state: Partial<Company>): FormError[] {
   const errors: FormError[] = [];
@@ -51,14 +48,24 @@ async function submit(event: FormSubmitEvent<Company>) {
     </template>
     <template #config>
       <UCard title="Company Config" variant="foyer">
-        <UForm :state="company" :validate="validate" @submit="submit">
+        <UForm
+          :state="company"
+          :validate="validate"
+          @submit="submit"
+          class="flex flex-col gap-4"
+        >
           <FormFieldString
             v-model="company.name"
             label="Name"
             name="name"
             required
           />
-          <FormFieldColor v-model="company.color" label="Color" name="color" />
+          <FormFieldColor
+            v-model="company.color"
+            label="Company color"
+            name="color"
+            :colors="['red', 'blue', 'green', 'yellow', 'purple']"
+          />
         </UForm>
       </UCard>
     </template>

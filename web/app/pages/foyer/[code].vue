@@ -1,125 +1,193 @@
 <template>
-  <div class="max-w-md mx-auto mt-16 p-6">
-    <h1 class="text-2xl font-bold mb-2">Join Game</h1>
-    <p class="text-sm text-gray-500 mb-6">
-      Game Code: <span class="font-mono font-semibold text-black">{{ gameCode }}</span>
-    </p>
+  <UContainer class="flex flex-col h-9/10 w-3/4 min-w-dvh">
+    <UStepper
+      ref="stepper"
+      v-model="activeStep"
+      :disabled="true"
+      :items="stepper_items"
+      :ui="{
+        root: 'w-full flex-1 min-h-0 bg-neutral-900 border-8 border-neutral-900 rounded-2xl p-4',
+        icon: 'bg-neutral-50',
+        content: 'w-full flex-1 min-h-0',
+      }"
+    >
+      <template #content="{ item }">
+        <div class="flex h-full flex-col">
+          <div class="min-h-0 flex-1">
+            <FoyerSetupOverview
+              v-if="item?.value === 'overview'"
+              :game-code="gameCode"
+              v-model:settings="settings"
+              @continue="stepper?.next()"
+            />
 
-    <form @submit.prevent="handleSubmit" class="space-y-4">
-      <div>
-        <label for="companyName" class="block text-sm font-medium mb-1">
-          Company Name
-        </label>
-        <input
-          id="companyName"
-          v-model="companyName"
-          type="text"
-          required
-          placeholder="Enter your company name"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-black"
-        />
-      </div>
-
-      <p v-if="errorMessage" class="text-red-600 text-sm">
-        {{ errorMessage }}
-      </p>
-      <ul>
-        <li v-for="company in companies" :key="company.id">
-					<p>{{ company }}</p>
-        </li>
-      </ul>
-
-
-      <button
-        type="submit"
-        :disabled="isLoading"
-        class="w-full py-2 px-4 bg-black text-white rounded-md hover:opacity-80 disabled:opacity-50 transition-opacity"
-      >
-        {{ isLoading ? 'Joining...' : 'Join Game' }}
-      </button>
-    </form>
-  </div>
+            <FoyerSetupCompany
+              v-else-if="item?.value === 'company-setup'"
+              v-model:company="company"
+            />
+            <UCard
+              v-else-if="item?.value === 'game-start'"
+              variant="outline"
+              title="Game starts in"
+              :ui="{
+                root: 'h-full w-full items-center justify-center',
+                title: 'text-2xl',
+                body: 'text-4xl text-white text-center',
+              }"
+            >
+              3
+            </UCard>
+          </div>
+          <div v-if="stepper?.hasNext" class="ml-auto flex p-4 pt-0">
+            <UButton
+              class="mx-3 bg-red-500 text-white disabled:opacity-0"
+              :disabled="!stepper?.hasPrev"
+              size="xl"
+              variant="foyer"
+              @click="stepper?.prev()"
+            >
+              Back
+            </UButton>
+            <UButton
+              class="text-white disabled:opacity-0"
+              size="xl"
+              variant="foyer"
+              :type="activeStep === 'overview' ? 'submit' : 'button'"
+              :form="
+                activeStep === 'overview' ? 'foyer-settings-form' : undefined
+              "
+              :disabled="!stepper?.hasNext"
+              :loading="isLoading"
+              @click="
+                activeStep === 'company-setup' ? handleSubmit() : undefined
+              "
+            >
+              {{ !stepper?.hasNext ? "Start" : "Next" }}
+            </UButton>
+          </div>
+        </div>
+      </template>
+    </UStepper>
+  </UContainer>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref } from "vue";
+import type { StepperItem } from "@nuxt/ui";
+import type { GameSettings, Company } from "#shared/types/game";
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
 
 // Den dynamischen Parameter [code] aus der URL auslesen
-const gameCode = route.params.code
+const gameCode = route.params.code;
 
-const companyName = ref('')
-const isLoading = ref(false)
-const errorMessage = ref(null)
+const isLoading = ref(false);
+const errorMessage = ref(null);
 
 const toast = useToast();
-let companies = ref(await $fetch(`/api/foyer/${gameCode}/companies`, { method: "GET" }));
+let companies = ref<Company[]>(
+  await $fetch<Company[]>(`/api/foyer/${gameCode}/companies`, {
+    method: "GET",
+  }),
+);
 
+let socket: WebSocket | null = null;
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+let closedByUs = false;
 
-let socket: WebSocket | null = null
-let reconnectTimer: ReturnType<typeof setTimeout> | null = null
-let closedByUs = false
+const settings = ref<GameSettings>({
+  cityName: "Baguette City",
+  companyCount: 3,
+  startingCapital: 10000,
+  roundCount: 12,
+});
+
+const company = ref<Company>({
+  name: "",
+  color: "red",
+});
+
+const stepper_items = ref<StepperItem[]>([
+  {
+    title: "Foyer Setup",
+    value: "overview",
+    icon: "i-lucide-users",
+  },
+  {
+    title: "Company Setup",
+    value: "company-setup",
+    icon: "i-lucide-building-complex",
+  },
+  {
+    title: "Game Start",
+    value: "game-start",
+    icon: "i-lucide-gamepad-2",
+  },
+]);
+
+const activeStep = ref("overview");
+const stepper = useTemplateRef("stepper");
 
 async function connectWebSocket() {
   // Fresh Ticket on every connection attempt
   const ticket = await $fetch<{ ticket: string }>(
     `/api/foyer/${gameCode}/ws-ticket`,
-    { method: 'POST' }
-  )
-  console.log('Obtained WebSocket ticket:', ticket.ticket)
+    { method: "POST" },
+  );
+  console.log("Obtained WebSocket ticket:", ticket.ticket);
   // Connect to WebSocket with the obtained ticket
-  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
-  socket = new WebSocket(`${protocol}//${location.host}/ws/game?ticket=${ticket.ticket}`)
+  const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+  socket = new WebSocket(
+    `${protocol}//${location.host}/ws/game?ticket=${ticket.ticket}`,
+  );
 
   // Handle incoming events from the Websocket
   socket.onmessage = (event) => {
-    const payloadEvent = JSON.parse(event.data)
-		console.log(`Event received: ${JSON.stringify(payloadEvent)}`);
-		if (payloadEvent.type == "joined")
-			companies.value.push(payloadEvent.company);
-  }
+    const payloadEvent = JSON.parse(event.data);
+    console.log(`Event received: ${JSON.stringify(payloadEvent)}`);
+    if (payloadEvent.type == "joined")
+      companies.value.push(payloadEvent.company);
+  };
 
   // Handle WebSocket close event
   socket.onclose = () => {
-    if (closedByUs)
-      return
-    reconnectTimer = setTimeout(connectWebSocket, 2000)
-  }
+    if (closedByUs) return;
+    reconnectTimer = setTimeout(connectWebSocket, 2000);
+  };
 }
 // Connect WebSocket on component mount
-onMounted(connectWebSocket)
+onMounted(connectWebSocket);
 // Disconnect WebSocket on component unmount
 onBeforeUnmount(() => {
-  closedByUs = true
-  if (reconnectTimer) clearTimeout(reconnectTimer)
-  socket?.close()
-})
+  closedByUs = true;
+  if (reconnectTimer) clearTimeout(reconnectTimer);
+  socket?.close();
+});
 
 const handleSubmit = async () => {
-  isLoading.value = true
-  errorMessage.value = null
+  isLoading.value = true;
+  errorMessage.value = null;
 
   try {
     // Beispiel-Request an deinen Backend-Endpunkt
     const response = await $fetch("/api/company/create", {
-      method: 'POST',
+      method: "POST",
       body: {
-        name: companyName.value,
-				gameCode: gameCode
-      }
-    })
-    console.log('Successfully joined:', response)
+        name: company.value.name,
+        color: company.value.color,
+        gameCode: gameCode,
+      },
+    });
+    console.log("Successfully joined:", response);
   } catch (error) {
-		console.log(`error: ${error.message}`)
-		toast.add({
-			title: "Failure",
-			description: error.statusMessage,
-			color: "danger",
-		});
+    console.log(`error: ${error.message}`);
+    toast.add({
+      title: "Failure",
+      description: error.statusMessage,
+      color: "danger",
+    });
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
 </script>
