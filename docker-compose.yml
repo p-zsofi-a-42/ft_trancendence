@@ -32,7 +32,10 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       TOKEN_SECRET: ${TOKEN_SECRET}
       REDIS_URL: redis://redis:6379
+      AVATAR_DIR: /data/avatars
     # No ports: only the web service can reach it, on the Compose network.
+    volumes:
+      - avatars:/data/avatars
     depends_on:
       postgres:
         condition: service_healthy
@@ -119,9 +122,11 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       TOKEN_SECRET: ${TOKEN_SECRET}
       REDIS_URL: redis://redis:6379
+      AVATAR_DIR: /data/avatars
     volumes:
       - ./services/user:/app
       - user_node_modules:/app/node_modules
+      - avatars:/data/avatars
     depends_on:
       postgres:
         condition: service_healthy
@@ -178,6 +183,8 @@ volumes:
   web_node_modules:
     driver: local
   user_node_modules:
+    driver: local
+  avatars:
     driver: local
   game_node_modules:
     driver: local

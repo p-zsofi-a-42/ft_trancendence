@@ -18,7 +18,7 @@ export async function signServiceToken(userId: number | string) {
 // 3. Returns a Promise resolving to the response of type T.
 export async function callUserService<T>(
   path: string,
-  options: { method?: 'GET' | 'POST'; body?: Record<string, unknown>; userId?: number } = {},
+  options: { method?: 'GET' | 'POST' | 'PATCH'; body?: Record<string, unknown> | FormData; userId?: number } = {},
 ): Promise<T> {
   const headers: Record<string, string> = {}
   if (options.userId !== undefined) {
@@ -38,6 +38,23 @@ export async function callUserService<T>(
       statusMessage: err.data?.message ?? 'User service unavailable',
     })
   }
+}
+
+// Fetches a non-JSON response from the user service (e.g. an image). Returns null on 404.
+export async function fetchUserServiceFile(
+  path: string,
+  userId: number | string,
+): Promise<{ data: ArrayBuffer; type: string } | null> {
+  const res = await $fetch.raw<ArrayBuffer>(`${useRuntimeConfig().userServiceUrl}${path}`, {
+    responseType: 'arrayBuffer',
+    headers: { authorization: `Bearer ${await signServiceToken(userId)}` },
+    ignoreResponseError: true,
+  })
+  if (res.status === 404) return null
+  if (!res.ok || !res._data) {
+    throw createError({ statusCode: 502, statusMessage: 'User service unavailable' })
+  }
+  return { data: res._data, type: res.headers.get('content-type') ?? 'application/octet-stream' }
 }
 
 // TODO: set user-id header
