@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import InputErrorTT from "../Custom/InputErrorTT.vue";
+
 const props = withDefaults(
   defineProps<{
     name: string;
@@ -24,18 +26,7 @@ const model = defineModel<string>({ required: true });
     :ui="{ root: 'items-center', error: 'hidden' }"
   >
     <template #default="{ error }">
-      <UTooltip
-        :text="typeof error === 'string' ? error : 'Required'"
-        :open="Boolean(error)"
-        :disabled="!error"
-        :arrow="true"
-        :ui="{
-          text: 'text-error',
-          content: 'bg-neutral-800',
-          arrow: 'fill-neutral-800',
-        }"
-        :content="{ side: errorSide ?? 'right' }"
-      >
+      <InputErrorTT :error="error">
         <UInput
           v-model="model"
           :placeholder="placeholder"
@@ -46,7 +37,7 @@ const model = defineModel<string>({ required: true });
             <slot name="input-trailing" />
           </template>
         </UInput>
-      </UTooltip>
+      </InputErrorTT>
     </template>
   </UFormField>
 </template>
