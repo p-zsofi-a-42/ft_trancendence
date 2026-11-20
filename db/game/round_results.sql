@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS round_results (
 	price					BIGINT NOT NULL CHECK (price >= 0),
 	ownership			SMALLINT NOT NULL CHECK (ownership BETWEEN 0 AND 100),
 	locked				BOOLEAN NOT NULL DEFAULT false,
+	locked_at			TIMESTAMPTZ,
 	UNIQUE (round_id, company_id)
 );
 
