@@ -83,12 +83,12 @@ const splitterItems: SplitterItem[] = [
             <UButton
               :disabled="accepting.has(user.id)"
               @click="acceptRequest(user.id)"
-              leading-icon="i-lucide-check"
+              leading-icon="i-myOwn-check"
             />
             <UButton
               :disabled="declining.has(user.id)"
               @click="declineRequest(user.id)"
-              leading-icon="i-lucide-x"
+              leading-icon="i-myOwn-x"
             />
           </template>
         </CustomUserList>

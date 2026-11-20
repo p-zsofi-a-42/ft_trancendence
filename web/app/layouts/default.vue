@@ -95,7 +95,7 @@ useHead({
               color="neutral"
               variant="foyer"
               block
-              trailing-icon="i-lucide-chevron-down"
+              trailing-icon="i-myOwn-chevron-down"
               aria-label="Profile"
             >
               <CustomUser v-if="loggedIn && user" :user="user" size="xl" />

@@ -25,6 +25,11 @@ export default defineNuxtConfig({
       watch: { usePolling: true },
     },
   },
-	css: ['~/assets/css/main.css'],
+  css: ['~/assets/css/main.css'],
+  icon: {
+    customCollections: [{
+      prefix: 'myOwn',
+      dir: './app/assets/icons'
+    }]
+  }
 })
-

@@ -17,17 +17,17 @@ const stepper_items = ref<StepperItem[]>([
   {
     title: "Foyer Setup",
     slot: "overview",
-    icon: "i-lucide-users",
+    icon: "i-myOwn-users",
   },
   {
     title: "Company Setup",
     slot: "company-setup",
-    icon: "i-lucide-building-complex",
+    icon: "i-myOwn-building-complex",
   },
   {
     title: "Game Start",
     slot: "game-start",
-    icon: "i-lucide-gamepad-2",
+    icon: "i-myOwn-gamepad-2",
   },
 ]);
 

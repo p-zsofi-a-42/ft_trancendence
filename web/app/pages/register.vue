@@ -32,13 +32,13 @@ const fields: AuthFormField[] = [
 // OAuth providers for social login (e.g., 42, GitHub)
 const providers = [
   {
-    icon: "i-simple-icons-42",
+    icon: "i-myOwn-42",
     onClick: () => {
       window.location.href = "/api/auth/oauth/login?provider=42";
     },
   },
   {
-    icon: "i-simple-icons-github",
+    icon: "i-myOwn-github",
     onClick: () => {
       window.location.href = "/api/auth/oauth/login?provider=github";
     },
@@ -87,7 +87,7 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
         :providers="providers"
         :loading="loading"
         title="Sign Up"
-        icon="i-lucide-user"
+        icon="i-myOwn-user"
         @submit="onSubmit"
         :ui="{
           leadingIcon: 'text-white',

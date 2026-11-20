@@ -72,7 +72,7 @@ const emit = defineEmits<{
                     :color="copied ? 'success' : 'neutral'"
                     variant="link"
                     size="sm"
-                    :icon="copied ? 'i-lucide-copy-check' : 'i-lucide-copy'"
+                    :icon="copied ? 'i-myOwn-copy-check' : 'i-myOwn-copy'"
                     aria-label="Copy to clipboard"
                     @click="copy(props.foyerCode)"
                   />
