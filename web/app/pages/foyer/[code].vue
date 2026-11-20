@@ -14,13 +14,19 @@
       <template #content="{ item }">
         <div class="flex h-full flex-col">
           <div class="min-h-0 flex-1">
-            <FoyerSetupOverview
+            <FoyerOverview
               v-if="item?.value === 'overview'"
               :game-code="gameCode"
+              :players="players"
+              :companies="companies"
+              v-model="settings"
               @continue="stepper?.next()"
             />
 
-            <FoyerSetupCompany v-else-if="item?.value === 'company-setup'" />
+            <FoyerCompany
+              v-else-if="item?.value === 'company-setup'"
+              v-model="companies"
+            />
             <UCard
               v-else-if="item?.value === 'game-start'"
               variant="outline"
@@ -36,26 +42,26 @@
           </div>
           <div v-if="stepper?.hasNext" class="ml-auto flex p-4 pt-0">
             <UButton
-              class="mx-3 bg-red-500 text-white disabled:opacity-0"
-              :disabled="!stepper?.hasPrev"
+              class="mx-3 bg-red-500 text-white disabled:opacity-0 hover:bg-red-500/50"
               size="xl"
               variant="foyer"
+              :disabled="!stepper?.hasPrev"
               @click="stepper?.prev()"
             >
               Back
             </UButton>
             <UButton
-              class="text-white disabled:opacity-0"
+              class="disabled:opacity-0"
               size="xl"
               variant="foyer"
-              :type="activeStep === 'overview' ? 'submit' : 'button'"
-              :form="
-                activeStep === 'overview' ? 'foyer-settings-form' : undefined
-              "
               :disabled="!stepper?.hasNext"
-              :loading="isLoading"
+              @click="
+                activeStep === 'overview'
+                  ? stepper?.next()
+                  : navigateTo(`/game/${gameCode}`)
+              "
             >
-              {{ !stepper?.hasNext ? "Start" : "Next" }}
+              {{ activeStep === "overview" ? "Next" : "Start" }}
             </UButton>
           </div>
         </div>
@@ -67,13 +73,38 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import type { StepperItem } from "@nuxt/ui";
+import type { UserSummary } from "#imports";
 
 const route = useRoute();
+const { user } = useUserSession();
+const gameCode: string = String(route.params.code);
 
-// Den dynamischen Parameter [code] aus der URL auslesen
-const gameCode = route.params.code;
+let settings = ref<Game>(
+  await $fetch(`/api/game/${gameCode}`, { method: "GET" }),
+);
 
-const isLoading = ref(false);
+const { data: companies } = await useFetch<Company[]>(
+  () => `/api/foyer/${gameCode}/companies`,
+  { default: () => [] },
+);
+
+const players = computed<UserSummary[]>(() => {
+  const playersById = new Map<string, UserSummary>();
+
+  for (const company of companies.value) {
+    const id = String(company.userId);
+
+    playersById.set(id, {
+      id,
+      name:
+        id === String(user.value?.id)
+          ? (user.value?.name ?? `Player ${id}`)
+          : `Player ${id}`,
+    });
+  }
+
+  return [...playersById.values()];
+});
 
 const stepper_items = ref<StepperItem[]>([
   {
@@ -92,7 +123,6 @@ const stepper_items = ref<StepperItem[]>([
     icon: "i-lucide-gamepad-2",
   },
 ]);
-
-const activeStep = ref("overview");
 const stepper = useTemplateRef("stepper");
+const activeStep = ref("overview");
 </script>

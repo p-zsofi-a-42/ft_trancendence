@@ -5,15 +5,13 @@ import type { Company } from "#shared/types/game";
 
 const route = useRoute();
 const { user } = useUserSession();
-const gameCode: string = String(route.params.code);
 
-const { data: companies } = await useFetch<Company[]>(
-  () => `/api/foyer/${gameCode}/companies`,
-  { default: () => [] },
-);
+const companiesModel = defineModel<Company[]>({
+  required: true,
+});
 
 const userCompany = computed(() =>
-  companies.value.find(
+  companiesModel.value.find(
     (company) => String(company.userId) === String(user.value?.id),
   ),
 );

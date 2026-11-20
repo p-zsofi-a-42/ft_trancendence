@@ -13,15 +13,15 @@ export type Company = {
 };
 
 export type Game = {
-  id_code: string;
-  n_players: number;
-  n_rounds: number;
-  current_round: number;
-  seed_capital: number;
-  creator_id: number;
-  minutes_per_round: number;
+  idCode: string;
+  nPlayers: number;
+  nRounds: number;
+  currentRound: number;
+  seedCapital: number;
+  creatorId: number;
+  minutesPerRound: number;
   status: "created" | "ongoing" | "done";
-  created_at: string;
+  createdAt: string;
 };
 
 export type Round = {
