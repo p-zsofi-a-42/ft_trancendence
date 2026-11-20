@@ -1,3 +1,9 @@
+// TODO: redundant, use Game instead
+export type Foyer = {
+  name: string;
+  companyCount: number;
+};
+
 export type Company = {
   id: number;
   userId: number;
