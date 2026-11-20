@@ -1,4 +1,5 @@
-import { defineHandler, getRequestHeader, readValidatedBody, createError } from "h3";
+import { defineHandler, getRequestHeader, readValidatedBody } from "h3";
+import { HTTPError } from "nitro";
 import z from "zod";
 import { db, games } from "@utils/db";
 import type { Game } from "@utils/db"
@@ -7,19 +8,28 @@ import { genCode } from "@utils/genGameCode";
 const validInput = z.strictObject({
 	nPlayers: z.number().int().min(3).max(5),
 	nRounds: z.number().int().min(1).max(40),
-	seedCapital: z.number().int().min(100_000).max(10_000_000)
+	seedCapital: z.number().int().min(100_000).max(10_000_000),
+	minutesPerRound: z.number().int().min(1).max(60)
 });
 
 /*
  * Create a new game with a uniquely generated id code and the fields provided in the request body validated against the validInput schema.
  */
 export default defineHandler(async (event) => {
-	const userId = z.coerce.bigint().min(1).parse(getRequestHeader(event, "user-id"));
-	const body = await readValidatedBody(event, validInput.parse);
+	let newGame = undefined;
 
-	const newGame = await insertGame({ ...body, creatorId: userId });
-	console.log(`created game(${newGame.id}): ${JSON.stringify(newGame)}`);
-	return { success: true, game: newGame };
+	try {
+		const userId = z.coerce.bigint().min(1).parse(getRequestHeader(event, "user-id"));
+		const body = await readValidatedBody(event, validInput.parse);
+		newGame = await insertGame({ ...body, creatorId: userId });
+		console.log(`created game(${newGame.id}): ${JSON.stringify(newGame)}`);
+		return newGame;
+	} catch (error: any) {
+		console.log(`Error at /api/foyer/create.post: ${error.message} instance of ${error.constructor.name}`);
+		if (error instanceof HTTPError)
+			throw error;
+		throw new HTTPError("failed to create game", { status: 500 });
+	}
 });
 
 /*

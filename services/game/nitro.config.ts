@@ -7,4 +7,5 @@ export default defineConfig({
 		"@core": "/app/core",
 		"@utils": "/app/utils",
 	},
+	plugins: ["plugins/scheduler.ts"],
 });

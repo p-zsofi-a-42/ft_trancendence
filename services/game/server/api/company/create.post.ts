@@ -3,6 +3,7 @@ import z from "zod";
 import { eq } from "drizzle-orm"
 import { client, connection } from "@utils/redis";
 import { db, games, companies } from "@utils/db";
+import { HTTPError } from "nitro";
 
 const validInput = z.strictObject({
 	gameCode: z.string().min(6).max(12),
@@ -15,21 +16,32 @@ const validInput = z.strictObject({
 export default defineHandler(async (event) => {
 	const userId = z.coerce.bigint().min(1).parse(getRequestHeader(event, "user-id"));
 	const body = await readValidatedBody(event, validInput.parse);
+	let game, row = undefined;
 
-	const [game] = await db
-		.select({ id: games.id })
-		.from(games)
-		.where(eq(games.idCode, body.gameCode));
-	if (!game.id)
-		throw Error(`game code does not exist (${game.idCode})`);
+	try {
+		[game] = await db
+			.select({ id: games.id })
+			.from(games)
+			.where(eq(games.idCode, body.gameCode));
+	} catch (error: any) {
+		console.log(`Error at /api/company/create.post: ${error.message}`);
+		throw new HTTPError("failed to retrieve game", { status: 500 });
+	}
+	if (!game)
+		throw new HTTPError({ message: "game does not exist", status: 400 });
 	// TODO: check if the game is already full
-	const [row] = await db
-		.insert(companies)
-		.values({ name: body.name, gameId: game.id, userId: userId })
-		.onConflictDoNothing({ target: [companies.gameId, companies.userId] })
-		.returning();
+	try {
+		[row] = await db
+			.insert(companies)
+			.values({ name: body.name, gameId: game.id, userId: userId })
+			.onConflictDoNothing({ target: [companies.gameId, companies.userId] })
+			.returning();
+	} catch (error: any) {
+		console.log(`Error at /api/company/create.get: ${error.message}`);
+		throw new HTTPError({ message: "failed to create company", status: 500 });
+	}
 	if (!row)
-		throw createError({statusCode: 409, statusMessage: "already joined"});
+		throw new HTTPError({ message: "already joined", status: 400 });
 	// publish the new company to the game session channel
 	await connection;
 	await client.publish(`game:session:${body.gameCode}`, JSON.stringify({ type: "joined", company: row }));
