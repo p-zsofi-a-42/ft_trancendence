@@ -1,11 +1,48 @@
 import type { ColorModeSelectProps } from "@nuxt/ui/runtime/components/color-mode/ColorModeSelect.vue.js";
 
-export interface Foyer {
-  name: string;
-  companyCount: number;
+// TODO: redundant, use Game instead
+export type Foyer = {
+	name: string;
+	companyCount: number;
+};
+
+export type Company = {
+	id: number;
+	userId: number;
+	name: string;
+	color: string;
+	createdAt: string;
 }
 
-export interface Company {
-  name: string;
-  color: string;
-}
+export type Game = {
+	id_code: string;
+	n_players: number;
+	n_rounds: number;
+	current_round: number;
+	seed_capital: number;
+	creator_id: number;
+	minutes_per_round: number;
+	status: "created" | "ongoing" | "done";
+	created_at: string;
+};
+
+export type Round = {
+	id: number;
+	index: number;
+	endsAt: string;
+	status: "ongoing" | "paused" | "done";
+};
+
+export type RoundResult = {
+	id: number;
+	roundId: number;
+	companyId: number;
+	capital: number;
+	customers: number;
+	quality: number;
+	n_developers: number;
+	n_salespeople: number;
+	price: number;
+	ownership: number;
+	locked: boolean;
+};
