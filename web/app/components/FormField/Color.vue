@@ -20,21 +20,6 @@ const colorClasses: Record<string, string> = {
   yellow: "bg-yellow-500",
   purple: "bg-purple-500",
 };
-
-const colorItems = computed(() =>
-  props.colors.map((color) => ({
-    label: color,
-    value: color,
-    ui: {
-      item: [
-        "size-8 rounded-full",
-        colorClasses[color] ?? "bg-neutral-500",
-        "has-data-[state=checked]:ring-2 has-data-[state=checked]:ring-white has-data-[state=checked]:ring-offset-2",
-      ],
-      label: "sr-only",
-    },
-  })),
-);
 </script>
 
 <template>

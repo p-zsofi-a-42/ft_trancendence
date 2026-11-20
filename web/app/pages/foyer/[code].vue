@@ -17,14 +17,10 @@
             <FoyerSetupOverview
               v-if="item?.value === 'overview'"
               :game-code="gameCode"
-              v-model:settings="settings"
               @continue="stepper?.next()"
             />
 
-            <FoyerSetupCompany
-              v-else-if="item?.value === 'company-setup'"
-              v-model:company="company"
-            />
+            <FoyerSetupCompany v-else-if="item?.value === 'company-setup'" />
             <UCard
               v-else-if="item?.value === 'game-start'"
               variant="outline"
@@ -58,9 +54,6 @@
               "
               :disabled="!stepper?.hasNext"
               :loading="isLoading"
-              @click="
-                activeStep === 'company-setup' ? handleSubmit() : undefined
-              "
             >
               {{ !stepper?.hasNext ? "Start" : "Next" }}
             </UButton>
@@ -74,7 +67,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import type { StepperItem } from "@nuxt/ui";
-import type { GameSettings, Company } from "#shared/types/game";
 
 const route = useRoute();
 
@@ -82,30 +74,6 @@ const route = useRoute();
 const gameCode = route.params.code;
 
 const isLoading = ref(false);
-const errorMessage = ref(null);
-
-const toast = useToast();
-let companies = ref<Company[]>(
-  await $fetch<Company[]>(`/api/foyer/${gameCode}/companies`, {
-    method: "GET",
-  }),
-);
-
-let socket: WebSocket | null = null;
-let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-let closedByUs = false;
-
-const settings = ref<GameSettings>({
-  cityName: "Baguette City",
-  companyCount: 3,
-  startingCapital: 10000,
-  roundCount: 12,
-});
-
-const company = ref<Company>({
-  name: "",
-  color: "red",
-});
 
 const stepper_items = ref<StepperItem[]>([
   {
@@ -127,67 +95,4 @@ const stepper_items = ref<StepperItem[]>([
 
 const activeStep = ref("overview");
 const stepper = useTemplateRef("stepper");
-
-async function connectWebSocket() {
-  // Fresh Ticket on every connection attempt
-  const ticket = await $fetch<{ ticket: string }>(
-    `/api/foyer/${gameCode}/ws-ticket`,
-    { method: "POST" },
-  );
-  console.log("Obtained WebSocket ticket:", ticket.ticket);
-  // Connect to WebSocket with the obtained ticket
-  const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-  socket = new WebSocket(
-    `${protocol}//${location.host}/ws/game?ticket=${ticket.ticket}`,
-  );
-
-  // Handle incoming events from the Websocket
-  socket.onmessage = (event) => {
-    const payloadEvent = JSON.parse(event.data);
-    console.log(`Event received: ${JSON.stringify(payloadEvent)}`);
-    if (payloadEvent.type == "joined")
-      companies.value.push(payloadEvent.company);
-  };
-
-  // Handle WebSocket close event
-  socket.onclose = () => {
-    if (closedByUs) return;
-    reconnectTimer = setTimeout(connectWebSocket, 2000);
-  };
-}
-// Connect WebSocket on component mount
-onMounted(connectWebSocket);
-// Disconnect WebSocket on component unmount
-onBeforeUnmount(() => {
-  closedByUs = true;
-  if (reconnectTimer) clearTimeout(reconnectTimer);
-  socket?.close();
-});
-
-const handleSubmit = async () => {
-  isLoading.value = true;
-  errorMessage.value = null;
-
-  try {
-    // Beispiel-Request an deinen Backend-Endpunkt
-    const response = await $fetch("/api/company/create", {
-      method: "POST",
-      body: {
-        name: company.value.name,
-        color: company.value.color,
-        gameCode: gameCode,
-      },
-    });
-    console.log("Successfully joined:", response);
-  } catch (error) {
-    console.log(`error: ${error.message}`);
-    toast.add({
-      title: "Failure",
-      description: error.statusMessage,
-      color: "danger",
-    });
-  } finally {
-    isLoading.value = false;
-  }
-};
 </script>

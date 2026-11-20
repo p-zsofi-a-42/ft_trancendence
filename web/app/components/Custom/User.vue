@@ -22,7 +22,6 @@ const props = defineProps<{
   <UUser
     :name="user.name"
     :size="size"
-    chip
     :avatar="{
       src: `/api/users/${user.id}/avatar`,
       loading: 'lazy',

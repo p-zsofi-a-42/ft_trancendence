@@ -3,7 +3,27 @@ import type { FormError, FormSubmitEvent } from "@nuxt/ui";
 import type { SplitterItem } from "@nuxt/ui";
 import type { Company } from "#shared/types/game";
 
-const company = defineModel<Company>("company", { required: true });
+const route = useRoute();
+const { user } = useUserSession();
+const gameCode: string = String(route.params.code);
+
+const { data: companies } = await useFetch<Company[]>(
+  () => `/api/foyer/${gameCode}/companies`,
+  { default: () => [] },
+);
+
+const userCompany = computed(() =>
+  companies.value.find(
+    (company) => String(company.userId) === String(user.value?.id),
+  ),
+);
+
+type CompanyDraft = Pick<Company, "name" | "color">;
+
+const companyForm = reactive<CompanyDraft>({
+  name: userCompany.value?.name ?? "",
+  color: userCompany.value?.color ?? "red",
+});
 
 function validate(state: Partial<Company>): FormError[] {
   const errors: FormError[] = [];
@@ -49,19 +69,19 @@ async function submit(event: FormSubmitEvent<Company>) {
     <template #config>
       <UCard title="Company Config" variant="foyer">
         <UForm
-          :state="company"
+          :state="companyForm"
           :validate="validate"
           @submit="submit"
           class="flex flex-col gap-4"
         >
           <FormFieldString
-            v-model="company.name"
+            v-model="companyForm.name"
             label="Name"
             name="name"
             required
           />
           <FormFieldColor
-            v-model="company.color"
+            v-model="companyForm.color"
             label="Company color"
             name="color"
             :colors="['red', 'blue', 'green', 'yellow', 'purple']"
