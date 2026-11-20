@@ -19,9 +19,9 @@ export default defineHandler(async (event) => {
 			.where(eq(games.idCode, routerParams.code));
 	} catch (error: any) {
 		console.log(`Error at /api/game/[code]/index.get: ${error.message}`);
-		throw new HTTPError("failed to retrieve game", { status: 500 });
+		throw new HTTPError({ message: "failed to retrieve game", status: 500 });
 	}
 	if (!game)
-		throw new HTTPError("game not found", { status: 404 });
+		throw new HTTPError({ message: "game not found", status: 404 });
 	return (game);
 });

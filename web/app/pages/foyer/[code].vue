@@ -55,7 +55,7 @@ const isLoading = ref(false)
 const errorMessage = ref(null)
 
 const toast = useToast();
-let companies = ref(await $fetch(`/api/foyer/${gameCode}/companies`, { method: "GET" }));
+let companies = ref(await $fetch(`/api/game/${gameCode}/companies`, { method: "GET" }));
 
 
 let socket: WebSocket | null = null

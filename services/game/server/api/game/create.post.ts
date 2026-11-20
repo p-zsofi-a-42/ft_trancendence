@@ -16,19 +16,19 @@ const validInput = z.strictObject({
  * Create a new game with a uniquely generated id code and the fields provided in the request body validated against the validInput schema.
  */
 export default defineHandler(async (event) => {
+	const body = await readValidatedBody(event, validInput.parse);
 	let newGame = undefined;
 
 	try {
 		const userId = z.coerce.bigint().min(1).parse(getRequestHeader(event, "user-id"));
-		const body = await readValidatedBody(event, validInput.parse);
 		newGame = await insertGame({ ...body, creatorId: userId });
 		console.log(`created game(${newGame.id}): ${JSON.stringify(newGame)}`);
 		return newGame;
 	} catch (error: any) {
-		console.log(`Error at /api/foyer/create.post: ${error.message} instance of ${error.constructor.name}`);
+		console.log(`Error at /api/game/create.post: ${error.message} instance of ${error.constructor.name}`);
 		if (error instanceof HTTPError)
 			throw error;
-		throw new HTTPError("failed to create game", { status: 500 });
+		throw new HTTPError({ message: "failed to create game", status: 500 });
 	}
 });
 

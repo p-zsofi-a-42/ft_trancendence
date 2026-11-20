@@ -1,9 +1,11 @@
 import { drizzle } from "drizzle-orm/node-postgres";
-import { games } from "@db/schema/games"
-import { companies } from "@db/schema/companies"
+import { games } from "@db/schema/games";
+import { companies } from "@db/schema/companies";
+import { rounds } from "@db/schema/rounds";
+import { round_results } from "@db/schema/round_results";
 
 export const db = drizzle(process.env.DATABASE_URL!);
 
-export { games, companies };
+export { games, companies, rounds, round_results };
 
 export type Game = typeof games.$inferSelect;

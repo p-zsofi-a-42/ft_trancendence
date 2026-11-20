@@ -25,7 +25,7 @@ export default defineHandler(async (event) => {
 			.where(eq(games.idCode, body.gameCode));
 	} catch (error: any) {
 		console.log(`Error at /api/company/create.post: ${error.message}`);
-		throw new HTTPError("failed to retrieve game", { status: 500 });
+		throw new HTTPError({ message: "failed to retrieve game", status: 500 });
 	}
 	if (!game)
 		throw new HTTPError({ message: "game does not exist", status: 400 });

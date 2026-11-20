@@ -8,14 +8,14 @@ async function create() {
   /* create a new foyer session (game session)
    */
 	try {
-		const  response = await $fetch("/api/foyer/create", {
+		const game = await $fetch("/api/foyer/create", {
 			method: "POST",
-			body: {nPlayers: 3, nRounds: 12, seedCapital: 100000},
+			body: {nPlayers: 3, nRounds: 12, seedCapital: 100000, minutesPerRound: 1},
 		});
-		const game = response.game;
+		console.log(`response: ${JSON.stringify(game)}`);
 		const code = game.idCode;
-		console.log("Game code:", code);
 		
+		await $fetch(`/api/company/create`, { method: "POST", body: { gameCode: code, name: "" } });
 		toast.add({
 			title: "Success",
 			description: "The Foyer has been created.",
