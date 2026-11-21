@@ -61,4 +61,4 @@ make dev
 
 docker compose exec -T postgres psql -U $db_user -d $db_name <db/schema.sql
 
-cat db/game/games.sql db/game/companies.sql | docker compose exec -T game-db psql -U $db_user -d $db_name
+cat db/game/games.sql db/game/companies.sql db/game/rounds.sql db/game/round_results.sql | docker compose exec -T game-db psql -U $db_user -d $db_name
