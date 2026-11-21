@@ -65,7 +65,7 @@ async function lockRound(round: rounds): any {
 					eq(games.nRounds, round.index + 1)
 			)).returning();
 			if (!game) { // the game is not done yet
-				
+				// left off
 			}
 		});
 	} catch (error: any) {
