@@ -29,7 +29,7 @@ export default defineHandler(async (event) => {
 	let row = undefined;
 
 	if (Object.keys(body).length === 0)
-		throw new HTTPError({ message: "empty body", status: 400 });
+		throw new HTTPError({ statusMessage: "empty body", status: 400 });
 	try {
 		[row] = await db
 			.update(games)
@@ -41,10 +41,10 @@ export default defineHandler(async (event) => {
 			)).returning();
 	} catch (error: any) {
 		console.log(`Error at /api/game/[code]/update.patch: ${error.message}`);
-		throw new HTTPError({ message: "game update failed", status: 500 });
+		throw new HTTPError({ statusMessage: "game update failed", status: 500 });
 	}
 	if (!row)
-		throw new HTTPError({ message: "update not permitted", status: 400 });
+		throw new HTTPError({ statusMessage: "update not permitted", status: 400 });
 	console.log(`game(${routerParams.code}) successfully updated: ${JSON.stringify(row)}`);
 	return (row);
 });

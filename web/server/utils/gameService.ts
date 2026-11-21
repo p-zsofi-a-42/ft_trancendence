@@ -17,12 +17,11 @@ export async function callGameService<T>(
 			headers,
 		});
 	} catch (error: any) {
+		console.log(`Error calling game service at ${path}: ${error.message}`);
 		const statusCode = error?.statusCode ?? error?.response?.status;
 
-		console.log("hello gameS", statusCode);
 		if (statusCode && statusCode >= 400 && statusCode < 500)
-			throw createError({ error });
-		console.log(`Error calling game service at ${path}: ${error.message}`);
+			throw createError(error);
 		throw createError({ message: "Game service unavailable", status: 502 });
 	}
 }

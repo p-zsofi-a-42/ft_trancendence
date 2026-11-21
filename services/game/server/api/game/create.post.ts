@@ -28,7 +28,7 @@ export default defineHandler(async (event) => {
 		console.log(`Error at /api/game/create.post: ${error.message} instance of ${error.constructor.name}`);
 		if (error instanceof HTTPError)
 			throw error;
-		throw new HTTPError({ message: "failed to create game", status: 500 });
+		throw new HTTPError({ statusMessage: "failed to create game", status: 500 });
 	}
 });
 

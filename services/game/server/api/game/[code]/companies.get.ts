@@ -22,10 +22,10 @@ export default defineHandler(async (event) => {
 			.where(eq(games.idCode, routerParams.code));
 	} catch (error: any) {
 		console.log(`Error at /api/game/[code]/companies.get: ${error.message}`);
-		throw new HTTPError({ message: "failed to retrieve game", status: 500 });
+		throw new HTTPError({ statusMessage: "failed to retrieve game", status: 500 });
 	}
 	if (!game)
-		throw new HTTPError({ message: "game does not exist", status: 400 });
+		throw new HTTPError({ statusMessage: "game does not exist", status: 400 });
 	try {
 		const compList = await db
 			.select()
@@ -34,6 +34,6 @@ export default defineHandler(async (event) => {
 		return (compList);
 	} catch (error: any) {
 		console.log(`Error at /api/game/[code]/companies.get: ${error.message}`);
-		throw new HTTPError({ message: "failed to retrieve companies", status: 500 });
+		throw new HTTPError({ statusMessage: "failed to retrieve companies", status: 500 });
 	}
 });

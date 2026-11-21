@@ -26,7 +26,7 @@ export default defineHandler(async (event) => {
 				)).returning();
 			if (!game) {
 				console.log(`Error at /api/start/create.post: ${error.message}`);
-				throw new HTTPError({ message: "game not found", status: 404 });
+				throw new HTTPError({ statusMessage: "game not found", status: 404 });
 			}
 			// 2. create the first round for the game
 			const [round] = await tx.insert(rounds)
@@ -42,7 +42,7 @@ export default defineHandler(async (event) => {
 				.where(eq(companies.gameId, game.id))
 				.returning();
 			if (comps.length < 1)
-				throw new HTTPError({ message: "game can't be started without any players (companies)", status: 400 });
+				throw new HTTPError({ statusMessage: "game can't be started without any players (companies)", status: 400 });
 			await tx.insert(roundResults).values(
 				comps.map(c => ({
 					game_id: game.id,
@@ -62,10 +62,10 @@ export default defineHandler(async (event) => {
 		// notify all players that the game has started
 		await connection;
 		await client.publish(`game:session:${code}`, JSON.stringify({ type: "started" }));
-		// TODO: define channal event types (joined, started, etc)
+		// TODO: define channel event types (joined, started, etc)
 		// LEFT OFF HERE:
 		// 1. test the game start flow
-		// 2. create a api endpoint to retrieve all users/players of a game
+		// 2. create an api endpoint to retrieve all users/players of a game
 		// 3. game loop
 		//
 		// left overs from yesterday:
