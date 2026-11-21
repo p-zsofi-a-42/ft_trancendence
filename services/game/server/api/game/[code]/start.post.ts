@@ -1,8 +1,9 @@
-import { defineHandler, getRequestHeader, readValidatedBody } from "h3";
+import { defineHandler, getRequestHeader, getValidatedRouterParams } from "h3";
 import { HTTPError } from "nitro";
 import z from "zod";
 import { eq, and, sql } from "drizzle-orm";
-import { db, games, companies, rounds, round_results } from "@utils/db";
+import { db, games, companies, rounds, roundResults } from "@utils/db";
+import { client, connection } from "@utils/redis";
 import type { Game } from "@utils/db"
 
 const validParams = z.object({
@@ -20,38 +21,34 @@ export default defineHandler(async (event) => {
 			const [game] = await tx.update(games)
 				.set({ status: "ongoing" })
 				.where(and(
-					eq(games.id, routerParams.code),
+					eq(games.idCode, routerParams.code),
 					eq(games.creatorId, userId),
-					eq(games.status, "waiting")
+					eq(games.status, "created")
 				)).returning();
-			if (!game) {
-				console.log(`Error at /api/start/create.post: ${error.message}`);
+			if (!game)
 				throw new HTTPError({ statusMessage: "game not found", status: 404 });
-			}
 			// 2. create the first round for the game
 			const [round] = await tx.insert(rounds)
 				.values({
 					gameId: game.id,
 					index: 0,
-					endsAt: sql`now() + ${game.minuesPerRound} * interval '1 minute'`
-				})
-				.returning();
+					endsAt: sql`now() + ${game.minutesPerRound} * interval '1 minute'`
+				}).returning();
 			// 3. create round_results entries for each company in the game
 			const comps = await tx.select()
 				.from(companies)
-				.where(eq(companies.gameId, game.id))
-				.returning();
+				.where(eq(companies.gameId, game.id));
 			if (comps.length < 1)
 				throw new HTTPError({ statusMessage: "game can't be started without any players (companies)", status: 400 });
 			await tx.insert(roundResults).values(
+				/* TODO: remove hard coded start parameters, store them some place more accessable instead */
 				comps.map(c => ({
-					game_id: game.id,
-					round_id: round.id,
-					company_id: c.id,
-					capital: game.seed_capital,
-					/* TODO: remove hard coded start parameters, store them some place more accessable instead */
+					gameId: game.id,
+					roundId: round.id,
+					companyId: c.id,
+					capital: game.seedCapital,
 					customers: 0,
-					quility: 20,
+					quality: 20,
 					nDevelopers: 2,
 					nSalespeople: 2,
 					price: 1000,
@@ -59,13 +56,10 @@ export default defineHandler(async (event) => {
 				})),
 			);
 		});
-		// notify all players that the game has started
-		await connection;
-		await client.publish(`game:session:${code}`, JSON.stringify({ type: "started" }));
 		// TODO: define channel event types (joined, started, etc)
 		// LEFT OFF HERE:
 		// 1. test the game start flow
-		// 2. create an api endpoint to retrieve all users/players of a game
+		// done 2. create an api endpoint to retrieve all users/players of a game
 		// 3. game loop
 		//
 		// left overs from yesterday:
@@ -79,4 +73,7 @@ export default defineHandler(async (event) => {
 			throw error;
 		throw new HTTPError({message: "failed to start game", status: 500 });
 	}
+	// notify all players that the game has started
+	await connection;
+	await client.publish(`game:session:${routerParams.code}`, JSON.stringify({ type: "started" }));
 });

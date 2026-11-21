@@ -4,7 +4,7 @@ import { games } from "@db/schema/games";
 import { rounds } from "@db/schema/rounds";
 import { companies } from "@db/schema/companies";
 
-export const round_results = pgTable("round_results", {
+export const roundResults = pgTable("round_results", {
 	id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
 	gameId: bigint("game_id", { mode: "number" }).references(() => games.id),
 	roundId: bigint("round_id", { mode: "number" }).references(() => rounds.id),
@@ -13,7 +13,7 @@ export const round_results = pgTable("round_results", {
 	customers: smallint("customers").notNull(),
 	quality: smallint("quality").notNull(),
 	nDevelopers: smallint("n_developers").notNull(),
-	nDalespeople: smallint("n_salespeople").notNull(),
+	nSalespeople: smallint("n_salespeople").notNull(),
 	price: bigint("price", { mode: "number" }).notNull(),
 	ownership: smallint("ownership").notNull(),
 	locked: boolean("locked").notNull().default(false),

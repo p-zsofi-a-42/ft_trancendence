@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS rounds (
 	id				BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	game_id		BIGINT NOT NULL REFERENCES games(id),
-	index			SMALLINT NOT NULL CHECK (index >= 1),
+	index			SMALLINT NOT NULL CHECK (index >= 0),
 	ends_at		TIMESTAMPTZ NOT NULL,
 	status		TEXT NOT NULL DEFAULT 'ongoing'
 						CHECK (status IN ('ongoing', 'paused', 'done')),
