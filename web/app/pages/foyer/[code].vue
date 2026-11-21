@@ -25,7 +25,7 @@
       </p>
       <ul>
         <li v-for="company in companies" :key="company.id">
-					<p>{{ company }}</p>
+					<p>{{ company.name }}</p>
         </li>
       </ul>
 
@@ -38,6 +38,11 @@
         {{ isLoading ? 'Joining...' : 'Join Game' }}
       </button>
     </form>
+		<form @submit.prevent="handleStart">
+			<button type="submit"
+        class="w-full my-2 py-2 px-4 bg-black text-white rounded-md hover:opacity-80 disabled:opacity-50 transition-opacity"
+				>Start</button>
+		</form>
   </div>
 </template>
 
@@ -46,16 +51,36 @@ import { ref } from 'vue'
 
 const route = useRoute()
 const router = useRouter()
+const toast = useToast();
 
 // Den dynamischen Parameter [code] aus der URL auslesen
 const gameCode = route.params.code
+let game = undefined;
+try {
+	game = await $fetch<Game>(`/api/game/${gameCode}`, { method: "GET" });
+	if (game.status === "ongoing") {
+		navigateTo(`/game/${gameCode}`);
+		toast.add({
+			title: "Info",
+			description: "Game has already started",
+			color: "info",
+		});
+	}
+} catch (error: any) {
+	console.log(`error: ${error.message}`)
+	toast.add({
+		title: "Failure",
+		description: error.statusMessage,
+		color: "danger",
+	});
+	navigateTo("/play");
+}
 
 const companyName = ref('')
 const isLoading = ref(false)
 const errorMessage = ref(null)
 
-const toast = useToast();
-let companies = ref(await $fetch(`/api/game/${gameCode}/companies`, { method: "GET" }));
+let companies = ref(await $fetch(`/api/game/${gameCode}/players`, { method: "GET" }));
 
 
 let socket: WebSocket | null = null
@@ -121,5 +146,25 @@ const handleSubmit = async () => {
   } finally {
     isLoading.value = false
   }
+}
+
+const handleStart = async () => {
+	try {
+		const response = await $fetch(`/api/game/${gameCode}/start`,
+		{ method: "POST" })
+		toast.add({
+			title: "Success",
+			description: "Started game",
+			color: "success",
+		});
+		navigateTo(`/game/${gameCode}`);
+	} catch (error: any) {
+		console.log(`error: ${error.message}`)
+		toast.add({
+			title: "Failure",
+			description: error.statusMessage,
+			color: "danger",
+		});
+	}
 }
 </script>

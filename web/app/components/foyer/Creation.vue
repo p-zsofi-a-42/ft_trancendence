@@ -29,7 +29,7 @@ async function submit(event: FormSubmitEvent<Foyer>) {
 	try {
 		const  response = await $fetch("/api/foyer/create", {
 			method: "POST",
-			body: {nPlayers: 3, nRounds: 12, seedCapital: 100000},
+			body: {nPlayers: 3, nRounds: 12, seedCapital: 100000, minutesPerRound: 1},
 		});
 		const game = response.game;
 		const code = game.idCode;
