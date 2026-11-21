@@ -79,7 +79,7 @@ async function submit(event: FormSubmitEvent<Foyer>) {
         required
       />
       <UButton
-        class="mx-auto text-white"
+        class="mx-auto text-app-text"
         size="xl"
         type="submit"
         variant="foyer"

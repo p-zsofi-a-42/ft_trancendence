@@ -27,3 +27,8 @@ h6 {
 * {
 	box-sizing: border-box;
 }
+
+
+@theme inline {
+  --color-app-text: var(--app-text);
+}

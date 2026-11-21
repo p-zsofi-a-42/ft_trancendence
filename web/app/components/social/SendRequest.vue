@@ -60,7 +60,7 @@ const searchUsers = async () => {
   <UContainer class="justify-center items-center">
     <UCard
       :ui="{
-        root: 'w-full h-full text-white',
+        root: 'w-full h-full text-app-text',
         body: 'text-center items-start',
       }"
       variant="subtle"
@@ -78,7 +78,7 @@ const searchUsers = async () => {
     <UCard
       title="Search Results"
       :ui="{
-        root: 'w-full h-full text-white mt-4 py-4',
+        root: 'w-full h-full text-app-text mt-4 py-4',
         body: 'text-center items-start',
       }"
       variant="subtle"

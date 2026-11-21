@@ -90,7 +90,7 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
         icon="i-myOwn-user"
         @submit="onSubmit"
         :ui="{
-          leadingIcon: 'text-white',
+          leadingIcon: 'text-app-text',
         }"
       >
         <template #description>

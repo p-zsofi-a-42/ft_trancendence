@@ -6,16 +6,27 @@ export default defineAppConfig({
     },
     card: {
       slots: {
-        root: "flex flex-col w-fit rounded-2xl p-1 text-inverted",
+		root: [
+ 			'flex flex-col w-fit',
+  			'rounded-2xl p-1',
+  			'text-default'],
         title: "flex flex-col items-center content-center",
       },
       variants: {
         variant: {
           foyer: {
-            root: "bg-elevated/50 text-default w-full min-w-0",
+			root: [
+				'bg-elevated/50',
+				'w-full min-w-0',
+				'text-default'],
           },
         },
       },
+    },
+	pageCard: {
+      slots: {
+        root: 'text-default'
+      }
     },
     button: {
       variants: {

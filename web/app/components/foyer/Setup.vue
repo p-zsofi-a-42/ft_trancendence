@@ -68,7 +68,7 @@ const stepper = useTemplateRef("stepper");
             :ui="{
               root: 'h-full w-full items-center justify-center',
               title: 'text-2xl',
-              body: 'text-4xl text-white text-center',
+              body: 'text-app-text text-4xl text-center',
             }"
           >
             3
@@ -77,7 +77,7 @@ const stepper = useTemplateRef("stepper");
       </UStepper>
       <div v-if="stepper?.hasNext" class="ml-auto flex">
         <UButton
-          class="mx-3 bg-red-500 text-white disabled:opacity-0"
+          class="mx-3 bg-red-500 text-app-text disabled:opacity-0"
           :disabled="!stepper?.hasPrev"
           size="xl"
           variant="foyer"
@@ -86,7 +86,7 @@ const stepper = useTemplateRef("stepper");
           Back
         </UButton>
         <UButton
-          class="text-white disabled:opacity-0"
+          class="text-app-text disabled:opacity-0"
           size="xl"
           variant="foyer"
           :disabled="!stepper?.hasNext"

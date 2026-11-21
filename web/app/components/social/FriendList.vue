@@ -78,7 +78,7 @@ const blockUser = async (id: string) => {
 <template>
   <UCard
     :ui="{
-      root: 'w-full h-full text-white',
+      root: 'w-full h-full text-app-text',
       body: 'text-center items-start',
     }"
     variant="subtle"

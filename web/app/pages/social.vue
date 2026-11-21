@@ -33,7 +33,7 @@ const socialItems: TabsItem[] = [
       :items="socialItems"
       :ui="{
         root: 'bg-neutral-900 rounded-2xl p-4 h-full',
-        content: 'h-full text-white text-center m-2',
+        content: 'h-full text-app-text text-center m-2',
       }"
     >
       <template #friends>

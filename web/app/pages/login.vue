@@ -91,7 +91,7 @@ async function onSubmitTotp(payload: FormSubmitEvent<TotpSchema>) {
         title="Login"
         icon="i-myOwn-user"
         @submit="onSubmit"
-        :ui="{ leadingIcon: 'text-white' }"
+        :ui="{ leadingIcon: 'text-app-text' }"
       >
         <template #description>
           <p>Enter your credentials to access your account.</p>

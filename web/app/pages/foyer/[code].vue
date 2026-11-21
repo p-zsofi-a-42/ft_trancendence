@@ -33,7 +33,7 @@
       <button
         type="submit"
         :disabled="isLoading"
-        class="w-full py-2 px-4 bg-black text-white rounded-md hover:opacity-80 disabled:opacity-50 transition-opacity"
+        class="w-full py-2 px-4 bg-black text-app-text rounded-md hover:opacity-80 disabled:opacity-50 transition-opacity"
       >
         {{ isLoading ? 'Joining...' : 'Join Game' }}
       </button>

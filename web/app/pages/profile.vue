@@ -2,7 +2,7 @@
   <div v-if="user">
     <UCard
       :ui="{
-        root: 'text-white',
+        root: 'text-app-text',
       }"
     >
       <template #header>
