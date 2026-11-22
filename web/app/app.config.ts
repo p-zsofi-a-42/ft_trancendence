@@ -6,24 +6,28 @@ export default defineAppConfig({
     },
     card: {
       slots: {
-		root: [
- 			'flex flex-col w-fit',
-  			'rounded-2xl p-1',
-  			'text-default'],
+        root: [
+            'flex flex-col',
+            'w-fit',
+            'rounded-2xl',
+            'p-1',
+            'text-default'
+        ],
         title: "flex flex-col items-center content-center",
       },
       variants: {
         variant: {
           foyer: {
-			root: [
-				'bg-elevated/50',
-				'w-full min-w-0',
-				'text-default'],
+            root: [
+              'bg-elevated/50',
+              'w-full min-w-0',
+              'text-default',
+            ],
           },
         },
       },
     },
-	pageCard: {
+    pageCard: {
       slots: {
         root: 'text-default'
       }
@@ -45,3 +49,14 @@ export default defineAppConfig({
     },
   },
 });
+
+/*
+
+Sizes: xs, sm, md, lg, xl.
+
+Button:
+solid, outline, soft, subtle, ghost, link.
+Input
+outline, soft, subtle, ghost, none.
+
+*/
