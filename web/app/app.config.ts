@@ -14,6 +14,12 @@ export default defineAppConfig({
         arrow: `align-baseline`,
       },
     },
+    toast: {
+      slots: {
+        title: 'font-system-reply text-xs leading-tight',
+        description: 'font-system-reply text-xs leading-tight',
+      },
+    },
     card: {
       slots: {
         root: [

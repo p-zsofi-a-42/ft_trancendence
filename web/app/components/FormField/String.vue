@@ -30,7 +30,7 @@ const model = defineModel<string>({ required: true });
         :disabled="!error"
         :arrow="true"
         :ui="{
-          text: 'text-error',
+          text: 'font-system-reply text-error',
           content: 'bg-app-background',
           arrow: 'fill-app-background',
         }"

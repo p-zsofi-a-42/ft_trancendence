@@ -1,6 +1,7 @@
 <script setup lang="ts">
 //
 import type { BlockedUser } from "#shared/types/friends";
+const toast = useToast();
 
 // Fetch blocked users from the API
 const { data, error, refresh } = useFetch<BlockedUser[]>("/api/blocks", {
@@ -19,7 +20,11 @@ const unblockUser = async (userId: string) => {
     });
     await refresh();
   } catch (err: any) {
-    alert("Failed to unblock user: " + err.message);
+    toast.add({
+      title: "Unblock failed",
+      description: err.message ?? "An unexpected error occurred",
+      color: "error",
+    });
   }
 };
 </script>

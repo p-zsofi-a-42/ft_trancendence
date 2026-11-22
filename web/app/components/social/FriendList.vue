@@ -6,6 +6,7 @@ import type { ConversationResult } from "#shared/types/chats";
 // MESSAGING FRIENDS
 const messaging = ref<Set<string>>(new Set());
 const chatResponse = ref<ConversationResult | null>(null);
+const toast = useToast();
 /* Requesting a conversationID for messaging a friend.
 On success, go to /chats/:id */
 const messageFriend = async (id: string) => {
@@ -18,11 +19,13 @@ const messageFriend = async (id: string) => {
     if (chatResponse.value?.id) navigateTo(`/chats/${chatResponse.value.id}`);
     await refresh();
   } catch (err: any) {
-    alert(
-      err.statusCode === 404
+    toast.add({
+      title: "Chat failed",
+      description: err.statusCode === 404
         ? "No chat with this user"
         : "An unexpected error occurred",
-    );
+      color: "error",
+    });
   } finally {
     messaging.value.delete(id);
   }
@@ -47,11 +50,13 @@ const removeFriend = async (id: string) => {
     await $fetch("/api/friends/remove", { method: "POST", body: { id } });
     await refresh();
   } catch (err: any) {
-    alert(
-      err.statusCode === 404
+    toast.add({
+      title: "Remove failed",
+      description: err.statusCode === 404
         ? "No friendship with this user"
         : "An unexpected error occurred",
-    );
+      color: "error",
+    });
   } finally {
     removing.value.delete(id);
   }
@@ -66,9 +71,11 @@ const blockUser = async (id: string) => {
     await $fetch("/api/blocks/block", { method: "POST", body: { id } });
     await refresh();
   } catch (err: any) {
-    alert(
-      err.statusCode === 404 ? "No such user" : "An unexpected error occurred",
-    );
+    toast.add({
+      title: "Block failed",
+      description: err.statusCode === 404 ? "No such user" : "An unexpected error occurred",
+      color: "error",
+    });
   } finally {
     blocking.value.delete(id);
   }

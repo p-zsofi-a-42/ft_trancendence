@@ -20,7 +20,7 @@
         />
       </div>
 
-      <p v-if="errorMessage" class="text-red-600 text-sm">
+      <p v-if="errorMessage" class="font-system-reply text-error text-sm">
         {{ errorMessage }}
       </p>
       <ul>

@@ -13,6 +13,7 @@ const incoming = computed(() =>
 const outgoing = computed(() =>
   (data.value ?? []).filter((f) => f.friendship === "outgoing"),
 ); // Outgoing friend requests
+const toast = useToast();
 
 // ACCEPT FRIEND-REQUESTS
 const accepting = ref<Set<string>>(new Set());
@@ -23,11 +24,13 @@ const acceptRequest = async (id: string) => {
     await $fetch("/api/friends/accept", { method: "POST", body: { id } });
     await refresh();
   } catch (err: any) {
-    alert(
-      err.statusCode === 404
+    toast.add({
+      title: "Request failed",
+      description: err.statusCode === 404
         ? "No pending request from this user"
         : "An unexpected error occurred",
-    );
+      color: "error",
+    });
   } finally {
     accepting.value.delete(id);
   }
@@ -43,11 +46,13 @@ const declineRequest = async (id: string) => {
     await $fetch("/api/friends/decline", { method: "POST", body: { id } });
     await refresh();
   } catch (err: any) {
-    alert(
-      err.statusCode === 404
+    toast.add({
+      title: "Request failed",
+      description: err.statusCode === 404
         ? "No pending request from this user"
         : "An unexpected error occurred",
-    );
+      color: "error",
+    });
   } finally {
     declining.value.delete(id);
   }
