@@ -31,8 +31,8 @@ const model = defineModel<string>({ required: true });
         :arrow="true"
         :ui="{
           text: 'text-error',
-          content: 'bg-neutral-800',
-          arrow: 'fill-neutral-800',
+          content: 'bg-app-background',
+          arrow: 'fill-app-background',
         }"
         :content="{ side: errorSide ?? 'right' }"
       >

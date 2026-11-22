@@ -1,5 +1,18 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
+@import "./palette.css";
+
+@theme inline {
+  --color-app-text: var(--ui-text);
+  --color-app-background: var(--ui-bg);
+  --color-app-header-footer: var(--ui-bg-accented);
+}
+
+@layer base {
+  body {
+    @apply text-app-text;
+  }
+}
 
 /* FONTS */
 @theme {
@@ -28,7 +41,25 @@ h6 {
 	box-sizing: border-box;
 }
 
+body {
+  min-height: 100vh;
+  background: 
+  linear-gradient(
+    to bottom,
+    var(--app-gradient-a) 0%,
+    var(--app-gradient-b) 50%,
+    var(--ui-bg) 75%,
+    var(--ui-bg) 100%
+  );
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
 
-@theme inline {
-  --color-app-text: var(--app-text);
+.dark body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 70%);
+  pointer-events: none;
+  z-index: 0;
 }

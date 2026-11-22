@@ -1,8 +1,18 @@
 export default defineAppConfig({
-  ui: {
-    colors: {
-      primary: "blue",
-      secondary: "amber",
+	ui: {
+	colors: {
+		primary: 'myor-a',
+		secondary: 'myor-b',
+		neutral: 'mygray',
+		success: 'mysuccess',
+		info: 'myblue',
+		warning: 'mywarning',
+		error: 'myerror',
+    },
+    tooltip: {
+      slots: {
+        arrow: `align-baseline`,
+      },
     },
     card: {
       slots: {

@@ -32,7 +32,7 @@ const socialItems: TabsItem[] = [
     <UTabs
       :items="socialItems"
       :ui="{
-        root: 'bg-neutral-900 rounded-2xl p-4 h-full',
+        root: 'bg-accented rounded-2xl p-4 h-full',
         content: 'h-full text-app-text text-center m-2',
       }"
     >

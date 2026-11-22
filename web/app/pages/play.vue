@@ -77,7 +77,7 @@ function validate(state: Partial<Foyer>): FormError[] {
     }"
   >
     <UForm @click="create">
-      <UButton class="text-app-text" size="xl" type="button"> Create </UButton>
+      <UButton size="xl" type="button"> Create </UButton>
     </UForm>
     <USeparator
       color="primary"
@@ -99,7 +99,7 @@ function validate(state: Partial<Foyer>): FormError[] {
         required
       >
         <template #input-trailing>
-          <UButton class="text-app-text" size="xl" type="submit"> Join </UButton>
+          <UButton size="xl" type="submit"> Join </UButton>
         </template>
       </FormFieldString>
     </UForm>
