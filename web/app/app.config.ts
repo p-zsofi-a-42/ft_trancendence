@@ -1,13 +1,13 @@
 export default defineAppConfig({
-	ui: {
-	colors: {
-		primary: 'myor-a',
-		secondary: 'myor-b',
-		neutral: 'mygray',
-		success: 'mysuccess',
-		info: 'myblue',
-		warning: 'mywarning',
-		error: 'myerror',
+  ui: {
+    colors: {
+      primary: "myor-a",
+      secondary: "myor-b",
+      neutral: "mygray",
+      success: "mysuccess",
+      info: "myblue",
+      warning: "mywarning",
+      error: "myerror",
     },
     tooltip: {
       slots: {
@@ -16,37 +16,27 @@ export default defineAppConfig({
     },
     toast: {
       slots: {
-        title: 'font-system-reply text-xs leading-tight',
-        description: 'font-system-reply text-xs leading-tight',
+        title: "font-system-reply text-xs leading-tight",
+        description: "font-system-reply text-xs leading-tight",
       },
     },
     card: {
       slots: {
-        root: [
-            'flex flex-col',
-            'w-fit',
-            'rounded-2xl',
-            'p-1',
-            'text-default'
-        ],
+        root: ["flex flex-col", "w-fit", "rounded-2xl", "p-1", "text-default"],
         title: "flex flex-col items-center content-center",
       },
       variants: {
         variant: {
           foyer: {
-            root: [
-              'bg-elevated/50',
-              'w-full min-w-0',
-              'text-default',
-            ],
+            root: ["bg-elevated/50", "w-full min-w-0", "text-default"],
           },
         },
       },
     },
     pageCard: {
       slots: {
-        root: 'text-default'
-      }
+        root: "text-default",
+      },
     },
     button: {
       variants: {
