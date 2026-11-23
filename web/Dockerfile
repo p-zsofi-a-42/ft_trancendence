@@ -2,6 +2,12 @@ FROM node:24-alpine AS base
 WORKDIR /app
 COPY package*.json ./
 
+# Testing stage
+FROM base AS tester
+RUN npm ci
+COPY . .
+CMD ["npm", "run", "test"]
+
 # Dev stage: source is bind-mounted in docker-compose.yml, so `npm run dev`
 # picks up file changes and hot-reloads without rebuilding the image.
 FROM base AS dev
