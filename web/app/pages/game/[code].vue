@@ -21,17 +21,17 @@
           class="flex h-full w-full min-w-0 flex-col gap-4 overflow-auto px-4"
         >
           <header
-            class="rounded-2xl h-14 border-4 border-primary bg-neutral-900 text-center mb-4"
+            class="rounded-2xl h-14 border-4 border-primary bg-bg text-center mb-4"
           >
             <div
-              class="border-b-4 border-x-4 border-primary rounded-b-2xl text-center justify-center items-center w-fit p-2 mx-auto inset-1 z-10 bg-neutral-900 text-white"
+              class="border-b-4 border-x-4 border-primary rounded-b-2xl text-center justify-center items-center w-fit p-2 mx-auto inset-1 z-10 bg-bg text-text"
             >
               <h1 class="text-3xl font-bold">60:00</h1>
               <p>4 / 12</p>
             </div>
           </header>
 
-          <section class="min-h-0 flex-1 rounded-2xl bg-neutral-900 p-4">
+          <section class="min-h-0 flex-1 rounded-2xl bg-bg p-4">
             <GameViewOverview v-if="activeTab === 'overview'" />
             <GameViewStatistics v-if="activeTab === 'statistics'" />
             <GameViewFinance v-if="activeTab === 'finance'" />
@@ -60,7 +60,7 @@ const splitterItems: SplitterItem[] = [
     defaultSize: 15,
     minSize: 10,
     maxSize: 15,
-    class: "bg-neutral-900 text-white my-0 h-full rounded-r-2xl",
+    class: "bg-bg text-text my-0 h-full rounded-r-2xl",
   },
   {
     id: "game-main",
@@ -75,7 +75,7 @@ const splitterItems: SplitterItem[] = [
     defaultSize: 15,
     minSize: 10,
     maxSize: 15,
-    class: "bg-neutral-900 text-white my-0 h-full rounded-l-2xl",
+    class: "bg-bg text-text my-0 h-full rounded-l-2xl",
   },
 ];
 

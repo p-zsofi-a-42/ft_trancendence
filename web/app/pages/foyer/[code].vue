@@ -6,7 +6,7 @@
       :disabled="true"
       :items="stepper_items"
       :ui="{
-        root: 'w-full flex-1 min-h-0 bg-app-background rounded-2xl p-6',
+        root: 'w-full flex-1 min-h-0 bg-bg rounded-2xl p-6',
         icon: 'bg-app-text',
         content: 'w-full flex-1 min-h-0',
       }"
@@ -42,7 +42,7 @@
           </div>
           <div v-if="stepper?.hasNext" class="ml-auto flex p-4 pt-0">
             <UButton
-              class="mx-3 bg-red-500 disabled:opacity-0 hover:bg-red-500/50"
+              class="mx-3 bg-fancy-dark disabled:opacity-0 hover:bg-fancy-dark/50"
               size="xl"
               variant="foyer"
               :disabled="!stepper?.hasPrev"

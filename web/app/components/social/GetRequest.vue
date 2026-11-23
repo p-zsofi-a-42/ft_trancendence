@@ -78,7 +78,7 @@ const splitterItems: SplitterItem[] = [
       <UCard
         title="incoming Requests"
         :ui="{
-          root: 'w-full h-full text-app-text',
+          root: 'w-full h-full text-text',
           body: 'text-center items-start',
         }"
         variant="subtle"
@@ -97,20 +97,20 @@ const splitterItems: SplitterItem[] = [
             />
           </template>
         </CustomUserList>
-        <p v-if="!incoming.length" class="text-app-text">No incoming requests.</p>
+        <p v-if="!incoming.length" class="text-text">No incoming requests.</p>
       </UCard>
     </template>
     <template #outgoing>
       <UCard
         title="Outgoing Requests"
         :ui="{
-          root: 'w-full text-app-text',
+          root: 'w-full text-text',
           body: 'text-center items-start',
         }"
         variant="subtle"
       >
         <CustomUserList :list="outgoing" />
-        <p v-if="!outgoing.length" class="text-app-text">No sent requests.</p>
+        <p v-if="!outgoing.length" class="text-text">No sent requests.</p>
       </UCard>
     </template>
   </USplitter>

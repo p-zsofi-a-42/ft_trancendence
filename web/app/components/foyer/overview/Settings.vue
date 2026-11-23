@@ -4,7 +4,7 @@
     variant="foyer"
     :ui="{
       root: 'flex h-full flex-col',
-      header: 'border-b-2 border-neutral-600',
+      header: 'border-b-2 border-app-fancy-bright',
       body: 'flex flex-1 flex-col gap-2',
       footer: 'flex flex-col mx-auto',
     }"

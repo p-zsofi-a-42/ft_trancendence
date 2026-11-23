@@ -18,7 +18,7 @@
       <UCard
         title="Players"
         variant="foyer"
-        :ui="{ body: 'text-center', header: 'border-b-2 border-neutral-600' }"
+        :ui="{ body: 'text-center', header: 'border-b-2 border-border-accented' }"
       >
         <CustomUserList :list="props.players" />
         <p v-if="!props.players.length">No Players</p>
@@ -32,8 +32,8 @@
         :ui="{
           root: 'flex h-full flex-col text-center',
           body: 'flex flex-1 min-h-0 flex-col gap-2',
-          header: 'border-b-2 border-neutral-600',
-          footer: 'border-t-2 border-neutral-600',
+          header: 'border-b-2 border-border-accented',
+          footer: 'border-t-2 border-border-accented',
         }"
       >
         <p v-if="!friends.length">No Friends :(</p>

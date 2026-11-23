@@ -46,11 +46,11 @@ const colorClasses: Record<string, string> = {
               :required="props.required"
             />
             <span
-              class="block size-4 rounded-full border border-white/40 transition"
+              class="block size-4 rounded-full border border-border-muted/40 transition"
               :class="[
                 colorClasses[color] ?? 'bg-neutral-500',
                 model === color
-                  ? 'ring-2 ring-white ring-offset-2 ring-offset-neutral-900 scale-110'
+                  ? 'ring-2 ring-white ring-offset-2 ring-offset-bg-muted scale-110'
                   : 'opacity-70 hover:opacity-100',
               ]"
             />
