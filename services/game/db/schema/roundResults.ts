@@ -17,7 +17,7 @@ export const roundResults = pgTable("round_results", {
 	price: bigint("price", { mode: "number" }).notNull(),
 	ownership: smallint("ownership").notNull(),
 	locked: boolean("locked").notNull().default(false),
-	locketAt: timestamp("locked_at"),
+	lockedAt: timestamp("locked_at"),
 }, (t) => [
 	check("check_customers", sql`${t.customers} >= 0`),
 	check("check_quality", sql`${t.customers} >= 0`),

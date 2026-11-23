@@ -9,3 +9,6 @@ export const db = drizzle(process.env.DATABASE_URL!);
 export { games, companies, rounds, roundResults };
 
 export type Game = typeof games.$inferSelect;
+export type Company = typeof companies.$inferSelect;
+export type Round = typeof rounds.$inferSelect;
+export type RoundResult = typeof roundResults.$inferSelect;
