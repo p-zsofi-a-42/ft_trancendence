@@ -6,6 +6,7 @@ const searchResults = ref<SearchResult[]>([]); // Stores the results of the user
 const searchQuery = ref(""); // Stores the current search query entered by the user
 const loading = ref(false); // Indicates whether a search request is currently in progress
 const sending = ref<Set<string>>(new Set()); // Tracks the IDs of users for whom a friend request is being sent
+const toast = useToast();
 
 // Function to add a friend by ID and send a friend request
 const addFriend = async (id: string) => {
@@ -24,11 +25,13 @@ const addFriend = async (id: string) => {
     // Reload the friend list so the new request appears under Sent requests
     await refreshNuxtData("friends-list");
   } catch (err: any) {
-    alert(
-      err.statusCode === 409
+    toast.add({
+      title: "Request failed",
+      description: err.statusCode === 409
         ? "Request already exists"
         : "An unexpected error occurred",
-    );
+      color: "error",
+    });
   } finally {
     // Remove the ID from the sending set after the request is finished
     sending.value.delete(id);
@@ -49,7 +52,11 @@ const searchUsers = async () => {
     // Cast the response to the SearchResult type
     searchResults.value = response as SearchResult[];
   } catch (err) {
-    alert("An unexpected error occurred");
+    toast.add({
+      title: "Search failed",
+      description: "An unexpected error occurred",
+      color: "error",
+    });
   } finally {
     loading.value = false;
   }
@@ -60,7 +67,7 @@ const searchUsers = async () => {
   <UContainer class="justify-center items-center">
     <UCard
       :ui="{
-        root: 'w-full h-full text-white',
+        root: 'w-full h-full text-app-text',
         body: 'text-center items-start',
       }"
       variant="subtle"
@@ -78,7 +85,7 @@ const searchUsers = async () => {
     <UCard
       title="Search Results"
       :ui="{
-        root: 'w-full h-full text-white mt-4 py-4',
+        root: 'w-full h-full text-app-text mt-4 py-4',
         body: 'text-center items-start',
       }"
       variant="subtle"
