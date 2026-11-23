@@ -14,25 +14,48 @@ jobs:
     name: test-and-build
     runs-on: ubuntu-latest
 
-    env:
-      POSTGRES_USER: ci
-      POSTGRES_PASSWORD: ci
-      POSTGRES_DB: ci
-      TOKEN_SECRET: ci-only-token-secret
-      NUXT_SESSION_PASSWORD: ci-only-session-password-at-least-32-characters
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
-    
-    # testing the build
-      - name: Validate Compose configuration
-        run: docker compose config --quiet
 
-      - name: Build production images
-        run: docker compose build web user
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            web/package-lock.json
+            services/user/package-lock.json
+            services/game/package-lock.json
 
-      - name: Build development images
-        run: docker compose --profile dev build web-dev user-dev
-    
-    #running tests
+      # VALIDATING AND BUILDING DOCKER IMAGES #
+      - name: Validate Docker Compose configuration
+        run: docker compose --env-file .env.example config --quiet
+
+      - name: Build production Docker images
+        run: docker compose --env-file .env.example build web user game
+
+      - name: Build development Docker images
+        run: docker compose --env-file .env.example --profile dev build web-dev user-dev game-dev
+
+      # RUNNING WEB TESTS #
+      - name: Install web dependencies
+        run: npm ci
+        working-directory: web
+
+      - name: Run web tests
+        run: npm test
+        working-directory: web
+
+      # BUILDING APP PACKAGES #
+      - name: Build web application
+        run: npm run build
+        working-directory: web
+
+      - name: Build user service
+        run: npm ci && npm run build
+        working-directory: services/user
+
+      - name: Build game service
+        run: npm ci && npm run build
+        working-directory: services/game
