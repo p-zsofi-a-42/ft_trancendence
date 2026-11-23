@@ -76,7 +76,7 @@ const splitterItems: SplitterItem[] = [
   <USplitter :items="splitterItems">
     <template #incoming>
       <UCard
-        title="incoming Requests"
+        title="Incoming Requests"
         :ui="{
           root: 'w-full h-full text-text',
           body: 'text-center items-start',

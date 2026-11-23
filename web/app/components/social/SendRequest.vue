@@ -79,7 +79,7 @@ const searchUsers = async () => {
           name="searchQuery"
           required
         />
-        <UButton type="submit" :disabled="loading">Search</UButton>
+        <UButton class="ml-2" type="submit" :disabled="loading">Search</UButton>
       </UForm>
     </UCard>
     <UCard
