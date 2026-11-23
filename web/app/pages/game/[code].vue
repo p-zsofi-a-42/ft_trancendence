@@ -33,6 +33,7 @@
 
           <section class="min-h-0 flex-1 rounded-2xl bg-neutral-900 p-4">
             <GameViewOverview v-if="activeTab === 'overview'" />
+            <GameViewStatistics v-if="activeTab === 'statistics'" />
             <GameViewFinance v-if="activeTab === 'finance'" />
             <GameViewSales v-if="activeTab === 'sales'" />
             <GameViewDevelopment v-if="activeTab === 'development'" />
@@ -47,7 +48,7 @@
 <script setup lang="ts">
 import type { SplitterItem, TabsItem } from "@nuxt/ui";
 
-type GameTab = "overview" | "finance" | "sales" | "development";
+type GameTab = "overview" | "statistics" | "finance" | "sales" | "development";
 
 const code = useRoute().params.code as string;
 const activeTab = ref<GameTab>("overview");
