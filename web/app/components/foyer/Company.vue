@@ -3,9 +3,24 @@ import type { FormError, FormSubmitEvent } from "@nuxt/ui";
 import type { SplitterItem } from "@nuxt/ui";
 import type { Company } from "#shared/types/game";
 
-const company = reactive<Company>({
-  name: "",
-  color: "#ffffff",
+const route = useRoute();
+const { user } = useUserSession();
+
+const companiesModel = defineModel<Company[]>({
+  required: true,
+});
+
+const userCompany = computed(() =>
+  companiesModel.value.find(
+    (company) => String(company.userId) === String(user.value?.id),
+  ),
+);
+
+type CompanyDraft = Pick<Company, "name" | "color">;
+
+const companyForm = reactive<CompanyDraft>({
+  name: userCompany.value?.name ?? "",
+  color: userCompany.value?.color ?? "red",
 });
 
 function validate(state: Partial<Company>): FormError[] {
@@ -18,7 +33,7 @@ function validate(state: Partial<Company>): FormError[] {
 
 const companyViewItems: SplitterItem[] = [
   {
-    slot: "preview",
+    slot: "company-list",
     minSize: 30,
     defaultSize: 50,
   },
@@ -46,19 +61,29 @@ async function submit(event: FormSubmitEvent<Company>) {
       panel: 'h-full min-h-0 p-0 justify-center',
     }"
   >
-    <template #preview>
-      <UCard title="Preview" variant="foyer" />
+    <template #company-list>
+      <UCard title="List of Companies" variant="foyer"> </UCard>
     </template>
     <template #config>
       <UCard title="Company Config" variant="foyer">
-        <UForm :state="company" :validate="validate" @submit="submit">
+        <UForm
+          :state="companyForm"
+          :validate="validate"
+          @submit="submit"
+          class="flex flex-col gap-4"
+        >
           <FormFieldString
-            v-model="company.name"
+            v-model="companyForm.name"
             label="Name"
             name="name"
             required
           />
-          <FormFieldColor v-model="company.color" label="Color" name="color" />
+          <FormFieldColor
+            v-model="companyForm.color"
+            label="Company color"
+            name="color"
+            :colors="['red', 'blue', 'green', 'yellow', 'purple']"
+          />
         </UForm>
       </UCard>
     </template>

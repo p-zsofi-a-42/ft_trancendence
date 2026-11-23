@@ -59,7 +59,7 @@ export default defineAppConfig({
           color: "primary",
           variant: "foyer",
           class:
-            "text-inverted bg-primary hover:bg-primary/75 active:bg-primary/75 disabled:bg-primary aria-disabled:bg-primary outline-primary/25 focus-visible:outline-3 block mt-4",
+            "text-white bg-primary hover:bg-primary/75 active:bg-primary/75 disabled:bg-primary aria-disabled:bg-primary outline-primary/25 focus-visible:outline-3 block mt-4",
         },
       ],
     },

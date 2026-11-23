@@ -2,14 +2,14 @@ import { SignJWT } from 'jose'
 
 // Short-lived token that tells the user service which user the request is for.
 export async function signServiceToken(userId: number | string) {
-  return new SignJWT({})
-    .setProtectedHeader({ alg: 'HS256' })
-    .setSubject(String(userId))
-    .setIssuer('web')
-    .setAudience('user')
-    .setIssuedAt()
-    .setExpirationTime('60s')
-    .sign(new TextEncoder().encode(useRuntimeConfig().tokenSecret))
+	return new SignJWT({})
+		.setProtectedHeader({ alg: 'HS256' })
+		.setSubject(String(userId))
+		.setIssuer('web')
+		.setAudience('user')
+		.setIssuedAt()
+		.setExpirationTime('60s')
+		.sign(new TextEncoder().encode(useRuntimeConfig().tokenSecret))
 }
 
 // Calls the user service with the appropriate authorization header.
@@ -17,66 +17,42 @@ export async function signServiceToken(userId: number | string) {
 // 2. options: an object containing optional method, body, and userId.
 // 3. Returns a Promise resolving to the response of type T.
 export async function callUserService<T>(
-  path: string,
-  options: { method?: 'GET' | 'POST' | 'PATCH'; body?: Record<string, unknown> | FormData; userId?: number } = {},
+	path: string,
+	options: { method?: 'GET' | 'POST' | 'PATCH'; body?: Record<string, unknown> | FormData; userId?: number } = {},
 ): Promise<T> {
-  const headers: Record<string, string> = {}
-  if (options.userId !== undefined) {
-    headers.authorization = `Bearer ${await signServiceToken(options.userId)}`
-  }
-  try {
-    // Call the user service with the given path and options
-    const res: unknown = await $fetch(`${useRuntimeConfig().userServiceUrl}${path}`, {
-      method: options.method ?? 'POST',
-      body: options.body,
-      headers,
-    })
-    return res as T
-  } catch (err: any) {
-    throw createError({
-      statusCode: err.statusCode ?? 502,
-      statusMessage: err.data?.message ?? 'User service unavailable',
-    })
-  }
+	const headers: Record<string, string> = {}
+	if (options.userId !== undefined) {
+		headers.authorization = `Bearer ${await signServiceToken(options.userId)}`
+	}
+	try {
+		// Call the user service with the given path and options
+		const res: unknown = await $fetch(`${useRuntimeConfig().userServiceUrl}${path}`, {
+			method: options.method ?? 'POST',
+			body: options.body,
+			headers,
+		})
+		return res as T
+	} catch (err: any) {
+		throw createError({
+			statusCode: err.statusCode ?? 502,
+			statusMessage: err.data?.message ?? 'User service unavailable',
+		})
+	}
 }
 
 // Fetches a non-JSON response from the user service (e.g. an image). Returns null on 404.
 export async function fetchUserServiceFile(
-  path: string,
-  userId: number | string,
+	path: string,
+	userId: number | string,
 ): Promise<{ data: ArrayBuffer; type: string } | null> {
-  const res = await $fetch.raw<ArrayBuffer>(`${useRuntimeConfig().userServiceUrl}${path}`, {
-    responseType: 'arrayBuffer',
-    headers: { authorization: `Bearer ${await signServiceToken(userId)}` },
-    ignoreResponseError: true,
-  })
-  if (res.status === 404) return null
-  if (!res.ok || !res._data) {
-    throw createError({ statusCode: 502, statusMessage: 'User service unavailable' })
-  }
-  return { data: res._data, type: res.headers.get('content-type') ?? 'application/octet-stream' }
-}
-
-// TODO: set user-id header
-export async function callGameService<T>(
-  path: string,
-  options: { method?: 'GET' | 'POST'; body?: unknown; gameId?: number } = {},
-): Promise<T> {
-  const headers: Record<string, string> = {}
-  if (options.userId !== undefined) {
-		headers["user-id"] = options.userId;
-    // headers.authorization = `Bearer ${await signServiceToken(options.userId)}`
-  }
-  try {
-    return await $fetch<T>(`${useRuntimeConfig().gameServiceUrl}${path}`, {
-      method: options.method ?? 'POST',
-      body: options.body,
-      headers,
-    })
-  } catch (err: any) {
-    throw createError({
-      statusCode: err.statusCode ?? 502,
-      statusMessage: err.data?.message ?? 'Game service unavailable',
-    })
-  }
+	const res = await $fetch.raw<ArrayBuffer>(`${useRuntimeConfig().userServiceUrl}${path}`, {
+		responseType: 'arrayBuffer',
+		headers: { authorization: `Bearer ${await signServiceToken(userId)}` },
+		ignoreResponseError: true,
+	})
+	if (res.status === 404) return null
+	if (!res.ok || !res._data) {
+		throw createError({ statusCode: 502, statusMessage: 'User service unavailable' })
+	}
+	return { data: res._data, type: res.headers.get('content-type') ?? 'application/octet-stream' }
 }
