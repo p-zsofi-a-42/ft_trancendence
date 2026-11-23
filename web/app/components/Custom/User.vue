@@ -22,11 +22,10 @@ const props = defineProps<{
   <UUser
     :name="user.name"
     :size="size"
-    chip
     :avatar="{
       src: `/api/users/${user.id}/avatar`,
       loading: 'lazy',
-      icon: 'i-lucide-user',
+      icon: 'i-myOwn-user',
     }"
   />
 </template>

@@ -2,7 +2,7 @@
   <div v-if="user">
     <UCard
       :ui="{
-        root: 'text-white',
+        root: 'text-app-text',
       }"
     >
       <template #header>
@@ -12,7 +12,7 @@
         <div class="pb-2">
           <UButton
             label="Change profile picture"
-            icon="i-lucide-upload"
+            icon="i-myOwn-upload"
             :loading="uploadingAvatar"
             @click="avatarInput?.click()"
           />
@@ -135,8 +135,8 @@ async function uploadAvatar(event: Event) {
 
 // Linked providers
 const PROVIDERS = [
-  { name: "github", label: "GitHub", icon: "i-simple-icons-github" },
-  { name: "42", label: "42", icon: "i-simple-icons-42" },
+  { name: "github", label: "GitHub", icon: "i-myOwn-github" },
+  { name: "42", label: "42", icon: "i-myOwn-42" },
 ];
 
 // Fetch the list of linked OAuth providers for the current user

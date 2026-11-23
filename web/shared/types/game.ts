@@ -1,5 +1,3 @@
-import type { ColorModeSelectProps } from "@nuxt/ui/runtime/components/color-mode/ColorModeSelect.vue.js";
-
 // TODO: redundant, use Game instead
 export type Foyer = {
 	name: string;
@@ -10,9 +8,9 @@ export type Company = {
 	id: number;
 	userId: number;
 	name: string;
-	color: string;
+	color: "red" | "blue" | "green" | "yellow" | "purple";
 	createdAt: string;
-}
+};
 
 export type Game = {
 	idCode: string;

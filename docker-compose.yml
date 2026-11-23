@@ -78,7 +78,7 @@ services:
     build: ./services/game
     image: game
     environment:
-      DATABASE_URL: postgres://${GAME_DB_USER}:${GAME_DB_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      DATABASE_URL: postgres://${GAME_DB_USER}:${GAME_DB_PASSWORD}@game-db:5432/${GAME_DB_NAME}
       REDIS_URL: redis://redis:6379
       TOKEN_SECRET: ${TOKEN_SECRET}
     # No ports: only the web service can reach it, on the Compose network.

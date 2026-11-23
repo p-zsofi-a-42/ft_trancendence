@@ -13,6 +13,7 @@ const incoming = computed(() =>
 const outgoing = computed(() =>
   (data.value ?? []).filter((f) => f.friendship === "outgoing"),
 ); // Outgoing friend requests
+const toast = useToast();
 
 // ACCEPT FRIEND-REQUESTS
 const accepting = ref<Set<string>>(new Set());
@@ -23,11 +24,13 @@ const acceptRequest = async (id: string) => {
     await $fetch("/api/friends/accept", { method: "POST", body: { id } });
     await refresh();
   } catch (err: any) {
-    alert(
-      err.statusCode === 404
+    toast.add({
+      title: "Request failed",
+      description: err.statusCode === 404
         ? "No pending request from this user"
         : "An unexpected error occurred",
-    );
+      color: "error",
+    });
   } finally {
     accepting.value.delete(id);
   }
@@ -43,11 +46,13 @@ const declineRequest = async (id: string) => {
     await $fetch("/api/friends/decline", { method: "POST", body: { id } });
     await refresh();
   } catch (err: any) {
-    alert(
-      err.statusCode === 404
+    toast.add({
+      title: "Request failed",
+      description: err.statusCode === 404
         ? "No pending request from this user"
         : "An unexpected error occurred",
-    );
+      color: "error",
+    });
   } finally {
     declining.value.delete(id);
   }
@@ -73,7 +78,7 @@ const splitterItems: SplitterItem[] = [
       <UCard
         title="incoming Requests"
         :ui="{
-          root: 'w-full h-full text-white',
+          root: 'w-full h-full text-app-text',
           body: 'text-center items-start',
         }"
         variant="subtle"
@@ -83,29 +88,29 @@ const splitterItems: SplitterItem[] = [
             <UButton
               :disabled="accepting.has(user.id)"
               @click="acceptRequest(user.id)"
-              leading-icon="i-lucide-check"
+              leading-icon="i-myOwn-check"
             />
             <UButton
               :disabled="declining.has(user.id)"
               @click="declineRequest(user.id)"
-              leading-icon="i-lucide-x"
+              leading-icon="i-myOwn-x"
             />
           </template>
         </CustomUserList>
-        <p v-if="!incoming.length">No incoming requests.</p>
+        <p v-if="!incoming.length" class="text-app-text">No incoming requests.</p>
       </UCard>
     </template>
     <template #outgoing>
       <UCard
         title="Outgoing Requests"
         :ui="{
-          root: 'w-full text-white',
+          root: 'w-full text-app-text',
           body: 'text-center items-start',
         }"
         variant="subtle"
       >
         <CustomUserList :list="outgoing" />
-        <p v-if="!outgoing.length">No sent requests.</p>
+        <p v-if="!outgoing.length" class="text-app-text">No sent requests.</p>
       </UCard>
     </template>
   </USplitter>
