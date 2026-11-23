@@ -13,13 +13,13 @@ const fields: AuthFormField[] = [
 
 const providers = [
   {
-    icon: "i-simple-icons-42",
+    icon: "i-myOwn-42",
     onClick: () => {
       window.location.href = "/api/auth/oauth/login?provider=42";
     },
   },
   {
-    icon: "i-simple-icons-github",
+    icon: "i-myOwn-github",
     onClick: () => {
       window.location.href = "/api/auth/oauth/login?provider=github";
     },
@@ -89,9 +89,9 @@ async function onSubmitTotp(payload: FormSubmitEvent<TotpSchema>) {
         :providers="providers"
         :loading="loading"
         title="Login"
-        icon="i-lucide-user"
+        icon="i-myOwn-user"
         @submit="onSubmit"
-        :ui="{ leadingIcon: 'text-white' }"
+        :ui="{ leadingIcon: 'text-app-text' }"
       >
         <template #description>
           <p>Enter your credentials to access your account.</p>
@@ -109,7 +109,7 @@ async function onSubmitTotp(payload: FormSubmitEvent<TotpSchema>) {
         :fields="totpFields"
         :loading="loading"
         title="Two-factor authentication"
-        icon="i-lucide-shield-check"
+        icon="i-myOwn-shield-check"
         @submit="onSubmitTotp"
       >
         <template #description>

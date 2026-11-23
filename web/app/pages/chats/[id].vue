@@ -8,11 +8,11 @@
     </NuxtLink>
     <ChatList />
     <h1 v-if="friendName">Chat {{ friendName }}</h1>
-    <p v-if="!friendName">
+    <p v-if="!friendName" class="font-system-reply">
       Friend not found.
     </p>
     <!-- Chat messages list -->
-    <p v-if="loadError">
+    <p v-if="loadError" class="font-system-reply text-error">
       {{ loadError }}
     </p>
     <!-- Error message for loading chat messages -->
@@ -44,7 +44,7 @@
         <button type="submit" :disabled="sending || !text.trim()">
           Send
         </button>
-        <p v-if="sendError">
+        <p v-if="sendError" class="font-system-reply text-error">
           {{ sendError }}
         </p>
       </form>

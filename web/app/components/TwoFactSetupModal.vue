@@ -20,7 +20,7 @@
         <UFormField label="Enter the 6-digit code from your app">
           <UInput v-model="code" placeholder="123456" maxlength="6" />
         </UFormField>
-        <p v-if="confirmError" class="text-sm text-error">{{ confirmError }}</p>
+        <p v-if="confirmError" class="font-system-reply text-sm text-error">{{ confirmError }}</p>
         <div class="flex gap-2">
           <UButton label="Back" variant="soft" @click="step = 0" />
           <UButton label="Confirm" :loading="confirming" @click="confirm" />

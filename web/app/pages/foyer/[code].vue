@@ -6,8 +6,8 @@
       :disabled="true"
       :items="stepper_items"
       :ui="{
-        root: 'w-full flex-1 min-h-0 bg-neutral-900 border-8 border-neutral-900 rounded-2xl p-4',
-        icon: 'bg-neutral-50',
+        root: 'w-full flex-1 min-h-0 bg-app-background rounded-2xl p-6',
+        icon: 'bg-app-text',
         content: 'w-full flex-1 min-h-0',
       }"
     >
@@ -34,7 +34,7 @@
               :ui="{
                 root: 'h-full w-full items-center justify-center',
                 title: 'text-2xl',
-                body: 'text-4xl text-white text-center',
+                body: 'text-4xl text-center',
               }"
             >
               3
@@ -42,7 +42,7 @@
           </div>
           <div v-if="stepper?.hasNext" class="ml-auto flex p-4 pt-0">
             <UButton
-              class="mx-3 bg-red-500 text-white disabled:opacity-0 hover:bg-red-500/50"
+              class="mx-3 bg-red-500 disabled:opacity-0 hover:bg-red-500/50"
               size="xl"
               variant="foyer"
               :disabled="!stepper?.hasPrev"
@@ -110,17 +110,17 @@ const stepper_items = ref<StepperItem[]>([
   {
     title: "Foyer Setup",
     value: "overview",
-    icon: "i-lucide-users",
+    icon: "i-myOwn-users",
   },
   {
     title: "Company Setup",
     value: "company-setup",
-    icon: "i-lucide-building-complex",
+    icon: "i-myOwn-building-complex",
   },
   {
     title: "Game Start",
     value: "game-start",
-    icon: "i-lucide-gamepad-2",
+    icon: "i-myOwn-gamepad-2",
   },
 ]);
 const stepper = useTemplateRef("stepper");

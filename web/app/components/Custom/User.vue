@@ -25,7 +25,7 @@ const props = defineProps<{
     :avatar="{
       src: `/api/users/${user.id}/avatar`,
       loading: 'lazy',
-      icon: 'i-lucide-user',
+      icon: 'i-myOwn-user',
     }"
   />
 </template>

@@ -1,6 +1,65 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
+@import "./palette.css";
+
+@theme inline {
+  --color-app-text: var(--ui-text);
+  --color-app-background: var(--ui-bg);
+  --color-app-header-footer: var(--ui-bg-accented);
+}
+
+@layer base {
+  body {
+    @apply text-app-text;
+  }
+}
+
+/* FONTS */
+@theme {
+	--font-sans: "DM Sans", sans-serif;
+	--font-heading: "Lilita One", sans-serif;
+	--font-heading2: "Palanquin Dark", sans-serif;
+	--font-system-reply: "DM Mono", monospace;
+	--font-for-testing: "Parisienne", sans-serif;
+}
+
+/* Setting default fonts */
+body {
+	font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: var(--font-heading2);
+}
 
 * {
 	box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  background: 
+  linear-gradient(
+    to bottom,
+    var(--app-gradient-a) 0%,
+    var(--app-gradient-b) 50%,
+    var(--ui-bg) 75%,
+    var(--ui-bg) 100%
+  );
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.dark body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 70%);
+  pointer-events: none;
+  z-index: 0;
 }
