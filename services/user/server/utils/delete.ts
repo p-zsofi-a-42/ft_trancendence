@@ -20,7 +20,7 @@ export async function deleteUserById(id: string) {
 export async function getUserById(id: string) {
   const userId = Number(id);
   const [user = null] = await db
-    .select( { id: users.id, name: users.name, email: users.email } )
+    .select( { id: users.id, name: users.name, email: users.email, role: users.role  } )
     .from(users)
     .where(
       eq(users.id, userId)
@@ -36,6 +36,7 @@ export async function updateUserById(id: string, data: { name?: string; email?: 
     .set({
       name: data.name,
       email: data.email,
+      role: data.role as 'user' | 'admin' | undefined,
     })
     .where(
       eq(users.id, userId)

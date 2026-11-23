@@ -3,6 +3,8 @@ export interface User {
   name: string
   email: string
   role: string
+  createdAt?: string
+  totpEnabled?: boolean
 }
 
 export interface UserPage {
