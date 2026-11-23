@@ -1,16 +1,22 @@
 // Route for fetching a paginated list of users as an admin. Requires the requester to be an admin.
-import type { User } from '#shared/types/user'
+import type { UserPage } from '#shared/types/user'
 
 
 export default defineEventHandler(async (event) => {
-  // Here you would typically check if the requester is an admin
   const { user } = await requireUserSession(event)
   if (!user.role || user.role !== 'admin') {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized BFF' })
   }
-
-  // GET user-service /routes/admin/users
-  // throw createError({ statusCode: 555, statusMessage: 'role is fine on bff' }) GEEEEEETS HEREEEEEEEEEE
-  return callUserService('/admin/users', { method: 'GET', userId: user.id })
-  // and then fetch the paginated list of users from the database
+  // Parse pagination parameters from the query string
+  const { page, pageSize } = getQuery(event)
+  const params = new URLSearchParams()
+  if (typeof page === 'string') {
+    params.set('page', page)
+  }
+  if (typeof pageSize === 'string') {
+    params.set('pageSize', pageSize)
+  }
+  const query = params.size > 0 ? `?${params}` : ''
+  // call the user service to fetch the paginated list of users
+  return callUserService(`/admin/users${query}`, { method: 'GET', userId: user.id })
 })

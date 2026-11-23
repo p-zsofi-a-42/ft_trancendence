@@ -4,3 +4,10 @@ export interface User {
   email: string
   role: string
 }
+
+export interface UserPage {
+  items: User[]
+  total: number
+  page: number
+  pageSize: number
+}
