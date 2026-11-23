@@ -4,7 +4,11 @@ import type { DropdownMenuItem, NavigationMenuItem } from "@nuxt/ui";
 const { loggedIn, user } = useUserSession();
 // Initialize presence tracking based on user login state
 const presence = usePresence();
-watch(loggedIn, (isLoggedIn) => (isLoggedIn ? presence.start() : presence.stop()), { immediate: true });
+watch(
+  loggedIn,
+  (isLoggedIn) => (isLoggedIn ? presence.start() : presence.stop()),
+  { immediate: true },
+);
 
 const navItems: NavigationMenuItem[] = [
   { label: "Home", to: "/" },
@@ -59,10 +63,9 @@ useHead({
 });
 
 /* Dark/Light mode*/
-const colorMode = useColorMode()
+const colorMode = useColorMode();
 function toggleTheme() {
-  colorMode.preference =
-    colorMode.value === 'dark' ? 'light' : 'dark'
+  colorMode.preference = colorMode.value === "dark" ? "light" : "dark";
 }
 </script>
 
@@ -95,13 +98,11 @@ function toggleTheme() {
       </template>
 
       <template #right>
-		<UButton
-			color="neutral"
-			variant="ghost"
-			@click="toggleTheme"
-		>
-			<UIcon :name="colorMode.value === 'dark' ? 'i-myOwn-sun' : 'i-myOwn-moon'" />
-		</UButton>
+        <UButton color="neutral" variant="ghost" @click="toggleTheme">
+          <UIcon
+            :name="colorMode.value === 'dark' ? 'i-myOwn-sun' : 'i-myOwn-moon'"
+          />
+        </UButton>
 
         <UDropdownMenu :items="loggedIn ? loggedInItems : loggedOutItems">
           <UTooltip text="Profile">
