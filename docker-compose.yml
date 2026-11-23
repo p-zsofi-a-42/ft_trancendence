@@ -83,6 +83,9 @@ services:
         condition: service_started
       redis:
         condition: service_healthy
+    volumes: #1 sharing source code with container #2 separating the container's dependencies from host's
+      - ./web:/app
+      - web_tester_node_modules:/app/node_modules
 
   # Redis service for pub/sub and caching
   redis:
@@ -205,4 +208,6 @@ volumes:
   avatars:
     driver: local
   game_node_modules:
+    driver: local
+  web_tester_node_modules:
     driver: local
