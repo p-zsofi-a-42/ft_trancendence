@@ -4,7 +4,11 @@ import type { DropdownMenuItem, NavigationMenuItem } from "@nuxt/ui";
 const { loggedIn, user } = useUserSession();
 // Initialize presence tracking based on user login state
 const presence = usePresence();
-watch(loggedIn, (isLoggedIn) => (isLoggedIn ? presence.start() : presence.stop()), { immediate: true });
+watch(
+  loggedIn,
+  (isLoggedIn) => (isLoggedIn ? presence.start() : presence.stop()),
+  { immediate: true },
+);
 
 const navItems: NavigationMenuItem[] = [
   { label: "Home", to: "/" },
@@ -60,6 +64,12 @@ const loggedOutItems: DropdownMenuItem[] = [
 useHead({
   title: "The Beer Game",
 });
+
+/* Dark/Light mode*/
+const colorMode = useColorMode();
+function toggleTheme() {
+  colorMode.preference = colorMode.value === "dark" ? "light" : "dark";
+}
 </script>
 
 <style src="~/assets/css/main.css"></style>
@@ -91,6 +101,12 @@ useHead({
       </template>
 
       <template #right>
+        <UButton color="neutral" variant="ghost" @click="toggleTheme">
+          <UIcon
+            :name="colorMode.value === 'dark' ? 'i-myOwn-sun' : 'i-myOwn-moon'"
+          />
+        </UButton>
+
         <UDropdownMenu :items="loggedIn ? loggedInItems : loggedOutItems">
           <UTooltip text="Profile">
             <UButton
@@ -98,7 +114,7 @@ useHead({
               color="neutral"
               variant="foyer"
               block
-              trailing-icon="i-lucide-chevron-down"
+              trailing-icon="i-myOwn-chevron-down"
               aria-label="Profile"
             >
               <CustomUser v-if="loggedIn && user" :user="user" size="xl" />
@@ -111,7 +127,7 @@ useHead({
 
     <UMain
       :ui="{
-        base: 'bg-neutral-100 text-primary-950 flex-1 grid place-items-center',
+        base: 'bg-transparent text-app-text flex-1 grid place-items-center',
       }"
     >
       <slot />
@@ -119,7 +135,7 @@ useHead({
 
     <UFooter
       :ui="{
-        root: 'bg-primary-950 text-neutral-100',
+        root: 'bg-transparent text-app-text',
       }"
     />
   </div>

@@ -1,73 +1,3 @@
-<script setup lang="ts">
-import type { Form, FormError, FormSubmitEvent } from "@nuxt/ui";
-import { capitalize } from "vue";
-
-const toast = useToast();
-
-async function create() {
-  /* create a new foyer session (game session)
-   */
-	try {
-		const  response = await $fetch("/api/foyer/create", {
-			method: "POST",
-			body: {nPlayers: 3, nRounds: 12, seedCapital: 100000},
-		});
-		const game = response.game;
-		const code = game.idCode;
-		console.log("Game code:", code);
-		
-		toast.add({
-			title: "Success",
-			description: "The Foyer has been created.",
-			color: "success",
-		});
-
-		// NAVIGATE TO GAME PAGE
-		navigateTo(`/foyer/${code}`);
-	} catch (error) {
-		console.log(`error: ${error.message}`)
-		toast.add({
-			title: "Failure",
-			description: "Failed to create a new Foyer.",
-			color: "danger",
-		});
-	}
-}
-
-async function join(event: FormSubmitEvent<string>) {
-  const codeResponse = await $fetch("/api/game", { method: "POST" });
-  const code = codeResponse.code;
-  console.log("Game code:", code);
-
-  toast.add({
-    title: "Success",
-    description: "The Foyer has been created.",
-    color: "success",
-  });
-
-  // NAVIGATE TO GAME PAGE
-  await navigateTo(`/foyer/${code}`);
-}
-
-const codeState = reactive({ code: "" });
-
-function validateCode(values: Partial<typeof codeState>): FormError[] {
-  return values.code?.length === 6
-    ? []
-    : [{ name: "code", message: "Code must be exactly 6 characters" }];
-}
-
-function validate(state: Partial<Foyer>): FormError[] {
-  const errors: FormError[] = [];
-
-  if (!state.name?.trim()) errors.push({ name: "name", message: "Required" });
-  if (!state.companyCount)
-    errors.push({ name: "companyCount", message: "Required" });
-
-  return errors;
-}
-</script>
-
 <template>
   <UCard
     title="Play The Game"
@@ -77,7 +7,7 @@ function validate(state: Partial<Foyer>): FormError[] {
     }"
   >
     <UForm @click="create">
-      <UButton class="text-white" size="xl" type="button"> Create </UButton>
+      <UButton size="xl" type="button"> Create </UButton>
     </UForm>
     <USeparator
       color="primary"
@@ -88,7 +18,7 @@ function validate(state: Partial<Foyer>): FormError[] {
         label: 'text-lg',
       }"
     />
-    <UForm :state="codeState" :validate="validateCode" @submit="join">
+    <UForm :state="codeState" @submit="join">
       <FormFieldString
         name="code"
         v-model="codeState.code"
@@ -99,9 +29,80 @@ function validate(state: Partial<Foyer>): FormError[] {
         required
       >
         <template #input-trailing>
-          <UButton class="text-white" size="xl" type="submit"> Join </UButton>
+          <UButton size="xl" type="submit"> Join </UButton>
         </template>
       </FormFieldString>
     </UForm>
   </UCard>
 </template>
+
+<script setup lang="ts">
+import type { FormError, FormSubmitEvent } from "@nuxt/ui";
+import type { Game } from "#imports";
+import { error } from "#build/ui";
+
+const toast = useToast();
+
+async function create() {
+  /* create a new foyer session (game session)
+   */
+  try {
+    const game = await $fetch("/api/foyer/create", {
+      method: "POST",
+      body: {
+        nPlayers: 3,
+        nRounds: 12,
+        seedCapital: 100000,
+        minutesPerRound: 1,
+      },
+    });
+    const code = game.idCode;
+    console.log("Game code:", code);
+
+    await $fetch(`/api/company/create`, {
+      method: "POST",
+      body: {
+        name: "",
+        gameCode: code,
+      },
+    });
+
+    toast.add({
+      title: "Success",
+      description: "The Foyer has been created.",
+      color: "success",
+    });
+
+    // NAVIGATE TO GAME PAGE
+    navigateTo(`/foyer/${code}`);
+  } catch (error) {
+    console.log(`error: ${error.message}`);
+    toast.add({
+      title: "Failure",
+      description: "Failed to create a new Foyer.",
+      color: "error",
+    });
+  }
+}
+
+const codeState = reactive({ code: "" });
+
+async function join(event: FormSubmitEvent<string>) {
+  await $fetch(`/api/company/create`, {
+    method: "POST",
+    body: {
+      name: "",
+      gameCode: event.data.code,
+    },
+  });
+
+  toast.add({
+    title: "Success",
+    description: "The Foyer has been created.",
+    color: "success",
+  });
+
+  // NAVIGATE TO GAME PAGE
+  await navigateTo(`/foyer/${event.data.code}`);
+}
+</script>

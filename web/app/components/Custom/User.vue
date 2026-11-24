@@ -3,6 +3,7 @@ import type { UserSummary } from "~~/shared/types/friends";
 
 const props = defineProps<{
   user: T;
+  avatarVersion?: number;
   size?:
     | "2xl"
     | "md"
@@ -21,10 +22,10 @@ const props = defineProps<{
   <UUser
     :name="user.name"
     :size="size"
-    chip
     :avatar="{
+      src: `/api/users/${user.id}/avatar`,
       loading: 'lazy',
-      icon: 'i-lucide-user',
+      icon: 'i-myOwn-user',
     }"
   />
 </template>

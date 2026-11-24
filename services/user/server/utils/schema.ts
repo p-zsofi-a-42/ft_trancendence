@@ -12,6 +12,7 @@ export const users = pgTable('users', {
   totpSecret: text('totp_secret'),
   totpEnabled: boolean('totp_enabled').notNull().default(false),
   role: text('role', { enum: ['user', 'admin'] }).notNull().default('user'),
+  avatarFile: text('avatar_file'),
 })
 
 // providers table

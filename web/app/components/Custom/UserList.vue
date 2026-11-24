@@ -9,11 +9,11 @@ const props = defineProps<{
 </script>
 
 <template>
-  <ul>
+  <ul class="flex-1 min-h-0 overflow-y-auto">
     <li
       v-for="user in list"
       :key="user.id"
-      class="border border-neutral-800 bg-neutral-900 rounded-xl p-2 mb-1 flex"
+      class="border rounded-xl p-2 mb-1 flex"
     >
       <CustomUser :user="user" />
       <!-- Show green dot if online: change to be on profile picture-->
