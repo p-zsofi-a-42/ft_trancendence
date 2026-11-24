@@ -1,15 +1,21 @@
+// TODO: what does this do?
+// {
+//   "extends": "./.nitro/types/tsconfig.json"
+// }
+// copied from user service
+
 {
 	"extends": "nitro/tsconfig",
 	"compilerOptions": {
 		"paths": {
 			"@db/*": [
-				"/app/db/*"
+				"./db/*"
 			],
 			"@core/*": [
-				"/app/core/*"
+				"./core/*"
 			],
 			"@utils/*": [
-				"/app/utils/*"
+				"./utils/*"
 			]
 		}
 	}

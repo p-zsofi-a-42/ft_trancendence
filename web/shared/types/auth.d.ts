@@ -3,6 +3,7 @@ declare module '#auth-utils' {
     id: string
     name: string
     email: string
+    role: 'user' | 'admin'
   }
 
   // Server-only data between password check and TOTP verification; 

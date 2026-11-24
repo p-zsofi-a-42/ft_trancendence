@@ -1,5 +1,3 @@
-<!-- SETUP AND GAME PAGE -->
-
 <!-- HTML CONTENT -->
 <template>
   <div class="h-[90vh] w-full my-4">
@@ -81,6 +79,7 @@
 
 <!-- LOGIC -->
 <script setup lang="ts">
+import type { Game, Company, Round, RoundResult } from "#shared/types/game";
 import type { SplitterItem, TabsItem } from "@nuxt/ui";
 import { nextTick, useTemplateRef, watch } from "vue";
 
@@ -138,8 +137,26 @@ watch(
 );
 
 type GameTab = "overview" | "statistics" | "finance" | "sales" | "development";
-
 const activeTab = ref<GameTab>("overview");
+
+const code = useRoute().params.code as string;
+
+// TODO: provisional redirect
+try {
+  const { loggedIn, user } = useUserSession();
+  console.log("User session:", JSON.stringify(user.value));
+  const game = await $fetch<Game>(`/api/game/${code}`, { method: "GET" });
+  console.log("Game data:", JSON.stringify(game));
+  const companies = await $fetch<Company[]>(`/api/game/${code}/companies`, {
+    method: "GET",
+  });
+  if (game.status === "created") navigateTo(`/foyer/${game.idCode}`);
+  else if (game.status === "done") navigateTo(`/results/${game.idCode}`);
+  if (!companies.some((c: Company) => c.userId == user.value.id))
+    navigateTo("/play");
+} catch (error) {
+  console.error("Error fetching game data:", error);
+}
 
 const splitterItems: SplitterItem[] = [
   {
