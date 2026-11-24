@@ -10,8 +10,11 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   totp_secret TEXT NULL,
   totp_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
   avatar_file TEXT NULL  -- file name inside AVATAR_DIR; NULL means the default avatar
 );
+-- Insert a admin into the users table, password is password
+ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin'));
 -- For databases created before avatar_file existed
 ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_file TEXT NULL;
 

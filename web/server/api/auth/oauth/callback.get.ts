@@ -103,7 +103,7 @@ export default defineEventHandler(async (event) => {
   // Not a link: login, or register on first use
   type OAuthUserResult = {
     message: string;
-    user: { id: string; name: string; email: string | null };
+    user: { id: string; name: string; email: string | null; role: 'user' | 'admin' };
     totpRequired: boolean;
   };
 
