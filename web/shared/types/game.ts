@@ -1,3 +1,5 @@
+import { User } from "#shared/types/auth";
+
 // TODO: redundant, use Game instead
 export type Foyer = {
 	name: string;
@@ -10,6 +12,10 @@ export type Company = {
 	name: string;
 	color: "red" | "blue" | "green" | "yellow" | "purple";
 	createdAt: string;
+};
+
+export type Player = Company & {
+	user: User,
 };
 
 export type Game = {

@@ -30,6 +30,7 @@ export default defineHandler(async (event) => {
 	if (!game)
 		throw new HTTPError({ statusMessage: "game does not exist", status: 400 });
 	// TODO: check if the game is already full
+
 	try {
 		[row] = await db
 			.insert(companies)
@@ -44,6 +45,11 @@ export default defineHandler(async (event) => {
 		throw new HTTPError({ statusMessage: "already joined", status: 400 });
 	// publish the new company to the game session channel
 	await connection;
-	await client.publish(`game:session:${body.gameCode}`, JSON.stringify({ type: "joined", company: row }));
+	await client.publish(`game:session:${body.gameCode}`,
+		JSON.stringify({
+			type: "joined",
+			company: row
+		})
+	);
 	return (row);
 });
