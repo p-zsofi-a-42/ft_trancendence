@@ -9,8 +9,8 @@
 
 		<template #players>
 			<UCard title="Players" variant="foyer" :ui="{ body: 'text-center', header: 'border-b-2 border-neutral-600' }">
-				<CustomUserList :list="props.players.map((p: Player) => p.user)" />
-				<p v-if="!props.players.length">No Players</p>
+				<CustomUserList :list="players.map((p: Player) => p.user)" />
+				<p v-if="!players.length">No Players</p>
 			</UCard>
 		</template>
 
@@ -36,6 +36,7 @@
 			</UCard>
 		</template>
 	</USplitter>
+	{{ users }}
 </template>
 
 <script setup lang="ts">
@@ -45,12 +46,14 @@ import { toDisplayString } from "vue";
 
 const props = defineProps<{
 	gameCode: string;
-	players: Player[];
 }>();
 
 const settingsModel = defineModel<Game>({
 	required: true,
 });
+
+// TODO: ensure that players is a "global" variable accessible across all foyer files
+let players = ref(await $fetch<Player[]>(`/api/game/${props.gameCode}/players`, { method: "GET" }));
 
 let socket: WebSocket | null = null;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -73,10 +76,8 @@ async function connectWebSocket() {
 	socket.onmessage = async (event) => {
 		const payloadEvent = JSON.parse(event.data);
 		console.log(`Event received: ${JSON.stringify(payloadEvent)}`);
-		if (payloadEvent.type == "joined") {
-			props.players = ref(await $fetch<Player[]>(`/api/game/${props.gameCode}/players`, { method: "GET" }));
-			// props.companies.push(payloadEvent.company);
-		}
+		if (payloadEvent.type == "joined")
+			players.value = await $fetch<Player[]>(`/api/game/${props.gameCode}/players`, { method: "GET" });
 	};
 
 	// Handle WebSocket close event
