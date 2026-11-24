@@ -25,11 +25,12 @@ export default defineHandler(async (event) => {
 			.where(eq(games.idCode, body.gameCode));
 	} catch (error: any) {
 		console.log(`Error at /api/company/create.post: ${error.message}`);
-		throw new HTTPError("failed to retrieve game", { status: 500 });
+		throw new HTTPError({ statusMessage: "failed to retrieve game", status: 500 });
 	}
 	if (!game)
-		throw new HTTPError({ message: "game does not exist", status: 400 });
+		throw new HTTPError({ statusMessage: "game does not exist", status: 400 });
 	// TODO: check if the game is already full
+
 	try {
 		[row] = await db
 			.insert(companies)
@@ -38,12 +39,17 @@ export default defineHandler(async (event) => {
 			.returning();
 	} catch (error: any) {
 		console.log(`Error at /api/company/create.get: ${error.message}`);
-		throw new HTTPError({ message: "failed to create company", status: 500 });
+		throw new HTTPError({ statusMessage: "failed to create company", status: 500 });
 	}
 	if (!row)
-		throw new HTTPError({ message: "already joined", status: 400 });
+		throw new HTTPError({ statusMessage: "already joined", status: 400 });
 	// publish the new company to the game session channel
 	await connection;
-	await client.publish(`game:session:${body.gameCode}`, JSON.stringify({ type: "joined", company: row }));
+	await client.publish(`game:session:${body.gameCode}`,
+		JSON.stringify({
+			type: "joined",
+			company: row
+		})
+	);
 	return (row);
 });
