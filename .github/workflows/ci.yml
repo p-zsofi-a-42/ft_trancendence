@@ -22,12 +22,40 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            web/package-lock.json
+            services/user/package-lock.json
+            services/game/package-lock.json
 
-      - name: Install dependencies
-        run: npm install
+      # VALIDATING AND BUILDING DOCKER IMAGES #
+      - name: Validate Docker Compose configuration
+        run: docker compose --env-file .env.example config --quiet
 
-      - name: Run tests
+      - name: Build production Docker images
+        run: docker compose --env-file .env.example build web user game
+
+      - name: Build development Docker images
+        run: docker compose --env-file .env.example --profile dev build web-dev user-dev game-dev
+
+      # RUNNING WEB TESTS #
+      - name: Install web dependencies
+        run: npm ci
+        working-directory: web
+
+      - name: Run web tests
         run: npm test
+        working-directory: web
 
-      - name: Build Nuxt app
+      # BUILDING APP PACKAGES #
+      - name: Build web application
         run: npm run build
+        working-directory: web
+
+      - name: Build user service
+        run: npm ci && npm run build
+        working-directory: services/user
+
+      - name: Build game service
+        run: npm ci && npm run build
+        working-directory: services/game

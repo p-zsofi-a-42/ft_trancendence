@@ -1,125 +1,138 @@
 <template>
-  <div class="max-w-md mx-auto mt-16 p-6">
-    <h1 class="text-2xl font-bold mb-2">Join Game</h1>
-    <p class="text-sm text-gray-500 mb-6">
-      Game Code: <span class="font-mono font-semibold text-black">{{ gameCode }}</span>
-    </p>
+	<UContainer class="flex flex-col h-9/10 w-3/4 min-w-dvh">
+		<UStepper ref="stepper" v-model="activeStep" :disabled="true" :items="stepper_items" :ui="{
+			root: 'w-full flex-1 min-h-0 bg-app-background rounded-2xl p-6',
+			icon: 'bg-app-text',
+			content: 'w-full flex-1 min-h-0',
+		}">
+			<template #content="{ item }">
+				<div class="flex h-full flex-col">
+					<div class="min-h-0 flex-1">
+						<FoyerOverview v-if="item?.value === 'overview'" :game-code="gameCode" :players="players"
+							:companies="companies" v-model="settings" @continue="stepper?.next()" />
 
-    <form @submit.prevent="handleSubmit" class="space-y-4">
-      <div>
-        <label for="companyName" class="block text-sm font-medium mb-1">
-          Company Name
-        </label>
-        <input
-          id="companyName"
-          v-model="companyName"
-          type="text"
-          required
-          placeholder="Enter your company name"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-black"
-        />
-      </div>
-
-      <p v-if="errorMessage" class="text-red-600 text-sm">
-        {{ errorMessage }}
-      </p>
-      <ul>
-        <li v-for="company in companies" :key="company.id">
-					<p>{{ company }}</p>
-        </li>
-      </ul>
-
-
-      <button
-        type="submit"
-        :disabled="isLoading"
-        class="w-full py-2 px-4 bg-black text-white rounded-md hover:opacity-80 disabled:opacity-50 transition-opacity"
-      >
-        {{ isLoading ? 'Joining...' : 'Join Game' }}
-      </button>
-    </form>
-  </div>
+						<FoyerCompany v-else-if="item?.value === 'company-setup'" v-model="companies" />
+						<UCard v-else-if="item?.value === 'game-start'" variant="outline" title="Game starts in" :ui="{
+							root: 'h-full w-full items-center justify-center',
+							title: 'text-2xl',
+							body: 'text-4xl text-center',
+						}">
+							3
+						</UCard>
+					</div>
+					<div v-if="stepper?.hasNext" class="ml-auto flex p-4 pt-0">
+						<UButton class="mx-3 bg-red-500 disabled:opacity-0 hover:bg-red-500/50" size="xl" variant="foyer"
+							:disabled="!stepper?.hasPrev" @click="stepper?.prev()">
+							Back
+						</UButton>
+						<UButton class="disabled:opacity-0" size="xl" variant="foyer" :disabled="!stepper?.hasNext" @click="
+							activeStep === 'overview'
+								? stepper?.next()
+								: startGame()
+							">
+							{{ activeStep === "overview" ? "Next" : "Start" }}
+						</UButton>
+					</div>
+				</div>
+			</template>
+		</UStepper>
+	</UContainer>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref } from "vue";
+import type { StepperItem } from "@nuxt/ui";
+import type { Player } from "#shared/types/game";
 
-const route = useRoute()
-const router = useRouter()
-
-// Den dynamischen Parameter [code] aus der URL auslesen
-const gameCode = route.params.code
-
-const companyName = ref('')
-const isLoading = ref(false)
-const errorMessage = ref(null)
-
+const route = useRoute();
+const { user } = useUserSession();
+const gameCode: string = String(route.params.code);
 const toast = useToast();
-let companies = ref(await $fetch(`/api/foyer/${gameCode}/companies`, { method: "GET" }));
 
+let settings = ref<Game>();
 
-let socket: WebSocket | null = null
-let reconnectTimer: ReturnType<typeof setTimeout> | null = null
-let closedByUs = false
+const { data: companies } = await useFetch<Company[]>(
+	() => `/api/foyer/${gameCode}/companies`,
+	{ default: () => [] },
+);
 
-async function connectWebSocket() {
-  // Fresh Ticket on every connection attempt
-  const ticket = await $fetch<{ ticket: string }>(
-    `/api/foyer/${gameCode}/ws-ticket`,
-    { method: 'POST' }
-  )
-  console.log('Obtained WebSocket ticket:', ticket.ticket)
-  // Connect to WebSocket with the obtained ticket
-  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
-  socket = new WebSocket(`${protocol}//${location.host}/ws/game?ticket=${ticket.ticket}`)
+//
+// const players = computed<UserSummary[]>(() => {
+// 	const playersById = new Map<string, UserSummary>();
+//
+// 	for (const company of companies.value) {
+// 		const id = String(company.userId);
+//
+// 		playersById.set(id, {
+// 			id,
+// 			name:
+// 				id === String(user.value?.id)
+// 					? (user.value?.name ?? `Player ${id}`)
+// 					: `Player ${id}`,
+// 		});
+// 	}
+//
+// 	return [...playersById.values()];
+// });
 
-  // Handle incoming events from the Websocket
-  socket.onmessage = (event) => {
-    const payloadEvent = JSON.parse(event.data)
-		console.log(`Event received: ${JSON.stringify(payloadEvent)}`);
-		if (payloadEvent.type == "joined")
-			companies.value.push(payloadEvent.company);
-  }
-
-  // Handle WebSocket close event
-  socket.onclose = () => {
-    if (closedByUs)
-      return
-    reconnectTimer = setTimeout(connectWebSocket, 2000)
-  }
-}
-// Connect WebSocket on component mount
-onMounted(connectWebSocket)
-// Disconnect WebSocket on component unmount
-onBeforeUnmount(() => {
-  closedByUs = true
-  if (reconnectTimer) clearTimeout(reconnectTimer)
-  socket?.close()
-})
-
-const handleSubmit = async () => {
-  isLoading.value = true
-  errorMessage.value = null
-
-  try {
-    // Beispiel-Request an deinen Backend-Endpunkt
-    const response = await $fetch("/api/company/create", {
-      method: 'POST',
-      body: {
-        name: companyName.value,
-				gameCode: gameCode
-      }
-    })
-    console.log('Successfully joined:', response)
-  } catch (error) {
-		console.log(`error: ${error.message}`)
+const stepper_items = ref<StepperItem[]>([
+	{
+		title: "Foyer Setup",
+		value: "overview",
+		icon: "i-myOwn-users",
+	},
+	{
+		title: "Company Setup",
+		value: "company-setup",
+		icon: "i-myOwn-building-complex",
+	},
+	{
+		title: "Game Start",
+		value: "game-start",
+		icon: "i-myOwn-gamepad-2",
+	},
+]);
+const stepper = useTemplateRef("stepper");
+const activeStep = ref("overview");
+async function startGame() {
+	try {
+		await $fetch(`/api/game/${gameCode}/start`, { method: "POST" });
+	} catch (error: any) {
+		console.log(`error: ${error.message}`);
 		toast.add({
 			title: "Failure",
 			description: error.statusMessage,
-			color: "danger",
+			color: "error",
 		});
-  } finally {
-    isLoading.value = false
-  }
+	}
+	navigateTo(`/game/${gameCode}`);
 }
+
+/* Provisional */
+try {
+	settings = ref<Game>(
+		await $fetch(`/api/game/${gameCode}`, { method: "GET" }),
+	);
+	if (settings.value.status === "ongoing")
+		navigateTo(`/game/${gameCode}`);
+	else if (settings.value.status === "done")
+		navigateTo(`/results/${gameCode}`);
+	// toast.add({
+	// 	title: "Info",
+	// 	description: "Game has already started",
+	// 	color: "info",
+	// });
+} catch (error: any) {
+	console.log(`error: ${error.message}`)
+	// toast.add({
+	// 	title: "Failure",
+	// 	description: error.statusMessage,
+	// 	color: "danger",
+	// });
+	navigateTo("/play");
+}
+/**/
+
+let players = ref(await $fetch<Player[]>(`/api/game/${gameCode}/players`, { method: "GET" }));
+
 </script>
