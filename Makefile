@@ -1,7 +1,8 @@
 .PHONY: dev dev-view prod down stop restart \
 	rebuild rebuild-prod clean-rebuild clean-rebuild-prod full-rebuild full-rebuild-dev \
 	clean-cache clean-runtime reset-user-db reset-game-db reset-avatar reset-all-data \
-	init-db clean-anonymous-volumes help
+	init-db clean-anonymous-volumes help \
+  test test-login test-auth-restart
 
 COMPOSE_PROJECT_NAME ?= $(shell basename "$(CURDIR)")
 
@@ -105,3 +106,12 @@ full-rebuild-dev: full-rebuild
 clean-anonymous-volumes:
 	docker volume ls --filter dangling=true --format '{{.Name}}'
 	docker volume prune -f
+  
+# ---------Testing-------------
+test:
+	docker compose run --rm -T --no-deps web-tester
+
+# Requires TEST_AUTH_USERNAME and TEST_AUTH_PASSWORD for an existing test user.
+# This target intentionally stops and starts the development Compose stack.
+test-auth-restart:
+	bash web/test/e2e/auth-session-restart.sh
