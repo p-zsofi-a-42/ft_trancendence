@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
     userId: Number(pendingUserId),
   })
 
-  const user = await callUserService<{ id: string; name: string; email: string }>(
+  const user = await callUserService<{ id: string; name: string; email: string; role: 'user' | 'admin' }>(
     '/users/me',
     { method: 'GET', userId: Number(pendingUserId) },
   )

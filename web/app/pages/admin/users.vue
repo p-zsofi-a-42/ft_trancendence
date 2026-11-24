@@ -88,6 +88,8 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import type { User, UserPage } from '#shared/types/user'
 import type { TableColumn } from '@nuxt/ui'
 
+definePageMeta({ middleware: 'admin' })
+
 const ANY = 'all'
 const roleItems = [
   { label: 'Any role', value: ANY },

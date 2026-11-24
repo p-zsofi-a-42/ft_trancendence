@@ -23,11 +23,14 @@ const logout = async () => {
   }
 };
 
-const loggedInItems: DropdownMenuItem[] = [
+const loggedInItems = computed<DropdownMenuItem[]>(() => [
   {
     label: "Profile",
     to: "/profile",
   },
+  ...(user.value?.role === "admin"
+    ? [{ label: "Admin", to: "/admin/users" }]
+    : []),
   {
     label: "Settings",
   },
@@ -38,7 +41,7 @@ const loggedInItems: DropdownMenuItem[] = [
       logout();
     },
   },
-];
+]);
 
 const loggedOutItems: DropdownMenuItem[] = [
   {

@@ -53,11 +53,7 @@ function parseDate(raw: unknown): Date | undefined {
 const escapeLike = (term: string) => term.replace(/[\\%_]/g, '\\$&')
 
 export default defineEventHandler(async (event) => {
-  try {
-    await requireAdmin(event)
-  } catch (error) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized Backend' })
-  }
+  await requireAdmin(event)
 
   const query = getQuery(event)
   const page = parseIntParam(query.page, 1)
