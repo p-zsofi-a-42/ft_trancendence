@@ -77,8 +77,8 @@ export async function updateUserById(
       return updatedUser;
     });
   } catch (err: any) {
-    // Postgres unique_violation on users.name
-    if (err.code === '23505') {
+    // Postgres unique_violation on users.name; drizzle wraps the driver error in `cause`
+    if ((err.cause?.code ?? err.code) === '23505') {
       throw createError({ statusCode: 409, statusMessage: 'Username already taken' });
     }
     throw err;
