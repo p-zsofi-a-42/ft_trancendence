@@ -1,27 +1,14 @@
-import { deleteUserById } from '../../../utils/delete';
+import { deleteUserById, parseUserId } from '../../../utils/delete';
 
 export default defineEventHandler(async (event) => {
-// throw createError({ statusCode: 401, statusMessage: 'Un' });
-  // const { id } = await readJsonBody(event);
-  // if (!id) {
-  //   throw createError({ statusCode: 400, statusMessage: 'User ID is required' });
-  // }
+  const actorId = await requireAdmin(event);
 
-  // check if the user has admin privileges
-  try {
-    await requireAdmin(event)
-  } catch (error) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized Backend' })
-  }
+  const userId = parseUserId(getRouterParam(event, 'id'));
 
-  // retrieve the user ID from the router parameters
-  const userId = getRouterParam(event, 'id');
-  
-  const [deletedUser] = await deleteUserById(userId);
+  const deletedUser = await deleteUserById(userId, actorId);
   if (!deletedUser) {
     throw createError({ statusCode: 404, statusMessage: 'User not found' });
   }
 
-  // Add your user deletion logic here
   return { success: true };
 });
