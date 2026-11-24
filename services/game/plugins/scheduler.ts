@@ -1,6 +1,6 @@
 import { definePlugin } from "nitro";
 import { db, games, rounds, roundResults } from "@utils/db";
-import type { Game, Company, Round, RoundResult } from "@utils/db";
+import type { Game, Round, RoundResult } from "@utils/db";
 import { lte, sql, and, eq } from "drizzle-orm";
 import { client, connection } from "@utils/redis";
 
@@ -9,9 +9,18 @@ type resultValues = Omit<RoundResult, "id" | "roundId" | "locked" | "lockedAt">;
 // INFO: watch -n1 docker logs -n40 game_dev
 export default definePlugin(async (nitroApp) => {
 	console.log('Nitro plugin', nitroApp);
-	// TODO: how should games be recovered after a crash? (e.g. if the server is restarted while a game is running)
-	// TODO: at launch check for expired games and change their status to "done" (or reset their endsAt?)
 
+	// TODO: how should games be recovered after a crash? (e.g. if the server is restarted while a game is running)
+	try {
+		await db.update(rounds)
+			.set({ status: "paused" })
+			.where(and(
+				eq(rounds.status, "ongoing"),
+				lte(rounds.endsAt, sql`now()`)
+			));
+	} catch (error: any) {
+		console.error(`scheduler error: ${error.message}`);
+	}
 	// console.time("testTimer");
 	const timer = setInterval(async (): Promise<void> => {
 		// console.timeEnd("testTimer");
@@ -46,19 +55,15 @@ async function closeRound(round: Round): Promise<void> {
 			if (game.nRounds > round.index + 1)  // the game is not done yet
 				await setUpNextRound(tx, round, game, results);
 			else console.log(`scheduler: game ${game.idCode} has ended`);
-
 		});
+		// TODO: inform the clients that the round has ended
+		// BUG: fails unexpectedly
+		// await connection;
+		// await client.publish(`game:session:${game.idCode}`, JSON.stringify({ type: "round_finished", round: round }));
 	} catch (error: any) {
 		console.error(`scheduler error: ${error.message}`);
 		return;
 	}
-	// TODO: inform the clients that the round has ended
-	/*
-	if (game && round) {
-		await connection;
-		await client.publish(`game:session:${game.idCode}`, JSON.stringify({ type: "round_finished", round: round.id }));
-	}
-	*/
 }
 
 /*
