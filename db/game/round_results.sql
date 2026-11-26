@@ -14,6 +14,9 @@ CREATE TABLE IF NOT EXISTS round_results (
 	locked_at			TIMESTAMPTZ,
 	UNIQUE (round_id, company_id)
 );
+-- TODO: add
+-- 1. number of employees a player wants to hire
+--
 
 CREATE INDEX IF NOT EXISTS idx_round_results_game ON round_results (game_id);
 CREATE INDEX IF NOT EXISTS idx_round_results_company ON round_results (company_id);

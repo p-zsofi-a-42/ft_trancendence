@@ -81,7 +81,7 @@ const toast = useToast();
 let settings = ref<Game>();
 
 const { data: companies } = await useFetch<Company[]>(
-  () => `/api/foyer/${gameCode}/companies`,
+  () => `/api/game/${gameCode}/companies`,
   { default: () => [] },
 );
 
