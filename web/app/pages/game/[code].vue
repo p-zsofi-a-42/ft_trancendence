@@ -156,6 +156,22 @@ try {
   else if (game.status === "done") navigateTo(`/results/${game.idCode}`);
   if (!companies.some((c: Company) => c.userId == user.value.id))
     navigateTo("/play");
+	let currentRound = await $fetch(`/api/game/${code}/round`, { method: "GET" });
+	console.log(`currentRound: ${JSON.stringify(currentRound)}`)
+	// TIMEER
+	const endsAt = new Date(currentRound.serverNow).getTime();
+	const timer = setInterval(() => {
+		const now = new Date().getTime();
+		const diff = endsAt - now;
+		if (diff < 0) {
+			clearInterval(timer);
+			return ;
+		}
+		const minutes = Math.floor(diff / 60000);
+		const seconds = Math.floor((diff % 60000) / 1000);
+		console.log(`${minutes}:${seconds}`)
+		roundTimer.value = `${minutes}:${seconds}`;
+	}, 1000);
 } catch (error) {
   console.error("Error fetching game data:", error);
 }
@@ -196,6 +212,7 @@ const tabsItems: TabsItem[] = [
   { label: "Sales", value: "sales" },
   { label: "Development", value: "development" },
 ];
+
 </script>
 
 <style lang="css" scoped>
