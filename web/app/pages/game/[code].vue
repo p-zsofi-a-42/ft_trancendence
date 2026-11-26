@@ -82,6 +82,8 @@
 import type { Game, Company, Round, RoundResult } from "#shared/types/game";
 import type { SplitterItem, TabsItem } from "@nuxt/ui";
 import { nextTick, useTemplateRef, watch } from "vue";
+  
+definePageMeta({ middleware: "auth" });
 
 let roundTimer = ref("00:00");
 let currentRound = ref(4);
