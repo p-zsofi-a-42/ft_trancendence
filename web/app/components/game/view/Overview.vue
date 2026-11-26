@@ -1,6 +1,9 @@
 <template>
-  <div class="grid grid-cols-2 grid-rows-2 w-full h-full gap-4">
-    <UCard title="Statistics" variant="subtle" class="w-full text-text">
+  <div
+    class="grid w-full h-full gap-4"
+    :class="resize ? 'grid-cols-1' : 'grid-cols-2'"
+  >
+    <UCard title="Statistics" variant="subtle" class="w-full text-white">
       More Info ...
     </UCard>
     <UCard title="Finance" variant="subtle" class="w-full text-text">
@@ -15,4 +18,6 @@
   </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+defineProps<{ resize: boolean }>();
+</script>

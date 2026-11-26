@@ -2,10 +2,11 @@
 // if 2FA is required, it stashes a pending-auth marker instead (never logs the user in yet).
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
-  const { user, totpRequired } = await callUserService<{
+  const { user, totpRequired, role } = await callUserService<{
     message: string
     user: { id: string; name: string; email: string }
     totpRequired: boolean
+    role: string
   }>('/internal/login', { body })
 
   if (totpRequired) {
@@ -16,6 +17,6 @@ export default defineEventHandler(async (event) => {
     return { message: 'TOTP verification required', totpRequired: true }
   }
 
-  await setUserSession(event, { user })
-  return { message: 'Login successful', user }
+  await setUserSession(event, { user: { ...user, role } })
+  return { message: 'Login successful', user: { ...user, role } }
 })

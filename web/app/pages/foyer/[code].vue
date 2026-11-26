@@ -55,11 +55,7 @@
               size="xl"
               variant="foyer"
               :disabled="!stepper?.hasNext"
-              @click="
-                activeStep === 'overview'
-                  ? stepper?.next()
-                  : navigateTo(`/game/${gameCode}`)
-              "
+              @click="activeStep === 'overview' ? stepper?.next() : startGame()"
             >
               {{ activeStep === "overview" ? "Next" : "Start" }}
             </UButton>
@@ -73,38 +69,40 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import type { StepperItem } from "@nuxt/ui";
-import type { UserSummary } from "#imports";
+import type { Player } from "#shared/types/game";
+
+definePageMeta({ middleware: "auth" });
 
 const route = useRoute();
 const { user } = useUserSession();
 const gameCode: string = String(route.params.code);
+const toast = useToast();
 
-let settings = ref<Game>(
-  await $fetch(`/api/game/${gameCode}`, { method: "GET" }),
-);
+let settings = ref<Game>();
 
 const { data: companies } = await useFetch<Company[]>(
   () => `/api/foyer/${gameCode}/companies`,
   { default: () => [] },
 );
 
-const players = computed<UserSummary[]>(() => {
-  const playersById = new Map<string, UserSummary>();
-
-  for (const company of companies.value) {
-    const id = String(company.userId);
-
-    playersById.set(id, {
-      id,
-      name:
-        id === String(user.value?.id)
-          ? (user.value?.name ?? `Player ${id}`)
-          : `Player ${id}`,
-    });
-  }
-
-  return [...playersById.values()];
-});
+//
+// const players = computed<UserSummary[]>(() => {
+// 	const playersById = new Map<string, UserSummary>();
+//
+// 	for (const company of companies.value) {
+// 		const id = String(company.userId);
+//
+// 		playersById.set(id, {
+// 			id,
+// 			name:
+// 				id === String(user.value?.id)
+// 					? (user.value?.name ?? `Player ${id}`)
+// 					: `Player ${id}`,
+// 		});
+// 	}
+//
+// 	return [...playersById.values()];
+// });
 
 const stepper_items = ref<StepperItem[]>([
   {
@@ -125,4 +123,44 @@ const stepper_items = ref<StepperItem[]>([
 ]);
 const stepper = useTemplateRef("stepper");
 const activeStep = ref("overview");
+async function startGame() {
+  try {
+    await $fetch(`/api/game/${gameCode}/start`, { method: "POST" });
+  } catch (error: any) {
+    console.log(`error: ${error.message}`);
+    toast.add({
+      title: "Failure",
+      description: error.statusMessage,
+      color: "error",
+    });
+  }
+  navigateTo(`/game/${gameCode}`);
+}
+
+/* Provisional */
+try {
+  settings = ref<Game>(
+    await $fetch(`/api/game/${gameCode}`, { method: "GET" }),
+  );
+  if (settings.value.status === "ongoing") navigateTo(`/game/${gameCode}`);
+  else if (settings.value.status === "done") navigateTo(`/results/${gameCode}`);
+  // toast.add({
+  // 	title: "Info",
+  // 	description: "Game has already started",
+  // 	color: "info",
+  // });
+} catch (error: any) {
+  console.log(`error: ${error.message}`);
+  // toast.add({
+  // 	title: "Failure",
+  // 	description: error.statusMessage,
+  // 	color: "danger",
+  // });
+  navigateTo("/play");
+}
+/**/
+
+let players = ref(
+  await $fetch<Player[]>(`/api/game/${gameCode}/players`, { method: "GET" }),
+);
 </script>

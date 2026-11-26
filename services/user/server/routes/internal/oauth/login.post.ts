@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const [link] = await db
-    .select({ oauthId: oauth.id, id: users.id, name: users.name, email: users.email, totpEnabled: users.totpEnabled })
+    .select({ oauthId: oauth.id, id: users.id, name: users.name, email: users.email, role: users.role, totpEnabled: users.totpEnabled })
     .from(oauth)
     .innerJoin(providers, eq(oauth.providerId, providers.id))
     .innerJoin(users, eq(oauth.userId, users.id))
@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
 
   return {
     message: 'Login successful',
-    user: { id: String(link.id), name: link.name, email: link.email },
+    user: { id: String(link.id), name: link.name, email: link.email, role: link.role },
     totpRequired: link.totpEnabled,
   }
 })
