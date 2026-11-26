@@ -41,6 +41,8 @@ import type { FormError, FormSubmitEvent } from "@nuxt/ui";
 import type { Game } from "#imports";
 import { error } from "#build/ui";
 
+definePageMeta({ middleware: "auth" });
+
 const toast = useToast();
 
 async function create() {
@@ -76,7 +78,9 @@ async function create() {
     // NAVIGATE TO GAME PAGE
     navigateTo(`/foyer/${code}`);
   } catch (error) {
-    console.log(`error: ${error.message}`);
+    if (error instanceof Error) console.log(`error: ${error.message}`);
+    else console.log("Unknown error:", error);
+
     toast.add({
       title: "Failure",
       description: "Failed to create a new Foyer.",

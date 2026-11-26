@@ -17,8 +17,8 @@ export async function signServiceToken(userId: number | string) {
 // 2. options: an object containing optional method, body, and userId.
 // 3. Returns a Promise resolving to the response of type T.
 export async function callUserService<T>(
-	path: string,
-	options: { method?: 'GET' | 'POST' | 'PATCH'; body?: Record<string, unknown> | FormData; userId?: number } = {},
+  path: string,
+  options: { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: Record<string, unknown>; userId?: number } = {},
 ): Promise<T> {
 	const headers: Record<string, string> = {}
 	if (options.userId !== undefined) {

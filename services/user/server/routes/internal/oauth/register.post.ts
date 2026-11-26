@@ -54,7 +54,7 @@ export default defineEventHandler(async (event) => {
       const [user] = await tx
         .insert(users)
         .values({ name, email: emailValue, passwordHash: null })
-        .returning({ id: users.id, name: users.name, email: users.email })
+        .returning({ id: users.id, name: users.name, email: users.email, role: users.role })
 
       await tx.insert(oauth).values({
         userId: user.id,
@@ -73,7 +73,7 @@ export default defineEventHandler(async (event) => {
     }
     return {
       message: 'Registration successful',
-      user: { id: String(created.id), name: created.name, email: created.email },
+      user: { id: String(created.id), name: created.name, email: created.email, role: created.role },
       totpRequired: false,
     }
   } catch (err: any) {
