@@ -59,7 +59,7 @@
       <slot />
     </UMain>
 
-    <SocialMessages />
+    <ChatMessages v-if="loggedIn" />
 
     <UFooter
       :ui="{
