@@ -15,12 +15,15 @@ CREATE TABLE IF NOT EXISTS users (
   -- A password account must have an email; OAuth-only accounts may have none
   CONSTRAINT users_password_requires_email CHECK (password_hash IS NULL OR email IS NOT NULL)
 );
+-- add UNIQUE constraint for email regardless of case
+-- ALTER TABLE users ADD CONSTRAINT users_email_key UNIQUE(email);
 -- Emails are unique regardless of case, and NULLs don't collide
-CREATE UNIQUE INDEX IF NOT EXISTS users_email_key ON users (lower(email)) WHERE email IS NOT NULL;
+-- CREATE UNIQUE INDEX IF NOT EXISTS users_email_key ON users (lower(email)) WHERE email IS NOT NULL;
 -- Insert a admin into the users table, password is password
-ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin'));
+-- ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin'));
 -- For databases created before avatar_file existed
-ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_file TEXT NULL;
+-- ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_file TEXT NULL;
+
 
 -- -----------------------------------------------------------------------------
 -- OAuth2.0 TABLES -------------------------------------------------------------
