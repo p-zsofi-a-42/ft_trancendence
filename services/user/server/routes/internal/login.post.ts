@@ -7,13 +7,13 @@ export default defineEventHandler(async (event) => {
   // Read the field and decide which one to use for login (username or email)
   const { login, password } = await readJsonBody(event)
   // accept either username or email for login
-  if ((typeof login === 'string' && !login)
+  if (typeof login !== 'string' || !login.trim()
     || typeof password !== 'string' || !password) {
     setResponseStatus(event, 400)
     return { message: 'Invalid login data' }
   }
   // trim whitespace from login input
-  const trimmedLogin = typeof login === 'string' ? login.trim() : login
+  const trimmedLogin = login.trim()
   // normalize email and username to lowercase for consistent comparison
   let cleanEmail: string | undefined
   if (trimmedLogin && typeof trimmedLogin === 'string' && trimmedLogin.includes('@'))
