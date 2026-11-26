@@ -2,7 +2,7 @@ import { definePlugin } from "nitro";
 import { db, games, rounds, roundResults } from "@utils/db";
 import type { Game, Round, RoundResult } from "@utils/db";
 import { lte, sql, and, eq } from "drizzle-orm";
-import { client, connection } from "@utils/redis";
+import { publish } from "@utils/redis";
 
 type resultValues = Omit<RoundResult, "id" | "roundId" | "locked" | "lockedAt">;
 
@@ -57,15 +57,12 @@ async function closeRound(round: Round): Promise<void> {
 			else console.log(`scheduler: game ${game.idCode} has ended`);
 		});
 		// TODO: inform the clients that the round has ended
-		// BUG: fails unexpectedly
-		// await connection;
-		// await client.publish(`game:session:${game.idCode}`, JSON.stringify({ type: "round_finished", round: round }));
+		await publish(`game:session:${game.idCode}`, { type: "round_finished", round: round });
 	} catch (error: any) {
 		console.error(`scheduler error: ${error.message}`);
 		return;
 	}
 }
-
 /*
  * Set the round status to "done" and lock the round results for all players
  */
@@ -115,5 +112,7 @@ async function setUpNextRound(tx: any, round: Round, game: Game, results: RoundR
 		...rest,
 		roundId: nextRound.id,
 	}));
+	// TODO: call calcResults here
+	// const nextRoundResults = calcResults(game, round, roundResultsCopy);
 	await tx.insert(roundResults).values(roundResultsCopy);
 }
