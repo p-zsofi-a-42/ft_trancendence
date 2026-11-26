@@ -26,7 +26,7 @@
         </div>
         <p><strong>ID:</strong> {{ user.id }}</p>
         <FormFieldString name="name" label="Username" v-model="form.name" required />
-        <FormFieldString name="email" label="Email" v-model="form.email" placeholder="Leave empty to remove" />
+        <FormFieldString name="email" label="Email" v-model="form.email" />
         <div class="flex gap-2 pt-2">
           <UButton type="submit" label="Save" :loading="saving" />
           <UButton label="Cancel" color="neutral" variant="ghost" :disabled="saving" @click="editing = false" />

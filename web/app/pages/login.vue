@@ -6,7 +6,7 @@ import type { FormSubmitEvent, AuthFormField } from "@nuxt/ui";
 const toast = useToast();
 
 const fields: AuthFormField[] = [
-  { name: "username", type: "username", label: "Username", placeholder: "Enter your username", required: true },
+  { name: "login", type: "text", label: "Login", placeholder: "Enter your username or email", required: true },
   { name: "password", type: "password", label: "Password", placeholder: "Enter your password", required: true },
   { name: "remember", label: "Remember me", type: "checkbox" },
 ];
@@ -27,7 +27,7 @@ const providers = [
 ];
 
 const schema = z.object({
-  username: z.string("Username is required"),
+  login: z.string("Login is required"),
   password: z.string("Password is required").min(8, "Must be at least 8 characters"),
 });
 type Schema = z.output<typeof schema>;
