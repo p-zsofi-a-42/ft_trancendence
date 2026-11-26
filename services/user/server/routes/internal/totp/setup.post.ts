@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
   const secret = new OTPAuth.Secret({ size: 20 })
   const totp = new OTPAuth.TOTP({
     issuer: 'ft_transcendence',
-    label: user.email,
+    label: user.email ?? user.name,
     algorithm: 'SHA1',
     digits: 6,
     period: 30,
