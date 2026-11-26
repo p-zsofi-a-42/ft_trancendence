@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
   const data: { name?: string; email?: string | null; role?: 'user' | 'admin' } = {};
 
   if (body.name !== undefined) {
-    if (typeof body.name !== 'string') {
+    if (typeof body.name !== 'string' || body.name.includes('@')) {
       throw createError({ statusCode: 400, statusMessage: 'Invalid name' });
     }
     const name = body.name.trim().toLowerCase();

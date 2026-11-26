@@ -74,7 +74,7 @@ export default defineEventHandler(async (event) => {
     return { message: 'Provider linked' }
   } catch (err: any) {
     // Postgres unique_violation: a concurrent request linked the same identity or provider first
-    if (err.code === '23505') {
+    if ((err.code ?? err.cause?.code) === '23505') {
       setResponseStatus(event, 409)
       return { message: 'Provider already linked' }
     }

@@ -1,14 +1,31 @@
 import { eq } from 'drizzle-orm'
 
 // Internal route: only the web service calls this, over the Compose network.
+// User login either by username or email
 export default defineEventHandler(async (event) => {
-  const { username, password } = await readJsonBody(event)
-  if (typeof username !== 'string' || typeof password !== 'string' || !username || !password) {
+  // User will either put username or email along with the password
+  // Read the field and decide which one to use for login (username or email)
+  const { login, password } = await readJsonBody(event)
+  // accept either username or email for login
+  if ((typeof login === 'string' && !login)
+    || typeof password !== 'string' || !password) {
     setResponseStatus(event, 400)
     return { message: 'Invalid login data' }
   }
+  // trim whitespace from login input
+  const trimmedLogin = typeof login === 'string' ? login.trim() : login
+  // normalize email and username to lowercase for consistent comparison
+  let cleanEmail: string | undefined
+  if (trimmedLogin && typeof trimmedLogin === 'string' && trimmedLogin.includes('@'))
+    cleanEmail = trimmedLogin.toLowerCase()
+  let cleanUsername: string | undefined
+  if (trimmedLogin && typeof trimmedLogin === 'string' && !trimmedLogin.includes('@'))
+    cleanUsername = trimmedLogin.toLowerCase()
 
-  const [user] = await db.select().from(users).where(eq(users.name, username.toLowerCase())).limit(1)
+  // query the user TABLE by normalized username or email
+  const [user] = await db.select().from(users).where(
+    cleanUsername ? eq(users.name, cleanUsername) : eq(users.email, cleanEmail)
+  ).limit(1)
   // OAuth-only accounts have no password; reject them here instead of hashing against null
   if (!user || !user.passwordHash || !(await passwordHasher.verify(user.passwordHash, password))) {
     setResponseStatus(event, 401)

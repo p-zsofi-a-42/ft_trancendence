@@ -9,8 +9,8 @@ import { eq } from 'drizzle-orm'
  */
 export default defineEventHandler(async (event) => {
   const { name, email, password } = await readJsonBody(event)
-  if (typeof name !== 'string' || !name
-    || (email !== undefined && typeof email !== 'string')
+  if (typeof name !== 'string' || !name || name.includes('@')
+    || (!email && typeof email !== 'string')
     || typeof password !== 'string' || !password)
   {
     setResponseStatus(event, 400)
@@ -26,14 +26,25 @@ export default defineEventHandler(async (event) => {
       return { message: 'Username already taken' }
     }
   }
+  
+  // Determine if a valid email was provided, should have '@' character,
+  // not be empty if provided
+  let normalizedEmail: string | null = null
+  if (email && (typeof email !== 'string' || !email.includes('@') || email.trim() === '')) {
+    setResponseStatus(event, 400)
+    return { message: 'Invalid email' }
+  } 
+  const hasEmail = email && typeof email === 'string' && email.trim() !== ''
+  if (hasEmail) {
+    normalizedEmail = email.toLowerCase().trim()
+  }
+
   // Hash the password for secure storage
   const passwordHash = await passwordHasher.make(password)
-  // Determine if a valid email was provided
-  const hasEmail = email && typeof email === 'string' && email.trim() !== ''
   // Insert the new user into the database
   const [created] = await db
     .insert(users)
-    .values({ name: normalizedName, email: hasEmail ? email : null, passwordHash })
+    .values({ name: normalizedName, email: normalizedEmail, passwordHash })
     .returning({ id: users.id })
   if (!created) {
     setResponseStatus(event, 500)
@@ -41,6 +52,6 @@ export default defineEventHandler(async (event) => {
   }
   return {
     message: 'Registration successful',
-    user: { id: String(created.id), name: name, email: hasEmail ? email : null },
+    user: { id: String(created.id), name: name, email: normalizedEmail },
   }
 })

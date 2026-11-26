@@ -6,7 +6,7 @@ import { pgTable, bigint, text, timestamp, uuid, boolean, primaryKey, uniqueInde
 export const users = pgTable('users', {
   id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
   name: text('name').notNull().unique(),
-  email: text('email'),
+  email: text('email').unique(),
   passwordHash: text('password_hash'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   totpSecret: text('totp_secret'),
