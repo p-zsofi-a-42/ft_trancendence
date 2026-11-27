@@ -3,7 +3,7 @@
     <UAccordion
       :items="items"
       :ui="{
-        root: 'rounded-tl-2xl bg-app-background shadow-lg',
+        root: 'rounded-tl-2xl bg-bg shadow-lg',
         trigger: 'px-4 py-3',
         content: 'border-t border-accented',
         body: 'p-4',
