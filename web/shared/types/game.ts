@@ -37,6 +37,11 @@ export type Round = {
 	status: "ongoing" | "paused" | "done";
 };
 
+export type RoundData = {
+	round: Round;
+	serverNow: string;
+};
+
 export type RoundResult = {
 	id: number;
 	roundId: number;

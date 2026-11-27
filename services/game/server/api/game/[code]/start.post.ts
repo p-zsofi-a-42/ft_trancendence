@@ -3,7 +3,7 @@ import { HTTPError } from "nitro";
 import z from "zod";
 import { eq, and, sql } from "drizzle-orm";
 import { db, games, companies, rounds, roundResults } from "@utils/db";
-import { client, connection } from "@utils/redis";
+import { client, connection, publish } from "@utils/redis";
 import type { Game } from "@utils/db"
 
 const validParams = z.object({
@@ -16,7 +16,7 @@ export default defineHandler(async (event) => {
 
 	try {
 		const userId = z.coerce.bigint().min(1).parse(getRequestHeader(event, "user-id"));
-		
+
 		await db.transaction(async (tx) => {
 			// 1. set game status to "ongoing"
 			[game] = await tx.update(games)
@@ -72,10 +72,9 @@ export default defineHandler(async (event) => {
 		console.log(`Error at /api/[code]/start.post: ${error.message} instance of ${error.constructor.name}`);
 		if (error instanceof HTTPError)
 			throw error;
-		throw new HTTPError({message: "failed to start game", status: 500 });
+		throw new HTTPError({ message: "failed to start game", status: 500 });
 	}
 	// notify all players that the game has started
-	await connection;
-	await client.publish(`game:session:${routerParams.code}`, JSON.stringify({ type: "started" }));
+	await publish(`game:session:${routerParams.code}`, { type: "started" })
 	return (game);
 });

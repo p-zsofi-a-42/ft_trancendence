@@ -32,7 +32,7 @@
             :class="
               message.sender_id === user?.id
                 ? 'ml-auto bg-primary-700'
-                : 'bg-neutral-700'
+                : 'bg-bg-elevated'
             "
           >
             <p class="whitespace-pre-wrap wrap-anywhere">

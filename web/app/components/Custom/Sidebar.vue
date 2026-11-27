@@ -11,7 +11,7 @@
       title: 'my-4 text-2xl text-center',
       container:
         'top-(--ui-header-height) bottom-0 h-[calc(100%-var(--ui-header-height))] border-0',
-      inner: 'bg-app-background rounded-l-2xl my-4',
+      inner: 'bg-bg rounded-l-2xl my-4',
     }"
   >
     <template #rail="{ ui }">

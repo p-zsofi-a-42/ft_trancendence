@@ -79,15 +79,15 @@
 
 <!-- LOGIC -->
 <script setup lang="ts">
-import type { Game, Company, Round, RoundResult } from "#shared/types/game";
+import type { Game, Company, Round, RoundData, RoundResult } from "#shared/types/game";
 import type { SplitterItem, TabsItem } from "@nuxt/ui";
 import { nextTick, useTemplateRef, watch } from "vue";
   
 definePageMeta({ middleware: "auth" });
 
-let roundTimer = ref("00:00");
-let currentRound = ref(4);
-let maxRounds = ref(12);
+let roundTimer = ref("--:--");
+let currentRound = ref(0);
+let maxRounds = ref(0);
 
 const isWide = ref(false);
 const leftOpen = ref(false);
@@ -110,7 +110,96 @@ function syncOverviewGrid() {
   overviewResize.value = !(gridQuery?.matches ?? false);
 }
 
-onMounted(() => {
+type GameTab = "overview" | "statistics" | "finance" | "sales" | "development";
+const activeTab = ref<GameTab>("overview");
+
+const code = useRoute().params.code as string;
+
+// TODO: provisional redirect
+try {
+  const { loggedIn, user } = useUserSession();
+  console.log("User session:", JSON.stringify(user.value));
+  const game = await $fetch<Game>(`/api/game/${code}`, { method: "GET" });
+  console.log("Game data:", JSON.stringify(game));
+	maxRounds.value = game.nRounds;
+  const companies = await $fetch<Company[]>(`/api/game/${code}/companies`, {
+    method: "GET",
+  });
+  if (game.status === "created") navigateTo(`/foyer/${game.idCode}`);
+  else if (game.status === "done") navigateTo(`/results/${game.idCode}`);
+  if (!companies.some((c: Company) => c.userId == user.value.id))
+    navigateTo("/play");
+} catch (error) {
+  console.error("Error fetching game data:", error);
+}
+
+let socket: WebSocket | null = null;
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+let closedByUs = false;
+let timerId = null;
+
+async function connectWebSocket() {
+	// Fresh Ticket on every connection attempt
+	const ticket = await $fetch<{ ticket: string }>(
+		`/api/foyer/${code}/ws-ticket`,
+		{ method: "POST" },
+	);
+	console.log("Obtained WebSocket ticket (game):", ticket.ticket);
+	// Connect to WebSocket with the obtained ticket
+	const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+	socket = new WebSocket(
+		`${protocol}//${location.host}/ws/game?ticket=${ticket.ticket}`,
+	);
+
+	// Handle incoming events from the Websocket
+	socket.onmessage = async (event) => {
+		const payloadEvent = JSON.parse(event.data);
+		console.log(`Event received: ${JSON.stringify(payloadEvent)}`);
+		if (payloadEvent.type == "round_finished")
+			await setUpTimer();
+	};
+
+	// Handle WebSocket close event
+	socket.onclose = () => {
+		if (closedByUs) return;
+		reconnectTimer = setTimeout(connectWebSocket, 2000);
+	};
+}
+
+function setTimer(diff) {
+	const minutes = String(Math.floor(diff / 60000)).padStart(2, '0');
+	const seconds = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+	roundTimer.value = `${minutes}:${seconds}`;
+}
+
+async function setUpTimer() {
+	try {
+		let { round, serverNow } = await $fetch<RoundData>(`/api/game/${code}/round`, { method: "GET" });
+		console.log(`currentRound: ${JSON.stringify(round)}`);
+
+		const endsAt = new Date(round.endsAt).getTime();
+		let now = new Date(serverNow).getTime();
+		if (timerId)
+			clearInterval(timerId);
+		currentRound.value = round.index + 1;
+		timerId = setInterval(() => {
+			const diff = endsAt - now;
+			setTimer(diff);
+			if (diff < 0) {
+				console.log("time out")
+				clearInterval(timerId);
+				return ;
+			}
+			now += 1000;
+		}, 1000);
+	} catch (error: any) {
+		console.error("Error fetching game data:", error);
+	}
+};
+
+onMounted(async () => {
+	await connectWebSocket();
+	await setUpTimer();
   sidebarQuery = window.matchMedia("(min-width: 1668px)");
   gridQuery = window.matchMedia("(min-width: 960px)");
 
@@ -119,6 +208,15 @@ onMounted(() => {
 
   sidebarQuery.addEventListener("change", syncSidebarDefaults);
   gridQuery.addEventListener("change", syncOverviewGrid);
+});
+
+onBeforeMount(() => {
+	// Disconnect WebSocket on component unmount
+	closedByUs = true;
+	if (reconnectTimer) clearTimeout(reconnectTimer);
+	socket?.close();
+	if (timerId)
+		clearInterval(timerId);
 });
 
 watch(
@@ -138,27 +236,6 @@ watch(
   { flush: "post", immediate: true },
 );
 
-type GameTab = "overview" | "statistics" | "finance" | "sales" | "development";
-const activeTab = ref<GameTab>("overview");
-
-const code = useRoute().params.code as string;
-
-// TODO: provisional redirect
-try {
-  const { loggedIn, user } = useUserSession();
-  console.log("User session:", JSON.stringify(user.value));
-  const game = await $fetch<Game>(`/api/game/${code}`, { method: "GET" });
-  console.log("Game data:", JSON.stringify(game));
-  const companies = await $fetch<Company[]>(`/api/game/${code}/companies`, {
-    method: "GET",
-  });
-  if (game.status === "created") navigateTo(`/foyer/${game.idCode}`);
-  else if (game.status === "done") navigateTo(`/results/${game.idCode}`);
-  if (!companies.some((c: Company) => c.userId == user.value.id))
-    navigateTo("/play");
-} catch (error) {
-  console.error("Error fetching game data:", error);
-}
 
 const splitterItems: SplitterItem[] = [
   {
@@ -196,6 +273,7 @@ const tabsItems: TabsItem[] = [
   { label: "Sales", value: "sales" },
   { label: "Development", value: "development" },
 ];
+
 </script>
 
 <style lang="css" scoped>

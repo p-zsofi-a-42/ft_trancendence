@@ -7,7 +7,7 @@
       :items="stepper_items"
       :ui="{
         root: 'w-full flex-1 min-h-0 bg-bg rounded-2xl p-6',
-        icon: 'bg-app-text',
+        icon: 'bg-text',
         content: 'w-full flex-1 min-h-0',
       }"
     >
@@ -81,7 +81,7 @@ const toast = useToast();
 let settings = ref<Game>();
 
 const { data: companies } = await useFetch<Company[]>(
-  () => `/api/foyer/${gameCode}/companies`,
+  () => `/api/game/${gameCode}/companies`,
   { default: () => [] },
 );
 
@@ -149,6 +149,9 @@ try {
   // 	description: "Game has already started",
   // 	color: "info",
   // });
+  let players = ref(
+    await $fetch<Player[]>(`/api/game/${gameCode}/players`, { method: "GET" }),
+  );
 } catch (error: any) {
   console.log(`error: ${error.message}`);
   // toast.add({
@@ -159,8 +162,4 @@ try {
   navigateTo("/play");
 }
 /**/
-
-let players = ref(
-  await $fetch<Player[]>(`/api/game/${gameCode}/players`, { method: "GET" }),
-);
 </script>

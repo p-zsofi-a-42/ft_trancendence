@@ -2,8 +2,10 @@ import { inArray } from "drizzle-orm";
 
 export default defineEventHandler(async (event) => {
 	const body = await readBody(event);
-	
+
 	try {
+		console.log(`body: ${JSON.stringify(body)}`);
+
 		const userList = await db.query.users
 			.findMany({
 				where: inArray(users.id, body.userIds)

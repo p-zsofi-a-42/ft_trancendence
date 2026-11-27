@@ -53,7 +53,7 @@
 
     <UMain
       :ui="{
-        base: 'bg-transparent text-app-text flex-1 grid place-items-center',
+        base: 'bg-transparent text-text flex-1 grid place-items-center',
       }"
     >
       <slot />
@@ -63,7 +63,7 @@
 
     <UFooter
       :ui="{
-        root: 'bg-transparent text-app-text',
+        root: 'bg-transparent text-text',
       }"
     />
   </div>

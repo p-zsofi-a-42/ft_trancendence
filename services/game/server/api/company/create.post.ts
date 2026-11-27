@@ -1,7 +1,7 @@
 import { defineHandler, getRequestHeader, readValidatedBody, createError } from "h3";
 import z from "zod";
 import { eq } from "drizzle-orm"
-import { client, connection } from "@utils/redis";
+import { publish } from "@utils/redis";
 import { db, games, companies } from "@utils/db";
 import { HTTPError } from "nitro";
 
@@ -44,12 +44,11 @@ export default defineHandler(async (event) => {
 	if (!row)
 		throw new HTTPError({ statusMessage: "already joined", status: 400 });
 	// publish the new company to the game session channel
-	await connection;
-	await client.publish(`game:session:${body.gameCode}`,
-		JSON.stringify({
+	await publish(`game:session:${body.gameCode}`,
+		{
 			type: "joined",
 			company: row
-		})
+		}
 	);
 	return (row);
 });
