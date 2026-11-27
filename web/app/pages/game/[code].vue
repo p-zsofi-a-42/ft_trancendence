@@ -115,6 +115,7 @@
 import type { Game, Company, Round, RoundData } from "#shared/types/game";
 import type { SplitterItem, TabsItem } from "@nuxt/ui";
 import { nextTick, useTemplateRef, watch } from "vue";
+import type { isAsync } from "zod/v3";
 
 definePageMeta({ middleware: "auth" });
 
@@ -172,6 +173,8 @@ let socket: WebSocket | null = null;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let closedByUs = false;
 let timerId: ReturnType<typeof setInterval> | undefined;
+let round = undefined;
+let serverNow = undefined;
 
 const roundData = ref<Round | null>(null);
 const remainingMs = ref(0);
@@ -197,8 +200,13 @@ function startTimer() {
   }, 1000);
 }
 
-function pauseRound() {
+async function pauseRound() {
   if (roundData.value?.status !== "ongoing") return;
+
+  ({ round, serverNow } = await $fetch<RoundData>(
+    `/api/game/rounds/${round.id}/state`,
+    { method: "POST" },
+  ));
 
   roundData.value.status = "paused";
 
@@ -207,8 +215,13 @@ function pauseRound() {
   }
 }
 
-function resumeRound() {
+async function resumeRound() {
   if (roundData.value?.status !== "paused") return;
+
+  ({ round, serverNow } = await $fetch<RoundData>(
+    `/api/game/rounds/${round.id}/state`,
+    { method: "POST" },
+  ));
 
   roundData.value.status = "ongoing";
   pauseModalOpen.value = false;
@@ -242,37 +255,38 @@ async function connectWebSocket() {
   };
 }
 
-function setTimer(diff: number) {
+function setTimer(diff) {
   const minutes = String(Math.floor(diff / 60000)).padStart(2, "0");
   const seconds = String(Math.floor((diff % 60000) / 1000)).padStart(2, "0");
-  roundTimer.value = `${minutes}:${seconds}`;
+  if (seconds >= 0) roundTimer.value = `${minutes}:${seconds}`;
+  else roundTimer.value = `--:--`;
 }
 
 async function setUpTimer() {
+  if (round && round.status !== "ongoing") return;
   try {
-    const { round: fetchedRound, serverNow } = await $fetch<RoundData>(
-      `/api/game/${code}/round`,
-      { method: "GET" },
-    );
+    ({ round, serverNow } = await $fetch<RoundData>(`/api/game/${code}/round`, {
+      method: "GET",
+    }));
 
-    roundData.value = fetchedRound;
+    roundData.value = round;
     remainingMs.value = Math.max(
-      new Date(fetchedRound.endsAt).getTime() - new Date(serverNow).getTime(),
+      new Date(round.endsAt).getTime() - new Date(serverNow).getTime(),
     );
     setTimer(remainingMs.value);
 
-    if (fetchedRound.status === "ongoing" && remainingMs.value > 0) {
+    if (round.status === "ongoing" && remainingMs.value > 0) {
       startTimer();
     } else {
       stopTimer();
     }
-    console.log(`currentRound: ${JSON.stringify(fetchedRound)}`);
+    console.log(`currentRound: ${JSON.stringify(round)}`);
 
-    const endsAt = new Date(fetchedRound.endsAt).getTime();
-    currentRound.value = fetchedRound.index + 1;
+    const endsAt = new Date(round.endsAt).getTime();
+    currentRound.value = round.index + 1;
     let now = new Date(serverNow).getTime();
     if (timerId !== undefined) clearInterval(timerId);
-    currentRound.value = fetchedRound.index + 1;
+    currentRound.value = round.index + 1;
     timerId = setInterval(() => {
       const diff = endsAt - now;
       setTimer(diff);
