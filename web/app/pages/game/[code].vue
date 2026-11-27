@@ -85,7 +85,7 @@ import { nextTick, useTemplateRef, watch } from "vue";
   
 definePageMeta({ middleware: "auth" });
 
-let roundTimer = ref("00:00");
+let roundTimer = ref("--:--");
 let currentRound = ref(0);
 let maxRounds = ref(0);
 

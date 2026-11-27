@@ -13,8 +13,8 @@
         variant="foyer"
         :ui="{ body: 'text-center', header: 'border-b-2 border-border-accented' }"
       >
-        <CustomUserList :list="props.players" />
-        <p v-if="!props.players.length">No Players</p>
+        <CustomUserList :list="players.map((p: Player) => p.user)" />
+        <p v-if="!players.length">No Players</p>
       </UCard>
     </template>
 
