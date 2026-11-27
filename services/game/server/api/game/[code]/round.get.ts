@@ -23,3 +23,4 @@ export default defineHandler(async (event) => {
 
 	return { round, serverNow: new Date().toISOString() };
 });
+

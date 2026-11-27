@@ -6,7 +6,7 @@ export const roundStatusEnum = pgEnum("status", ["ongoing", "paused", "done"]);
 
 export const rounds = pgTable("rounds", {
 	id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
-	gameId: bigint("game_id", { mode: "number" }).references(() => games.id),
+	gameId: bigint("game_id", { mode: "number" }).notNull().references(() => games.id),
 	index: smallint().notNull(),
 	endsAt: timestamp("ends_at").notNull(),
 	status: roundStatusEnum().notNull().default("ongoing"),
