@@ -31,9 +31,12 @@
       <div v-else class="flex flex-col gap-4 py-4">
         <p class="text-sm text-muted">
           Save these recovery codes somewhere safe. Each one can be used once if you lose
-          access to your authenticator app. They will not be shown again.
+          access to your authenticator app.
+		</p>
+        <p class="text-sm text-error">
+		  They will not be shown again.
         </p>
-        <ul class="grid grid-cols-2 gap-2 font-mono text-sm">
+        <ul class="grid grid-cols-2 gap-2 font-system-reply text-sm">
           <li v-for="rc in recoveryCodes" :key="rc" class="rounded bg-elevated px-2 py-1">{{ rc }}</li>
         </ul>
         <UButton label="Done" @click="finish" />

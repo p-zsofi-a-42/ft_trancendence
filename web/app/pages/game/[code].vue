@@ -42,17 +42,17 @@
       <template #main>
         <main class="flex flex-col h-full w-full min-w-0 gap-6 overflow-auto">
           <header
-            class="rounded-2xl h-14 border-4 border-primary bg-neutral-900 text-center mb-4"
+            class="rounded-2xl h-14 border-4 border-primary bg-bg text-center mb-4"
           >
             <div
-              class="border-b-4 border-x-4 border-primary rounded-b-2xl text-center justify-center items-center w-40 p-2 mx-auto inset-1 z-10 bg-app-background"
+              class="border-b-4 border-x-4 border-primary rounded-b-2xl text-center justify-center items-center w-40 p-2 mx-auto inset-1 z-10 bg-bg text-text"
             >
               <h1 class="text-3xl font-bold">{{ roundTimer }}</h1>
               <p>{{ currentRound }} / {{ maxRounds }}</p>
             </div>
           </header>
 
-          <section class="min-h-0 flex-1 rounded-2xl bg-neutral-900 p-4">
+          <section class="min-h-0 flex-1 rounded-2xl bg-bg p-4">
             <GameViewOverview
               v-if="activeTab === 'overview'"
               :resize="overviewResize"

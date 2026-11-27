@@ -67,7 +67,7 @@ const searchUsers = async () => {
   <UContainer class="justify-center items-center">
     <UCard
       :ui="{
-        root: 'w-full h-full text-app-text',
+        root: 'w-full h-full text-text',
         body: 'text-center items-start',
       }"
       variant="subtle"
@@ -79,13 +79,13 @@ const searchUsers = async () => {
           name="searchQuery"
           required
         />
-        <UButton type="submit" :disabled="loading">Search</UButton>
+        <UButton class="ml-2" type="submit" :disabled="loading">Search</UButton>
       </UForm>
     </UCard>
     <UCard
       title="Search Results"
       :ui="{
-        root: 'w-full h-full text-app-text mt-4 py-4',
+        root: 'w-full h-full text-text mt-4 py-4',
         body: 'text-center items-start',
       }"
       variant="subtle"

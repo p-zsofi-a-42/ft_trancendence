@@ -13,8 +13,8 @@ const props = defineProps<{
     :arrow="true"
     :ui="{
       text: 'text-error',
-      content: 'bg-neutral-800',
-      arrow: 'fill-neutral-800',
+      content: 'bg-bg-elevated',
+      arrow: 'fill-bg-elevated',
     }"
     :content="{ side: props.errorSide ?? 'right' }"
   >

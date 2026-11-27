@@ -6,13 +6,13 @@
     <UCard title="Statistics" variant="subtle" class="w-full text-white">
       More Info ...
     </UCard>
-    <UCard title="Finance" variant="subtle" class="w-full text-white">
+    <UCard title="Finance" variant="subtle" class="w-full text-text">
       More Info ...
     </UCard>
-    <UCard title="Sales" variant="subtle" class="w-full text-white">
+    <UCard title="Sales" variant="subtle" class="w-full text-text">
       More Info ...
     </UCard>
-    <UCard title="Development" variant="subtle" class="w-full text-white">
+    <UCard title="Development" variant="subtle" class="w-full text-text">
       More Info ...
     </UCard>
   </div>

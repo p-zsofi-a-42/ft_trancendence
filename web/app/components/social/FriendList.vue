@@ -85,20 +85,26 @@ const blockUser = async (id: string) => {
 <template>
   <UCard
     :ui="{
-      root: 'w-full h-full text-app-text',
+      root: 'w-full h-full text-text',
       body: 'text-center items-start',
     }"
     variant="subtle"
   >
     <CustomUserList :list="friends">
       <template #trailing="{ user }">
+		<!-- Colors hard-coded on purpose -->
         <UButton
+		  class="bg-error-700/40 hover:bg-error-800/90" 
           :disabled="removing.has(user.id)"
           @click="removeFriend(user.id)"
         >
           Remove
+		<!-- Colors hard-coded on purpose -->
         </UButton>
-        <UButton :disabled="blocking.has(user.id)" @click="blockUser(user.id)">
+        <UButton
+		  class="bg-error-700/40 hover:bg-error-800/90" 
+		  :disabled="blocking.has(user.id)" @click="blockUser(user.id)"
+		>
           Block
         </UButton>
         <UButton

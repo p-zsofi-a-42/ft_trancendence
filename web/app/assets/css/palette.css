@@ -1,47 +1,49 @@
 :root {
+  /* Text */
   --ui-text-dimmed: var(--color-mygray-700);
   --ui-text-muted: var(--color-mygray-500);
   --ui-text-toned: var(--color-mygray-600);
   --ui-text: var(--color-mygray-700);
   --ui-text-highlighted: var(--color-mygray-700);
   --ui-text-inverted: var(--color-mygray-50);
-  --ui-bg: var(--color-myturq-50);
-  --ui-bg-muted: var(--color-myturq-50);
-  --ui-bg-elevated: var(--color-myturq-200);
+  /* Background */
+  --ui-bg: var(--color-myturq-200);
+  --ui-bg-muted: var(--color-myturq-200);
+  --ui-bg-elevated: var(--color-myturq-300);
   --ui-bg-accented: var(--color-myor-b-500);
   --ui-bg-inverted: var(--color-myturq-400);
+  /* Border */
   --ui-border: var(--color-mygray-200);
   --ui-border-muted: var(--color-mygray-200);
   --ui-border-accented: var(--color-mygray-300);
   --ui-border-inverted: var(--color-mygray-900);
+  /* Other */
   --ui-radius: 0.25rem;
-
-  --app-background: var(--ui-bg);
-  --app-header-footer: var(--ui-bg-accented);
   --app-gradient-a: var(--color-myor-a-500);
   --app-gradient-b: var(--color-myor-b-500);
 }
 
 .dark {
+  /* Text */
   --ui-text-dimmed: var(--color-mygray-300);
   --ui-text-muted: var(--color-mygray-300);
   --ui-text-toned: var(--color-mygray-300);
   --ui-text: #ffffff;
   --ui-text-highlighted: #ffffff;
   --ui-text-inverted: #ffffff;
+  /* Background */
   --ui-bg: var(--color-myturq-900);
-  --ui-bg-muted: var(--color-myturq-900);
+  --ui-bg-muted: var(--color-myturq-700);
   --ui-bg-elevated: var(--color-myturq-800);
-  --ui-bg-accented: var(--color-myor-b-500);
-  --ui-bg-inverted: var(--color-myturq-700);
+  --ui-bg-accented: var(--color-myturq-900);
+  --ui-bg-inverted: var(--color-myturq-300);
+  /* Border */
   --ui-border: var(--color-mygray-800);
-  --ui-border-muted: var(--color-mygray-800);
+  --ui-border-muted: var(--color-mygray-600);
   --ui-border-accented: var(--color-mygray-700);
-  --ui-border-inverted: var(--color-mygray-800);
+  --ui-border-inverted: var(--color-mygray-300);
+  /* Other */
   --ui-radius: 0.25rem;
-
-  --app-background: var(--ui-bg);
-  --app-header-footer: var(--ui-bg-accented);
   --app-gradient-a: var(--color-myor-a-800);
   --app-gradient-b: var(--color-myor-a-600);
 }
