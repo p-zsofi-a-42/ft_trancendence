@@ -149,6 +149,9 @@ try {
   // 	description: "Game has already started",
   // 	color: "info",
   // });
+	let players = ref(
+		await $fetch<Player[]>(`/api/game/${gameCode}/players`, { method: "GET" }),
+	);
 } catch (error: any) {
   console.log(`error: ${error.message}`);
   // toast.add({
@@ -159,8 +162,4 @@ try {
   navigateTo("/play");
 }
 /**/
-
-let players = ref(
-  await $fetch<Player[]>(`/api/game/${gameCode}/players`, { method: "GET" }),
-);
 </script>
