@@ -42,13 +42,46 @@
       <template #main>
         <main class="flex flex-col h-full w-full min-w-0 gap-6 overflow-auto">
           <header
-            class="rounded-2xl h-14 border-4 border-primary bg-bg text-center mb-4"
+            class="grid grid-cols-[minmax(0,1fr)_minmax(7.5rem,max-content)_minmax(0,1fr)]"
           >
             <div
-              class="border-b-4 border-x-4 border-primary rounded-b-2xl text-center justify-center items-center w-40 p-2 mx-auto inset-1 z-10 bg-bg text-text"
+              class="h-14 min-w-0 p-3 border-3 border-r-0 border-primary rounded-bl-2xl bg-bg"
+            >
+              {{ money }}€
+            </div>
+
+            <div
+              class="border-4 border-primary rounded-b-2xl text-center p-2 inset-1 z-10 bg-bg text-text"
             >
               <h1 class="text-3xl font-bold">{{ roundTimer }}</h1>
               <p>{{ currentRound }} / {{ maxRounds }}</p>
+            </div>
+            <div
+              class="flex justify-end h-14 min-w-0 border-3 border-l-0 border-primary rounded-br-2xl bg-bg text-right"
+            >
+              <UModal
+                v-model:open="pauseModalOpen"
+                :close="false"
+                :dismissible="false"
+                :ui="{
+                  content: 'w-fit rounded-2xl',
+                  header: 'justify-center text-center',
+                  footer: 'justify-center',
+                }"
+              >
+                <UButton
+                  icon="i-lucide-pause"
+                  class="rounded-l-none rounded-t-none min-w-12 min-h-fit justify-center"
+                  @click="pauseRound"
+                />
+                <template #title> Game paused </template>
+                <template #description>
+                  Wait for the game owner to resume.
+                </template>
+                <template #footer>
+                  <UButton label="Resume" @click="resumeRound" />
+                </template>
+              </UModal>
             </div>
           </header>
 
@@ -79,21 +112,28 @@
 
 <!-- LOGIC -->
 <script setup lang="ts">
-import type { Game, Company, Round, RoundData, RoundResult } from "#shared/types/game";
+import type { Game, Company, Round, RoundData } from "#shared/types/game";
 import type { SplitterItem, TabsItem } from "@nuxt/ui";
 import { nextTick, useTemplateRef, watch } from "vue";
-  
+
 definePageMeta({ middleware: "auth" });
 
-let roundTimer = ref("--:--");
-let currentRound = ref(0);
-let maxRounds = ref(0);
+type GameTab = "overview" | "statistics" | "finance" | "sales" | "development";
 
+const code = useRoute().params.code as string;
+const activeTab = ref<GameTab>("overview");
+
+const money = ref(0);
+const roundTimer = ref("--:--");
+const currentRound = ref(0);
+const maxRounds = ref(0);
+
+const splitter = useTemplateRef("gameSplitter");
 const isWide = ref(false);
 const leftOpen = ref(false);
 const rightOpen = ref(false);
 const overviewResize = ref(true);
-const splitter = useTemplateRef("gameSplitter");
+const pauseModalOpen = ref(false);
 
 let sidebarQuery: MediaQueryList | undefined;
 let gridQuery: MediaQueryList | undefined;
@@ -110,18 +150,13 @@ function syncOverviewGrid() {
   overviewResize.value = !(gridQuery?.matches ?? false);
 }
 
-type GameTab = "overview" | "statistics" | "finance" | "sales" | "development";
-const activeTab = ref<GameTab>("overview");
-
-const code = useRoute().params.code as string;
-
 // TODO: provisional redirect
 try {
-  const { loggedIn, user } = useUserSession();
+  const { user } = useUserSession();
   console.log("User session:", JSON.stringify(user.value));
   const game = await $fetch<Game>(`/api/game/${code}`, { method: "GET" });
   console.log("Game data:", JSON.stringify(game));
-	maxRounds.value = game.nRounds;
+  maxRounds.value = game.nRounds;
   const companies = await $fetch<Company[]>(`/api/game/${code}/companies`, {
     method: "GET",
   });
@@ -136,70 +171,127 @@ try {
 let socket: WebSocket | null = null;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let closedByUs = false;
-let timerId = null;
+let timerId: ReturnType<typeof setInterval> | undefined;
 
-async function connectWebSocket() {
-	// Fresh Ticket on every connection attempt
-	const ticket = await $fetch<{ ticket: string }>(
-		`/api/foyer/${code}/ws-ticket`,
-		{ method: "POST" },
-	);
-	console.log("Obtained WebSocket ticket (game):", ticket.ticket);
-	// Connect to WebSocket with the obtained ticket
-	const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-	socket = new WebSocket(
-		`${protocol}//${location.host}/ws/game?ticket=${ticket.ticket}`,
-	);
+const roundData = ref<Round | null>(null);
+const remainingMs = ref(0);
 
-	// Handle incoming events from the Websocket
-	socket.onmessage = async (event) => {
-		const payloadEvent = JSON.parse(event.data);
-		console.log(`Event received: ${JSON.stringify(payloadEvent)}`);
-		if (payloadEvent.type == "round_finished")
-			await setUpTimer();
-	};
-
-	// Handle WebSocket close event
-	socket.onclose = () => {
-		if (closedByUs) return;
-		reconnectTimer = setTimeout(connectWebSocket, 2000);
-	};
+function stopTimer() {
+  if (timerId !== undefined) clearInterval(timerId);
+  timerId = undefined;
 }
 
-function setTimer(diff) {
-	const minutes = String(Math.floor(diff / 60000)).padStart(2, '0');
-	const seconds = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
-	roundTimer.value = `${minutes}:${seconds}`;
+function startTimer() {
+  stopTimer();
+
+  timerId = setInterval(() => {
+    if (roundData.value?.status !== "ongoing") {
+      stopTimer();
+      return;
+    }
+
+    remainingMs.value = Math.max(remainingMs.value - 1000, 0);
+    setTimer(remainingMs.value);
+
+    if (remainingMs.value === 0) stopTimer();
+  }, 1000);
+}
+
+function pauseRound() {
+  if (roundData.value?.status !== "ongoing") return;
+
+  roundData.value.status = "paused";
+
+  if (timerId !== undefined) {
+    stopTimer();
+  }
+}
+
+function resumeRound() {
+  if (roundData.value?.status !== "paused") return;
+
+  roundData.value.status = "ongoing";
+  pauseModalOpen.value = false;
+  startTimer();
+}
+
+async function connectWebSocket() {
+  // Fresh Ticket on every connection attempt
+  const ticket = await $fetch<{ ticket: string }>(
+    `/api/foyer/${code}/ws-ticket`,
+    { method: "POST" },
+  );
+  console.log("Obtained WebSocket ticket (game):", ticket.ticket);
+  // Connect to WebSocket with the obtained ticket
+  const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+  socket = new WebSocket(
+    `${protocol}//${location.host}/ws/game?ticket=${ticket.ticket}`,
+  );
+
+  // Handle incoming events from the Websocket
+  socket.onmessage = async (event) => {
+    const payloadEvent = JSON.parse(event.data);
+    console.log(`Event received: ${JSON.stringify(payloadEvent)}`);
+    if (payloadEvent.type == "round_finished") await setUpTimer();
+  };
+
+  // Handle WebSocket close event
+  socket.onclose = () => {
+    if (closedByUs) return;
+    reconnectTimer = setTimeout(connectWebSocket, 2000);
+  };
+}
+
+function setTimer(diff: number) {
+  const minutes = String(Math.floor(diff / 60000)).padStart(2, "0");
+  const seconds = String(Math.floor((diff % 60000) / 1000)).padStart(2, "0");
+  roundTimer.value = `${minutes}:${seconds}`;
 }
 
 async function setUpTimer() {
-	try {
-		let { round, serverNow } = await $fetch<RoundData>(`/api/game/${code}/round`, { method: "GET" });
-		console.log(`currentRound: ${JSON.stringify(round)}`);
+  try {
+    const { round: fetchedRound, serverNow } = await $fetch<RoundData>(
+      `/api/game/${code}/round`,
+      { method: "GET" },
+    );
 
-		const endsAt = new Date(round.endsAt).getTime();
-		let now = new Date(serverNow).getTime();
-		if (timerId)
-			clearInterval(timerId);
-		currentRound.value = round.index + 1;
-		timerId = setInterval(() => {
-			const diff = endsAt - now;
-			setTimer(diff);
-			if (diff < 0) {
-				console.log("time out")
-				clearInterval(timerId);
-				return ;
-			}
-			now += 1000;
-		}, 1000);
-	} catch (error: any) {
-		console.error("Error fetching game data:", error);
-	}
-};
+    roundData.value = fetchedRound;
+    remainingMs.value = Math.max(
+      new Date(fetchedRound.endsAt).getTime() - new Date(serverNow).getTime(),
+    );
+    setTimer(remainingMs.value);
+
+    if (fetchedRound.status === "ongoing" && remainingMs.value > 0) {
+      startTimer();
+    } else {
+      stopTimer();
+    }
+    console.log(`currentRound: ${JSON.stringify(fetchedRound)}`);
+
+    const endsAt = new Date(fetchedRound.endsAt).getTime();
+    currentRound.value = fetchedRound.index + 1;
+    let now = new Date(serverNow).getTime();
+    if (timerId !== undefined) clearInterval(timerId);
+    currentRound.value = fetchedRound.index + 1;
+    timerId = setInterval(() => {
+      const diff = endsAt - now;
+      setTimer(diff);
+      if (diff < 0 || roundData.value?.status !== "ongoing") {
+        console.log("time out");
+        clearInterval(timerId);
+        timerId = undefined;
+        return;
+      }
+      now += 1000;
+    }, 1000);
+  } catch (error: any) {
+    console.error("Error fetching game data:", error);
+  }
+}
 
 onMounted(async () => {
-	await connectWebSocket();
-	await setUpTimer();
+  await connectWebSocket();
+  await setUpTimer();
   sidebarQuery = window.matchMedia("(min-width: 1668px)");
   gridQuery = window.matchMedia("(min-width: 960px)");
 
@@ -210,13 +302,12 @@ onMounted(async () => {
   gridQuery.addEventListener("change", syncOverviewGrid);
 });
 
-onBeforeMount(() => {
-	// Disconnect WebSocket on component unmount
-	closedByUs = true;
-	if (reconnectTimer) clearTimeout(reconnectTimer);
-	socket?.close();
-	if (timerId)
-		clearInterval(timerId);
+onBeforeUnmount(() => {
+  // Disconnect WebSocket on component unmount
+  closedByUs = true;
+  if (reconnectTimer) clearTimeout(reconnectTimer);
+  if (timerId !== undefined) clearInterval(timerId);
+  socket?.close();
 });
 
 watch(
@@ -235,7 +326,6 @@ watch(
   },
   { flush: "post", immediate: true },
 );
-
 
 const splitterItems: SplitterItem[] = [
   {
@@ -273,7 +363,6 @@ const tabsItems: TabsItem[] = [
   { label: "Sales", value: "sales" },
   { label: "Development", value: "development" },
 ];
-
 </script>
 
 <style lang="css" scoped>
