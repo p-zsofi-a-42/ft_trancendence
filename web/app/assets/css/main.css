@@ -2,15 +2,9 @@
 @import "@nuxt/ui";
 @import "./palette.css";
 
-@theme inline {
-  --color-app-text: var(--ui-text);
-  --color-app-background: var(--ui-bg);
-  --color-app-header-footer: var(--ui-bg-accented);
-}
-
 @layer base {
   body {
-    @apply text-app-text;
+    @apply text-text;
   }
 }
 
@@ -41,6 +35,34 @@ h6 {
 	box-sizing: border-box;
 }
 
+@theme {
+  /* Text */
+  --color-text-dimmed: var(--ui-text-dimmed);
+  --color-text-muted: var(--ui-text-muted);
+  --color-text-toned: var(--ui-text-toned);
+  --color-text: var(--ui-text);
+  --color-text-highlighted: var(--ui-text-highlighted);
+  --color-text-inverted: var(--ui-text-inverted);
+  /* Background */
+  --color-bg: var(--ui-bg);
+  --color-bg-muted: var(--ui-bg-muted);
+  --color-bg-elevated: var(--ui-bg-elevated);
+  --color-bg-accented: var(--ui-bg-accented);
+  --color-bg-inverted: var(--ui-bg-inverted);
+  /* Border */
+  --color-border: var(--ui-border);
+  --color-border-muted: var(--ui-border-muted);
+  --color-border-accented: var(--ui-border-accented);
+  --color-border-inverted: var(--ui-border-inverted);
+  /* Other */
+  --color-header-footer: var(--ui-bg-accented);
+  --color-fancy-dark: var(--app-gradient-a);
+  --color-fancy-bright: var(--app-gradient-b);
+  /* Radius */
+  --radius: var(--ui-radius);
+}
+
+
 body {
   min-height: 100vh;
   background: 
@@ -55,6 +77,14 @@ body {
   background-attachment: fixed;
 }
 
+:root body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 10%);
+  pointer-events: none;
+  z-index: 0;
+}
 .dark body::before {
   content: '';
   position: fixed;

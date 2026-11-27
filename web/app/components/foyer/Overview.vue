@@ -7,21 +7,29 @@
 			<FoyerOverviewSettings :game-code="props.gameCode" v-model="settingsModel" />
 		</template>
 
-		<template #players>
-			<UCard title="Players" variant="foyer" :ui="{ body: 'text-center', header: 'border-b-2 border-neutral-600' }">
-				<CustomUserList :list="players.map((p: Player) => p.user)" />
-				<p v-if="!players.length">No Players</p>
-			</UCard>
-		</template>
+    <template #players>
+      <UCard
+        title="Players"
+        variant="foyer"
+        :ui="{ body: 'text-center', header: 'border-b-2 border-border-accented' }"
+      >
+        <CustomUserList :list="props.players" />
+        <p v-if="!props.players.length">No Players</p>
+      </UCard>
+    </template>
 
-		<template #invite>
-			<UCard title="Invite to Foyer" variant="foyer" :ui="{
-				root: 'flex h-full flex-col text-center',
-				body: 'flex flex-1 min-h-0 flex-col gap-2',
-				header: 'border-b-2 border-neutral-600',
-				footer: 'border-t-2 border-neutral-600',
-			}">
-				<p v-if="!friends.length">No Friends :(</p>
+    <template #invite>
+      <UCard
+        title="Invite to Foyer"
+        variant="foyer"
+        :ui="{
+          root: 'flex h-full flex-col text-center',
+          body: 'flex flex-1 min-h-0 flex-col gap-2',
+          header: 'border-b-2 border-border-accented',
+          footer: 'border-t-2 border-border-accented',
+        }"
+      >
+        <p v-if="!friends.length">No Friends :(</p>
 
 				<CustomUserList :list="friends">
 					<template #trailing>
@@ -36,7 +44,6 @@
 			</UCard>
 		</template>
 	</USplitter>
-	{{ users }}
 </template>
 
 <script setup lang="ts">

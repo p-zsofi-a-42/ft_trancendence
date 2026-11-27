@@ -32,7 +32,7 @@ const unblockUser = async (userId: string) => {
 <template>
   <UCard
     :ui="{
-      root: 'w-full h-full text-app-text',
+      root: 'w-full h-full text-text',
       body: 'text-center items-start',
     }"
     variant="subtle"
