@@ -57,17 +57,6 @@ export default defineHandler(async (event) => {
 				})),
 			);
 		});
-		// TODO: define channel event types (joined, started, etc)
-		// LEFT OFF HERE:
-		// 1. test the game start flow
-		// done 2. create an api endpoint to retrieve all users/players of a game
-		// 3. game loop
-		//
-		// left overs from yesterday:
-		// 2. check permissions (mostly frontend I think)
-		// 3. implement the scheduler
-		//  - think about recovery
-		//  - implement round checking loop (fetch all ongoing games last rounds and check if their time is up, if so, start the next round)
 	} catch (error: any) {
 		console.log(`Error at /api/[code]/start.post: ${error.message} instance of ${error.constructor.name}`);
 		if (error instanceof HTTPError)

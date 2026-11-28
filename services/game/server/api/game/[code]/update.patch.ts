@@ -6,6 +6,7 @@ import { HTTPError } from "nitro";
 import z from "zod";
 import { and, eq, not } from "drizzle-orm";
 import { games, db } from "@utils/db";
+import { publish } from "@utils/redis";
 
 const validParams = z.object({
 	code: z.string().min(6).max(12)
@@ -46,5 +47,11 @@ export default defineHandler(async (event) => {
 	if (!row)
 		throw new HTTPError({ statusMessage: "update not permitted", status: 400 });
 	console.log(`game(${routerParams.code}) successfully updated: ${JSON.stringify(row)}`);
+	await publish(`game:session:${routerParams.code}`,
+		{
+			type: "updated",
+			game: row
+		}
+	);
 	return (row);
 });
