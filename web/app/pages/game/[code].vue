@@ -173,7 +173,7 @@ let socket: WebSocket | null = null;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let closedByUs = false;
 let timerId: ReturnType<typeof setInterval> | undefined;
-let round = undefined;
+let round: Round | undefined;
 let serverNow = undefined;
 
 const roundData = ref<Round | null>(null);
@@ -201,29 +201,26 @@ function startTimer() {
 }
 
 async function pauseRound() {
-  if (roundData.value?.status !== "ongoing") return;
+  const activeRound = roundData.value;
+  if (!activeRound || activeRound.status !== "ongoing") return;
 
-  ({ round, serverNow } = await $fetch<RoundData>(
-    `/api/game/rounds/${round.id}/state`,
-    { method: "POST" },
-  ));
+  await $fetch<RoundData>(`/api/game/rounds/${activeRound.id}/state`, {
+    method: "POST",
+  });
 
-  roundData.value.status = "paused";
-
-  if (timerId !== undefined) {
-    stopTimer();
-  }
+  activeRound.status = "paused";
+  if (timerId !== undefined) stopTimer();
 }
 
 async function resumeRound() {
-  if (roundData.value?.status !== "paused") return;
+  const activeRound = roundData.value;
+  if (!activeRound || activeRound.status !== "paused") return;
 
-  ({ round, serverNow } = await $fetch<RoundData>(
-    `/api/game/rounds/${round.id}/state`,
-    { method: "POST" },
-  ));
+  await $fetch<RoundData>(`/api/game/rounds/${activeRound.id}/state`, {
+    method: "POST",
+  });
 
-  roundData.value.status = "ongoing";
+  activeRound.status = "ongoing";
   pauseModalOpen.value = false;
   startTimer();
 }
@@ -255,19 +252,25 @@ async function connectWebSocket() {
   };
 }
 
-function setTimer(diff) {
+function setTimer(diff: number) {
+  if (diff < 0) {
+    roundTimer.value = "--:--";
+    return;
+  }
+
   const minutes = String(Math.floor(diff / 60000)).padStart(2, "0");
   const seconds = String(Math.floor((diff % 60000) / 1000)).padStart(2, "0");
-  if (seconds >= 0) roundTimer.value = `${minutes}:${seconds}`;
-  else roundTimer.value = `--:--`;
+  roundTimer.value = `${minutes}:${seconds}`;
 }
 
 async function setUpTimer() {
-  if (round && round.status !== "ongoing") return;
+  if (roundData.value && roundData.value.status !== "ongoing") return;
+
   try {
-    ({ round, serverNow } = await $fetch<RoundData>(`/api/game/${code}/round`, {
-      method: "GET",
-    }));
+    const { round, serverNow } = await $fetch<RoundData>(
+      `/api/game/${code}/round`,
+      { method: "GET" },
+    );
 
     roundData.value = round;
     remainingMs.value = Math.max(
