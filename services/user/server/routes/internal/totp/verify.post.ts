@@ -1,5 +1,4 @@
 import { eq } from 'drizzle-orm'
-import * as OTPAuth from 'otpauth'
 
 /**
  * @brief Verifies a TOTP code at login time for a user who already has 2FA enabled.
@@ -34,18 +33,7 @@ export default defineEventHandler(async (event) => {
     setResponseStatus(event, 409)
     return { message: 'TOTP is not enabled for this user' }
   }
-  // Create a TOTP instance using the user's stored secret to validate the submitted code
-  const totp = new OTPAuth.TOTP({
-    issuer: 'ft_transcendence',
-    label: user.email ?? user.name,
-    algorithm: 'SHA1',
-    digits: 6,
-    period: 30,
-    secret: OTPAuth.Secret.fromBase32(user.totpSecret),
-  })
-  // window: 1 allows the previous/next 30s step, to tolerate clock drift
-  const delta = totp.validate({ token: code, window: 1 })
-  if (delta === null) {
+  if (!verifyTotpCode(user.totpSecret, code)) {
     setResponseStatus(event, 401)
     return { message: 'Invalid TOTP code' }
   }

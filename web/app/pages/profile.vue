@@ -6,7 +6,7 @@
       }"
     >
       <template #header>
-        <CustomUser :user="user" :avatar-version="avatarVersion" size="3xl" />
+        <CustomUser :user="user" size="3xl" />
       </template>
       <UForm v-if="editing" :schema="schema" :state="form" class="pt-2" @submit="saveProfile">
         <div class="pb-2">
@@ -55,6 +55,50 @@
             @click="unlink(p)"
           />
         </div>
+      </div>
+      <div class="pt-4 space-y-3">
+        <h3 class="font-semibold">Password</h3>
+        <UButton
+          v-if="!changingPassword"
+          :label="user.hasPassword ? 'Change password' : 'Set password'"
+          @click="startPasswordChange"
+        />
+        <UForm v-else :schema="passwordSchema" :state="passwordForm" class="space-y-3" @submit="savePassword">
+          <FormFieldString
+            v-if="user.hasPassword"
+            name="currentPassword"
+            label="Current password"
+            type="password"
+            v-model="passwordForm.currentPassword"
+            required
+          />
+          <FormFieldString name="newPassword" label="New password" type="password" v-model="passwordForm.newPassword" required />
+          <FormFieldString
+            name="confirmPassword"
+            label="Confirm new password"
+            type="password"
+            v-model="passwordForm.confirmPassword"
+            required
+          />
+          <FormFieldString v-if="!user.email" name="email" label="Email" v-model="passwordForm.email" required />
+          <FormFieldString
+            v-if="user.totpEnabled"
+            name="totpCode"
+            label="Authenticator code"
+            v-model="passwordForm.totpCode"
+            required
+          />
+          <div class="flex gap-2 pt-2">
+            <UButton type="submit" label="Save password" :loading="savingPassword" />
+            <UButton
+              label="Cancel"
+              color="neutral"
+              variant="ghost"
+              :disabled="savingPassword"
+              @click="cancelPasswordChange"
+            />
+          </div>
+        </UForm>
       </div>
     </UCard>
 </div>
@@ -105,10 +149,75 @@ async function saveProfile(event: FormSubmitEvent<z.output<typeof schema>>) {
   }
 }
 
+// Password: set one (OAuth-only accounts) or change it. Requirements depend on the account state.
+const passwordSchema = z
+  .object({
+    currentPassword: z.string(),
+    newPassword: z.string().min(8, "Must be at least 8 characters"),
+    confirmPassword: z.string(),
+    email: z.string().trim().email("Invalid email").or(z.literal("")),
+    totpCode: z.string(),
+  })
+  .superRefine((data, ctx) => {
+    if (user.value?.hasPassword && !data.currentPassword) {
+      ctx.addIssue({ code: "custom", path: ["currentPassword"], message: "Current password is required" });
+    }
+    if (data.newPassword !== data.confirmPassword) {
+      ctx.addIssue({ code: "custom", path: ["confirmPassword"], message: "Passwords do not match" });
+    }
+    if (!user.value?.email && !data.email) {
+      ctx.addIssue({ code: "custom", path: ["email"], message: "Email is required to set a password" });
+    }
+    if (user.value?.totpEnabled && !data.totpCode) {
+      ctx.addIssue({ code: "custom", path: ["totpCode"], message: "Authenticator code is required" });
+    }
+  });
+
+const changingPassword = ref(false);
+const savingPassword = ref(false);
+const passwordForm = reactive({ currentPassword: "", newPassword: "", confirmPassword: "", email: "", totpCode: "" });
+
+function resetPasswordForm() {
+  Object.assign(passwordForm, { currentPassword: "", newPassword: "", confirmPassword: "", email: "", totpCode: "" });
+}
+
+function startPasswordChange() {
+  resetPasswordForm();
+  changingPassword.value = true;
+}
+
+function cancelPasswordChange() {
+  resetPasswordForm();
+  changingPassword.value = false;
+}
+
+async function savePassword(event: FormSubmitEvent<z.output<typeof passwordSchema>>) {
+  savingPassword.value = true;
+  try {
+    await $fetch("/api/auth/password", {
+      method: "PATCH",
+      body: {
+        currentPassword: event.data.currentPassword,
+        newPassword: event.data.newPassword,
+        email: event.data.email,
+        totpCode: event.data.totpCode,
+      },
+    });
+    await Promise.all([refreshProfile(), useUserSession().fetch()]);
+    cancelPasswordChange();
+    toast.add({ title: "Password saved" });
+  } catch (err) {
+    const message = (err as { data?: { message?: string } }).data?.message ?? "Please try again";
+    toast.add({ title: "Password update failed", description: message });
+  } finally {
+    savingPassword.value = false;
+  }
+}
+
 // Profile picture upload
 const avatarInput = ref<HTMLInputElement | null>(null);
 const uploadingAvatar = ref(false);
-const avatarVersion = ref(0);
+const avatarVersion = useAvatarVersion();
 
 async function uploadAvatar(event: Event) {
   const input = event.target as HTMLInputElement;
@@ -130,6 +239,7 @@ async function uploadAvatar(event: Event) {
   } finally {
     uploadingAvatar.value = false;
     input.value = "";
+    
   }
 }
 
