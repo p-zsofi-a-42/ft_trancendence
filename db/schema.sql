@@ -1,4 +1,3 @@
-
 -- -----------------------------------------------------------------------------
 -- USERS -----------------------------------------------------------------------
 -- -----------------------------------------------------------------------------
@@ -15,15 +14,6 @@ CREATE TABLE IF NOT EXISTS users (
   -- A password account must have an email; OAuth-only accounts may have none
   CONSTRAINT users_password_requires_email CHECK (password_hash IS NULL OR email IS NOT NULL)
 );
--- add UNIQUE constraint for email regardless of case
--- ALTER TABLE users ADD CONSTRAINT users_email_key UNIQUE(email);
--- Emails are unique regardless of case, and NULLs don't collide
--- CREATE UNIQUE INDEX IF NOT EXISTS users_email_key ON users (lower(email)) WHERE email IS NOT NULL;
--- Insert a admin into the users table, password is password
--- ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin'));
--- For databases created before avatar_file existed
--- ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_file TEXT NULL;
-
 
 -- -----------------------------------------------------------------------------
 -- OAuth2.0 TABLES -------------------------------------------------------------
@@ -31,7 +21,6 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- PROVIDERS -------------------------------------------------------------------
 -- Stores all OAuth providers that can be used for authentication 
--- e.g., Google, Github
 CREATE TABLE IF NOT EXISTS providers (
   id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   name       TEXT NOT NULL UNIQUE,    -- e.g. 'github', lowercase
@@ -51,8 +40,6 @@ CREATE TABLE IF NOT EXISTS oauth (
   refresh_token_enc TEXT NULL,     -- encrypted in the app; NULL if the provider issues none
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
--- For databases created before refresh_token_enc existed
-ALTER TABLE oauth ADD COLUMN IF NOT EXISTS refresh_token_enc TEXT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS oauth_provider_user_key ON oauth (provider_id, provider_user_id);
 CREATE UNIQUE INDEX IF NOT EXISTS oauth_user_provider_key ON oauth (user_id, provider_id);
 CREATE INDEX IF NOT EXISTS oauth_user_idx ON oauth (user_id);
@@ -71,9 +58,7 @@ CREATE TABLE IF NOT EXISTS totp_recovery_codes (
   used_at    TIMESTAMPTZ NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-
 CREATE INDEX IF NOT EXISTS totp_recovery_codes_user_idx ON totp_recovery_codes (user_id);
--- A user can't have the same hashed code stored twice
 CREATE UNIQUE INDEX IF NOT EXISTS totp_recovery_codes_user_code_key ON totp_recovery_codes (user_id, code_hash);
 
 -- -----------------------------------------------------------------------------
@@ -89,11 +74,9 @@ CREATE TABLE IF NOT EXISTS friendships (
   updated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
   CHECK (requester_id <> addressee_id)
 );
-
 -- A pair of users can only have one row, whichever direction it was sent in
 CREATE UNIQUE INDEX IF NOT EXISTS friendships_pair_key
   ON friendships (LEAST(requester_id, addressee_id), GREATEST(requester_id, addressee_id));
-
 CREATE INDEX IF NOT EXISTS friendships_addressee_idx ON friendships (addressee_id, status);
 CREATE INDEX IF NOT EXISTS friendships_requester_idx ON friendships (requester_id, status);
 
@@ -108,10 +91,8 @@ CREATE TABLE IF NOT EXISTS blocks (
   PRIMARY KEY (blocker_id, blocked_id),
   CHECK (blocker_id <> blocked_id)
 );
-
 CREATE INDEX IF NOT EXISTS blocks_blocked_idx ON blocks (blocked_id, blocker_id);
 
--- -----------------------------------------------------------------------------
 -- -----------------------------------------------------------------------------
 -- CHATS -----------------------------------------------------------------------
 -- -----------------------------------------------------------------------------
@@ -123,7 +104,6 @@ CREATE TABLE IF NOT EXISTS conversations (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   CHECK (user_a_id < user_b_id)
 );
-
 CREATE UNIQUE INDEX IF NOT EXISTS conversations_pair_key ON conversations (user_a_id, user_b_id);
 CREATE INDEX IF NOT EXISTS conversations_user_b_idx ON conversations (user_b_id);
 
@@ -136,9 +116,7 @@ CREATE TABLE IF NOT EXISTS messages (
   client_id       UUID,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-
 CREATE INDEX IF NOT EXISTS messages_conversation_idx ON messages (conversation_id, id DESC);
--- Retries from the same client don't create duplicate messages
 CREATE UNIQUE INDEX IF NOT EXISTS messages_client_key ON messages (sender_id, client_id) WHERE client_id IS NOT NULL;
 
 -- Per-user read position, used for unread counts
@@ -148,16 +126,3 @@ CREATE TABLE IF NOT EXISTS conversation_reads (
   last_read_message_id BIGINT REFERENCES messages(id) ON DELETE SET NULL,
   PRIMARY KEY (conversation_id, user_id)
 );
-
-
-
--- RUN THE SCHEMA SQL FILE
--- docker compose exec -T postgres psql -U <db_user> -d <db_name< < db/schema.sql
-
--- Check user database entries
--- docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT id, name, email, created_at FROM users;"'
-
--- Go inside the Postgres container database
--- docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
--- \dt
--- \d users - shows the table structure

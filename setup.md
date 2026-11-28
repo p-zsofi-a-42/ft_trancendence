@@ -3,7 +3,11 @@
 ## 2. make dev
 
 ## 3. Database Setup (intialize)
-After `make dev`
+The user database image (`db/user/Dockerfile`) applies `db/schema.sql` and creates the first admin from `ADMIN_NAME`, `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env`. This only happens when the `postgres_data` volume is first created. For an existing volume, run `make reset-user-db` (this deletes user data).
+
+Skip admin creation by leaving `ADMIN_PASSWORD` empty. Then the schema is still applied, but no admin account exists.
+
+To apply the schema manually instead (for example on an existing volume):
 ```bash
 docker compose exec -T postgres psql -U your_db_user -d your_db_name < db/schema.sql
 ```
