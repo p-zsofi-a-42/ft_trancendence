@@ -13,16 +13,18 @@ export default defineEventHandler(async (event) => {
   const expectedState = getCookie(event, "oauth_state");
   const provider = getCookie(event, "oauth_provider");
   const intent = getCookie(event, "oauth_intent");
-  // One-time use of the state and provider cookies, clear to prevent reuse
+  const codeVerifier = getCookie(event, "oauth_pkce");
+  // One-time use of the state, provider, intent and PKCE cookies, clear to prevent reuse
   deleteCookie(event, "oauth_state", { path: "/api/auth/oauth" });
   deleteCookie(event, "oauth_provider", { path: "/api/auth/oauth" });
   deleteCookie(event, "oauth_intent", { path: "/api/auth/oauth" });
+  deleteCookie(event, "oauth_pkce", { path: "/api/auth/oauth" });
   
   // Handle error returned by the provider (e.g., user denied access)
   if (error) {
     throw createError({ statusCode: 400, statusMessage: `Provider returned error: ${error}` });
   }
-  if (typeof code !== "string" || typeof state !== "string" || !expectedState || !provider) {
+  if (typeof code !== "string" || typeof state !== "string" || !expectedState || !provider || !codeVerifier) {
     throw createError({ statusCode: 400, statusMessage: "Invalid OAuth callback" });
   }
   // Verify that the state parameter matches the one stored in the cookie to prevent CSRF attacks
@@ -61,6 +63,7 @@ export default defineEventHandler(async (event) => {
       client_secret: providerConfig.clientSecret,
       code,
       redirect_uri: config.oauthRedirectUri,
+      code_verifier: codeVerifier,
     }),
   });
 
