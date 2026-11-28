@@ -35,12 +35,6 @@ export default defineEventHandler(async (event) => {
   }
 
   const providers: Record<string, { tokenUrl: string; userUrl: string; clientId: string; clientSecret: string }> = {
-    "42": {
-      tokenUrl: "https://api.intra.42.fr/oauth/token",
-      userUrl: "https://api.intra.42.fr/v2/me",
-      clientId: config.oauth42ClientId,
-      clientSecret: config.oauth42ClientSecret,
-    },
     github: {
       tokenUrl: "https://github.com/login/oauth/access_token",
       userUrl: "https://api.github.com/user",

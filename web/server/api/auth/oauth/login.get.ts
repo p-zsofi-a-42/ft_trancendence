@@ -8,11 +8,6 @@ export default defineEventHandler(async (event) => {
 
   // Define the supported OAuth providers and their configuration
   const PROVIDERS: Record<string, { authorizeUrl: string; clientId: string; scope: string }> = {
-    "42": {
-      authorizeUrl: "https://api.intra.42.fr/oauth/authorize",
-      clientId: config.oauth42ClientId,
-      scope: "public",
-    },
     github: {
       authorizeUrl: "https://github.com/login/oauth/authorize",
       clientId: config.oauthGithubClientId,
@@ -75,11 +70,11 @@ export default defineEventHandler(async (event) => {
 
 /* 
 Generated URL example: 
-https://api.intra.42.fr/oauth/authorize?client_id=placeholder-42-client-id&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fauth%2Foauth%2Fcallback&response_type=code&scope=public&state=kqCN7c1EhgFpRtSMhlBWhd75g3v386aqRXybqbcTmPw&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256
+https://github.com/login/oauth/authorize?client_id=placeholder-github-client-id&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fauth%2Foauth%2Fcallback&response_type=code&scope=read%3Auser+user%3Aemail&state=kqCN7c1EhgFpRtSMhlBWhd75g3v386aqRXybqbcTmPw&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256
 
 
 BFF Success Response:
 HTTP/1.1 302 Found
-Location: https://api.intra.42.fr/oauth/authorize?client_id=placeholder-42-client-id&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fauth%2Foauth%2Fcallback&response_type=code&scope=public&state=kqCN7c1EhgFpRtSMhlBWhd75g3v386aqRXybqbcTmPw&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256
+Location: https://github.com/login/oauth/authorize?client_id=placeholder-github-client-id&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fauth%2Foauth%2Fcallback&response_type=code&scope=read%3Auser+user%3Aemail&state=kqCN7c1EhgFpRtSMhlBWhd75g3v386aqRXybqbcTmPw&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256
 Set-Cookie: oauth_state=kqCN7c1EhgFpRtSMhlBWhd75g3v386aqRXybqbcTmPw; Max-Age=600; Path=/api/auth/oauth; HttpOnly; Secure; SameSite=Lax
 */

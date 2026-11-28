@@ -13,12 +13,6 @@ const fields: AuthFormField[] = [
 
 const providers = [
   {
-    icon: "i-myOwn-42",
-    onClick: () => {
-      window.location.href = "/api/auth/oauth/login?provider=42";
-    },
-  },
-  {
     icon: "i-myOwn-github",
     onClick: () => {
       window.location.href = "/api/auth/oauth/login?provider=github";

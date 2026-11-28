@@ -61,8 +61,7 @@ Accounts created this way have no password. Password login rejects them with 401
 4. **Prove possession**: the callback reads `oauth_pkce`, clears it, and sends the raw `code_verifier` to `/token`. The provider hashes it, compares the result with the stored challenge, and issues tokens only if they match. A missing cookie is rejected with 400.
 
 **Provider support**
-- GitHub documents `code_challenge` and `code_challenge_method=S256` for its web flow.
-- 42: not verified against the live API yet. Its login page is a Keycloak realm, which supports PKCE, but the intra app setting still needs a test login.
+- Only GitHub is configured. GitHub documents `code_challenge` and `code_challenge_method=S256` for its web flow.
 
 --- 
 
@@ -77,14 +76,13 @@ Accounts created this way have no password. Password login rejects them with 401
 
 #### Missing features
 * `Refresh and revocation`: refresh_token_enc is stored, but nothing uses it. Expired tokens, invalid_grant on refresh, and decryption are all still missing.
-* `42 PKCE check`: the 42 authorize and token requests send the PKCE parameters, but 42's support isn't verified yet. Test a real 42 login. If 42 rejects them, remove the two parameters from `login.get.ts` and the `code_verifier` from `callback.get.ts`.
 * `Error UI`: errors from the OAuth routes come back as raw JSON or 400/403 responses. Only link results have a UI so far (a toast on `/profile`).
 
 ## ASCII DIAGRAM (Flow)
 ```text
 Browser                   BFF (web)                 Provider                user-service
    |                          |                         |                         |
-1  | GET /login?provider=42   |                         |                         |
+1  |GET /login?provider=github|                         |                         |
    |------------------------->|                         |                         |
    |                          | validate provider       |                         |
    |                          | state = random(32)      |                         |

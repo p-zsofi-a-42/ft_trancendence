@@ -24,13 +24,13 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_file TEXT NULL;
 
 -- PROVIDERS -------------------------------------------------------------------
 -- Stores all OAuth providers that can be used for authentication 
--- e.g., Google, Github, 42
+-- e.g., Google, Github
 CREATE TABLE IF NOT EXISTS providers (
   id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   name       TEXT NOT NULL UNIQUE,    -- e.g. 'github', lowercase
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-INSERT INTO providers (name) VALUES ('42'), ('github') ON CONFLICT (name) DO NOTHING;
+INSERT INTO providers (name) VALUES ('github') ON CONFLICT (name) DO NOTHING;
 
 -- OAUTH
 -- Stores all OAuth authentication records for users

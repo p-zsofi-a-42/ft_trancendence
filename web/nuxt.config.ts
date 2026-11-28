@@ -15,8 +15,6 @@ export default defineNuxtConfig({
     gameServiceUrl: '',
     tokenSecret: '',
     redisUrl: '',
-    oauth42ClientId: '',
-    oauth42ClientSecret: '',
     oauthGithubClientId: '',
     oauthGithubClientSecret: '',
     oauthTokenKey: '',
