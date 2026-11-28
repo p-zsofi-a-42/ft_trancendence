@@ -72,6 +72,7 @@
                 <UButton
                   icon="i-lucide-pause"
                   class="rounded-l-none rounded-t-none min-w-12 min-h-fit justify-center"
+                  :disabled="!isGameOwner"
                   @click="pauseRound"
                 />
                 <template #title> Game paused </template>
@@ -79,7 +80,12 @@
                   Wait for the game owner to resume.
                 </template>
                 <template #footer>
-                  <UButton label="Resume" @click="resumeRound" />
+                  <UButton
+                    label="Resume"
+                    :disabled="!isGameOwner"
+                    :loading="!isGameOwner"
+                    @click="resumeRound"
+                  />
                 </template>
               </UModal>
             </div>
@@ -116,10 +122,12 @@ import type { Game, Company, Round, RoundData } from "#shared/types/game";
 import type { SplitterItem, TabsItem } from "@nuxt/ui";
 import { nextTick, useTemplateRef, watch } from "vue";
 import type { isAsync } from "zod/v3";
+import setupPost from "~~/server/api/auth/totp/setup.post";
 
 definePageMeta({ middleware: "auth" });
 
 type GameTab = "overview" | "statistics" | "finance" | "sales" | "development";
+type RoundStateEvent = RoundData & { type: "round_state_changed" };
 
 const code = useRoute().params.code as string;
 const activeTab = ref<GameTab>("overview");
@@ -151,11 +159,13 @@ function syncOverviewGrid() {
   overviewResize.value = !(gridQuery?.matches ?? false);
 }
 
+const { user } = useUserSession();
+const game = await $fetch<Game>(`/api/game/${code}`, { method: "GET" });
+const isGameOwner = String(game.creatorId) === user.value.id ? true : false;
+
 // TODO: provisional redirect
 try {
-  const { user } = useUserSession();
   console.log("User session:", JSON.stringify(user.value));
-  const game = await $fetch<Game>(`/api/game/${code}`, { method: "GET" });
   console.log("Game data:", JSON.stringify(game));
   maxRounds.value = game.nRounds;
   const companies = await $fetch<Company[]>(`/api/game/${code}/companies`, {
@@ -200,29 +210,54 @@ function startTimer() {
   }, 1000);
 }
 
+function applyRoundState({ round, serverNow }: RoundData) {
+  roundData.value = round;
+  currentRound.value = round.index + 1;
+  remainingMs.value = Math.max(
+    new Date(round.endsAt).getTime() - new Date(serverNow).getTime(),
+    0,
+  );
+  setTimer(remainingMs.value);
+
+  if (round.status === "paused") {
+    pauseModalOpen.value = true;
+    stopTimer();
+    return;
+  }
+
+  pauseModalOpen.value = false;
+
+  if (round.status === "ongoing" && remainingMs.value > 0) {
+    startTimer();
+  } else {
+    stopTimer();
+  }
+}
+
 async function pauseRound() {
   const activeRound = roundData.value;
   if (!activeRound || activeRound.status !== "ongoing") return;
 
-  await $fetch<RoundData>(`/api/game/rounds/${activeRound.id}/state`, {
-    method: "POST",
-  });
+  const state = await $fetch<RoundData>(
+    `/api/game/rounds/${activeRound.id}/state`,
+    { method: "POST" },
+  );
+  applyRoundState(state);
 
   activeRound.status = "paused";
-  if (timerId !== undefined) stopTimer();
 }
 
 async function resumeRound() {
   const activeRound = roundData.value;
   if (!activeRound || activeRound.status !== "paused") return;
 
-  await $fetch<RoundData>(`/api/game/rounds/${activeRound.id}/state`, {
-    method: "POST",
-  });
+  const state = await $fetch<RoundData>(
+    `/api/game/rounds/${activeRound.id}/state`,
+    { method: "POST" },
+  );
+  applyRoundState(state);
 
   activeRound.status = "ongoing";
-  pauseModalOpen.value = false;
-  startTimer();
 }
 
 async function connectWebSocket() {
@@ -240,9 +275,21 @@ async function connectWebSocket() {
 
   // Handle incoming events from the Websocket
   socket.onmessage = async (event) => {
-    const payloadEvent = JSON.parse(event.data);
+    const payloadEvent = JSON.parse(event.data) as
+      | RoundStateEvent
+      | { type: "round_finished" };
+
     console.log(`Event received: ${JSON.stringify(payloadEvent)}`);
-    if (payloadEvent.type == "round_finished") await setUpTimer();
+
+    if (payloadEvent.type === "round_state_changed") {
+      applyRoundState(payloadEvent);
+    } else if (payloadEvent.type == "round_finished") {
+      await setUpTimer();
+    }
+  };
+
+  socket.onopen = () => {
+    void setUpTimer();
   };
 
   // Handle WebSocket close event
@@ -264,43 +311,11 @@ function setTimer(diff: number) {
 }
 
 async function setUpTimer() {
-  if (roundData.value && roundData.value.status !== "ongoing") return;
-
   try {
-    const { round, serverNow } = await $fetch<RoundData>(
-      `/api/game/${code}/round`,
-      { method: "GET" },
-    );
-
-    roundData.value = round;
-    remainingMs.value = Math.max(
-      new Date(round.endsAt).getTime() - new Date(serverNow).getTime(),
-    );
-    setTimer(remainingMs.value);
-
-    if (round.status === "ongoing" && remainingMs.value > 0) {
-      startTimer();
-    } else {
-      stopTimer();
-    }
-    console.log(`currentRound: ${JSON.stringify(round)}`);
-
-    const endsAt = new Date(round.endsAt).getTime();
-    currentRound.value = round.index + 1;
-    let now = new Date(serverNow).getTime();
-    if (timerId !== undefined) clearInterval(timerId);
-    currentRound.value = round.index + 1;
-    timerId = setInterval(() => {
-      const diff = endsAt - now;
-      setTimer(diff);
-      if (diff < 0 || roundData.value?.status !== "ongoing") {
-        console.log("time out");
-        clearInterval(timerId);
-        timerId = undefined;
-        return;
-      }
-      now += 1000;
-    }, 1000);
+    const state = await $fetch<RoundData>(`/api/game/${code}/round`, {
+      method: "GET",
+    });
+    applyRoundState(state);
   } catch (error: any) {
     console.error("Error fetching game data:", error);
   }
@@ -308,7 +323,6 @@ async function setUpTimer() {
 
 onMounted(async () => {
   await connectWebSocket();
-  await setUpTimer();
   sidebarQuery = window.matchMedia("(min-width: 1668px)");
   gridQuery = window.matchMedia("(min-width: 960px)");
 
