@@ -1,6 +1,7 @@
 services:
-  postgres:
+  user-db:
     # Builds db/user/Dockerfile: schema plus first admin, created on first start of an empty volume.
+    container_name: user_db
     build:
       context: ./db
       dockerfile: user/Dockerfile
@@ -12,7 +13,7 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - user_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h 127.0.0.1"]
       interval: 5s
@@ -35,7 +36,7 @@ services:
   user:
     build: ./services/user
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@user-db:5432/${POSTGRES_DB}
       TOKEN_SECRET: ${TOKEN_SECRET}
       REDIS_URL: redis://redis:6379
       AVATAR_DIR: /data/avatars
@@ -43,7 +44,7 @@ services:
     volumes:
       - avatars:/data/avatars
     depends_on:
-      postgres:
+      user-db:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -119,7 +120,7 @@ services:
     container_name: game_dev
     image: game_dev
     environment:
-      DATABASE_URL: postgresql://${GAME_DB_USER}:${GAME_DB_PASSWORD}@game_db:5432/${GAME_DB_NAME}
+      DATABASE_URL: postgresql://${GAME_DB_USER}:${GAME_DB_PASSWORD}@game-db:5432/${GAME_DB_NAME}
       REDIS_URL: redis://redis:6379
       TOKEN_SECRET: ${TOKEN_SECRET}
     ports:
@@ -128,7 +129,7 @@ services:
       - ./services/game:/app
       - game_node_modules:/app/node_modules
     depends_on:
-      postgres:
+      user-db:
         condition: service_healthy
       game-db:
         condition: service_healthy
@@ -144,7 +145,7 @@ services:
     container_name: user_dev
     image: user_dev
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@user-db:5432/${POSTGRES_DB}
       TOKEN_SECRET: ${TOKEN_SECRET}
       REDIS_URL: redis://redis:6379
       AVATAR_DIR: /data/avatars
@@ -153,7 +154,7 @@ services:
       - user_node_modules:/app/node_modules
       - avatars:/data/avatars
     depends_on:
-      postgres:
+      user-db:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -199,7 +200,7 @@ services:
       - dev
 
 volumes:
-  postgres_data:
+  user_data:
     driver: local
   game_data:
     driver: local
