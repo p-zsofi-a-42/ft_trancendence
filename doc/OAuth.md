@@ -27,7 +27,7 @@
 
 If `oauth/login` returns 404, the callback calls user-service `oauth/register`. In one transaction it creates a user with no password and the `oauth` row. The username is the provider login, lowercased, with allowed characters only. A numeric suffix (`-2`, `-3`, ...) is added if the name is taken. The provider email is stored (lowercased) only if no other account uses it; otherwise the account is created with no email and is not linked to that account. The response has the same shape as login, so the session is set the same way.
 
-Accounts created this way have no password. Password login rejects them with 401.
+Accounts created this way have no password. Password login rejects them with 401 until the user sets one from the profile page (`PATCH /api/auth/password`, which proxies to user-service `PATCH /users/me/password`). Setting a first password on an account without an email requires an email in the same request.
 
 
 ### Linking a provider to an existing account
