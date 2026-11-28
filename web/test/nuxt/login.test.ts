@@ -3,7 +3,7 @@ import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { flushPromises } from '@vue/test-utils'
 import login from '../../app/pages/login.vue'
 
-const usernameSelector = 'input[placeholder="Enter your username"]'
+const usernameSelector = 'input[placeholder="Enter your username or email"]'
 const passwordSelector = 'input[placeholder="Enter your password"]'
 
 function expectAccessibleError(
@@ -20,11 +20,11 @@ function expectAccessibleError(
 }
 
 describe('Login page', () => {
-  it('associates labels with the username and password controls', async () => {
+  it('associates labels with the username or email and password controls', async () => {
     const wrapper = await mountSuspended(login)
 
     for (const [selector, labelText] of [
-      [usernameSelector, 'Username'],
+      [usernameSelector, 'Username or Email'],
       [passwordSelector, 'Password'],
     ] as const) {
       const input = wrapper.get(selector)
@@ -41,7 +41,7 @@ describe('Login page', () => {
     await wrapper.getComponent({ name: 'UForm' }).vm.submit()
     await flushPromises()
 
-    expectAccessibleError(wrapper, usernameSelector, 'Username is required')
+    expectAccessibleError(wrapper, usernameSelector, 'Username or Email is required')
     expectAccessibleError(wrapper, passwordSelector, 'Password is required')
   })
 

@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
   const updates: { name?: string; email?: string | null } = {}
 
   if (name !== undefined) {
-    if (typeof name !== 'string' || name.trim() === '') {
+    if (typeof name !== 'string' || name.trim() === '' || name.includes('@')) {
       setResponseStatus(event, 400)
       return { message: 'Invalid name' }
     }
