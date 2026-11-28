@@ -26,7 +26,7 @@
         </div>
         <p><strong>ID:</strong> {{ user.id }}</p>
         <FormFieldString name="name" label="Username" v-model="form.name" required />
-        <FormFieldString name="email" label="Email" v-model="form.email" placeholder="Leave empty to remove" />
+        <FormFieldString name="email" label="Email" v-model="form.email" />
         <div class="flex gap-2 pt-2">
           <UButton type="submit" label="Save" :loading="saving" />
           <UButton label="Cancel" color="neutral" variant="ghost" :disabled="saving" @click="editing = false" />
@@ -136,7 +136,6 @@ async function uploadAvatar(event: Event) {
 // Linked providers
 const PROVIDERS = [
   { name: "github", label: "GitHub", icon: "i-myOwn-github" },
-  { name: "42", label: "42", icon: "i-myOwn-42" },
 ];
 
 // Fetch the list of linked OAuth providers for the current user

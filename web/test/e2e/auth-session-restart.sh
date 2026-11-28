@@ -23,7 +23,7 @@ trap cleanup EXIT
 payload="$(docker compose run --rm -T --no-deps \
   -e TEST_AUTH_USERNAME -e TEST_AUTH_PASSWORD \
   web-tester node -e \
-  'process.stdout.write(JSON.stringify({ username: process.env.TEST_AUTH_USERNAME, password: process.env.TEST_AUTH_PASSWORD }))')"
+  'process.stdout.write(JSON.stringify({ login: process.env.TEST_AUTH_USERNAME, password: process.env.TEST_AUTH_PASSWORD }))')"
 
 curl -fsS -o /dev/null -c "$cookie_jar" \
   -H 'Content-Type: application/json' \

@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 
 // Internal route: only the web service calls this, over the Compose network.
 // Creates a passwordless user and links the provider identity to it in one transaction.
@@ -31,7 +31,8 @@ export default defineEventHandler(async (event) => {
 
   // Username from the provider login: lowercase, allowed characters only
   const base = login.toLowerCase().replace(/[^a-z0-9_-]/g, '') || 'user'
-  const emailValue = email && email.trim() !== '' ? email : null
+  // Normalized like register and login, so the lookup below matches the unique index on lower(email)
+  const emailValue = email && typeof email === 'string' && email.trim() !== '' ? email.trim().toLowerCase() : null
 
   try {
     const created = await db.transaction(async (tx) => {
@@ -51,9 +52,21 @@ export default defineEventHandler(async (event) => {
         name = `${base}-${n}`
       }
 
+      // A failed insert would abort the transaction, so check the email first.
+      // If a password account already uses it, create this account without email; it is never linked by email.
+      let userEmail = emailValue
+      if (userEmail !== null) {
+        const [emailOwner] = await tx
+          .select({ id: users.id })
+          .from(users)
+          .where(sql`lower(${users.email}) = ${userEmail}`)
+          .limit(1)
+        if (emailOwner) userEmail = null
+      }
+
       const [user] = await tx
         .insert(users)
-        .values({ name, email: emailValue, passwordHash: null })
+        .values({ name, email: userEmail, passwordHash: null })
         .returning({ id: users.id, name: users.name, email: users.email, role: users.role })
 
       await tx.insert(oauth).values({
@@ -77,8 +90,9 @@ export default defineEventHandler(async (event) => {
       totpRequired: false,
     }
   } catch (err: any) {
-    // Postgres unique_violation: a concurrent request took the name or the identity first
-    if (err.code === '23505') {
+    // Postgres unique_violation: a concurrent request took the name, the email, or the identity first.
+    // The email case is a race with the pre-check above; a retry then sees the email as taken and stores null.
+    if ((err.code ?? err.cause?.code) === '23505') {
       setResponseStatus(event, 409)
       return { message: 'Username or provider account already taken' }
     }

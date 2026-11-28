@@ -4,19 +4,26 @@
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
   id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  name       TEXT NOT NULL UNIQUE,
-  email      TEXT NULL,
-  password_hash TEXT NULL,
+  name       TEXT NOT NULL UNIQUE,  -- username, lowercase, set by app
+  email      TEXT NULL UNIQUE,      -- optional for OAuth-only users
+  password_hash TEXT NULL,          -- NULL for OAuth-only users
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   totp_secret TEXT NULL,
   totp_enabled BOOLEAN NOT NULL DEFAULT FALSE,
   role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
-  avatar_file TEXT NULL  -- file name inside AVATAR_DIR; NULL means the default avatar
+  avatar_file TEXT NULL,            -- file name inside AVATAR_DIR; NULL means the default avatar
+  -- A password account must have an email; OAuth-only accounts may have none
+  CONSTRAINT users_password_requires_email CHECK (password_hash IS NULL OR email IS NOT NULL)
 );
+-- add UNIQUE constraint for email regardless of case
+-- ALTER TABLE users ADD CONSTRAINT users_email_key UNIQUE(email);
+-- Emails are unique regardless of case, and NULLs don't collide
+-- CREATE UNIQUE INDEX IF NOT EXISTS users_email_key ON users (lower(email)) WHERE email IS NOT NULL;
 -- Insert a admin into the users table, password is password
-ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin'));
+-- ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin'));
 -- For databases created before avatar_file existed
-ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_file TEXT NULL;
+-- ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_file TEXT NULL;
+
 
 -- -----------------------------------------------------------------------------
 -- OAuth2.0 TABLES -------------------------------------------------------------
@@ -24,13 +31,13 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_file TEXT NULL;
 
 -- PROVIDERS -------------------------------------------------------------------
 -- Stores all OAuth providers that can be used for authentication 
--- e.g., Google, Github, 42
+-- e.g., Google, Github
 CREATE TABLE IF NOT EXISTS providers (
   id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   name       TEXT NOT NULL UNIQUE,    -- e.g. 'github', lowercase
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-INSERT INTO providers (name) VALUES ('42'), ('github') ON CONFLICT (name) DO NOTHING;
+INSERT INTO providers (name) VALUES ('github') ON CONFLICT (name) DO NOTHING;
 
 -- OAUTH
 -- Stores all OAuth authentication records for users

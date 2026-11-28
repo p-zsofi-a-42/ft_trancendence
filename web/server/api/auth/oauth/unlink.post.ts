@@ -1,4 +1,4 @@
-const PROVIDER_NAMES = ["42", "github"];
+const PROVIDER_NAMES = ["github"];
 
 export default defineEventHandler(async (event) => {
   const { user } = await requireUserSession(event);

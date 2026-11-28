@@ -13,16 +13,18 @@ export default defineEventHandler(async (event) => {
   const expectedState = getCookie(event, "oauth_state");
   const provider = getCookie(event, "oauth_provider");
   const intent = getCookie(event, "oauth_intent");
-  // One-time use of the state and provider cookies, clear to prevent reuse
+  const codeVerifier = getCookie(event, "oauth_pkce");
+  // One-time use of the state, provider, intent and PKCE cookies, clear to prevent reuse
   deleteCookie(event, "oauth_state", { path: "/api/auth/oauth" });
   deleteCookie(event, "oauth_provider", { path: "/api/auth/oauth" });
   deleteCookie(event, "oauth_intent", { path: "/api/auth/oauth" });
+  deleteCookie(event, "oauth_pkce", { path: "/api/auth/oauth" });
   
   // Handle error returned by the provider (e.g., user denied access)
   if (error) {
     throw createError({ statusCode: 400, statusMessage: `Provider returned error: ${error}` });
   }
-  if (typeof code !== "string" || typeof state !== "string" || !expectedState || !provider) {
+  if (typeof code !== "string" || typeof state !== "string" || !expectedState || !provider || !codeVerifier) {
     throw createError({ statusCode: 400, statusMessage: "Invalid OAuth callback" });
   }
   // Verify that the state parameter matches the one stored in the cookie to prevent CSRF attacks
@@ -33,12 +35,6 @@ export default defineEventHandler(async (event) => {
   }
 
   const providers: Record<string, { tokenUrl: string; userUrl: string; clientId: string; clientSecret: string }> = {
-    "42": {
-      tokenUrl: "https://api.intra.42.fr/oauth/token",
-      userUrl: "https://api.intra.42.fr/v2/me",
-      clientId: config.oauth42ClientId,
-      clientSecret: config.oauth42ClientSecret,
-    },
     github: {
       tokenUrl: "https://github.com/login/oauth/access_token",
       userUrl: "https://api.github.com/user",
@@ -61,6 +57,7 @@ export default defineEventHandler(async (event) => {
       client_secret: providerConfig.clientSecret,
       code,
       redirect_uri: config.oauthRedirectUri,
+      code_verifier: codeVerifier,
     }),
   });
 
@@ -118,9 +115,10 @@ export default defineEventHandler(async (event) => {
   }
   const { user, totpRequired } = result;
 
-  // The 2FA step lives on the login page, not in this redirect flow, so refuse instead of skipping it
+  // Same as login.post.ts: no full session yet, only the pending marker that verify/recovery consume
   if (totpRequired) {
-    throw createError({ statusCode: 403, statusMessage: "Two-factor authentication is not supported for OAuth login yet" });
+    await setUserSession(event, { secure: { pendingTotpUserId: user.id } });
+    return sendRedirect(event, "/login?totp=required", 302);
   }
 
   await setUserSession(event, { user });

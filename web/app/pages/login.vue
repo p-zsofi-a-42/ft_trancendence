@@ -6,18 +6,12 @@ import type { FormSubmitEvent, AuthFormField } from "@nuxt/ui";
 const toast = useToast();
 
 const fields: AuthFormField[] = [
-  { name: "username", type: "username", label: "Username", placeholder: "Enter your username", required: true },
+  { name: "login", type: "text", label: "Username or Email", placeholder: "Enter your username or email", required: true },
   { name: "password", type: "password", label: "Password", placeholder: "Enter your password", required: true },
   { name: "remember", label: "Remember me", type: "checkbox" },
 ];
 
 const providers = [
-  {
-    icon: "i-myOwn-42",
-    onClick: () => {
-      window.location.href = "/api/auth/oauth/login?provider=42";
-    },
-  },
   {
     icon: "i-myOwn-github",
     onClick: () => {
@@ -27,7 +21,7 @@ const providers = [
 ];
 
 const schema = z.object({
-  username: z.string("Username is required"),
+  login: z.string("Username or Email is required"),
   password: z.string("Password is required").min(8, "Must be at least 8 characters"),
 });
 type Schema = z.output<typeof schema>;
@@ -39,8 +33,11 @@ const totpFields: AuthFormField[] = [
 const totpSchema = z.object({ code: z.string().min(6, "Enter the code") });
 type TotpSchema = z.output<typeof totpSchema>;
 
+const route = useRoute();
+
 const loading = ref(false);
-const totpPending = ref(false);
+// The OAuth callback redirects here with ?totp=required when the account has 2FA enabled
+const totpPending = ref(route.query.totp === "required");
 const useRecovery = ref(false);
 
 async function onSubmit(payload: FormSubmitEvent<Schema>) {
