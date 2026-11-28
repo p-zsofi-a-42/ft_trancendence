@@ -118,9 +118,10 @@ export default defineEventHandler(async (event) => {
   }
   const { user, totpRequired } = result;
 
-  // The 2FA step lives on the login page, not in this redirect flow, so refuse instead of skipping it
+  // Same as login.post.ts: no full session yet, only the pending marker that verify/recovery consume
   if (totpRequired) {
-    throw createError({ statusCode: 403, statusMessage: "Two-factor authentication is not supported for OAuth login yet" });
+    await setUserSession(event, { secure: { pendingTotpUserId: user.id } });
+    return sendRedirect(event, "/login?totp=required", 302);
   }
 
   await setUserSession(event, { user });

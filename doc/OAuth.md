@@ -66,13 +66,12 @@ Accounts created this way have no password. Password login rejects them with 401
 
 - Browser only sees redirects and cookies. The client_secret, the provider's access token, and the profile fetch all stay between the BFF and the provider.
 - Unlinked accounts are registered on first use (see *Register on first use*), so they no longer stop at step 6.
-- 2FA accounts stop at step 6 too, with 403, until the TOTP step is wired in.
+- 2FA accounts that log in with OAuth get the same TOTP step as password logins: the callback stores the pending marker and redirects to `/login?totp=required`, where the code form is shown.
 - Possible bug in step 4 with GitHub: GitHub's token endpoint can return HTTP 200 with an error body, for example for a bad or reused code. $fetch won't throw in that case, so token.access_token is undefined and encryptToken fails with a 500. Checking for token.error before step 5 would give a clear 400 instead.
 
 ### TODO & TODECIDE
 
 #### Missing features
-* `2FA for OAuth logins`: accounts with TOTP enabled get a 403. The TOTP step has to be added to the redirect flow.
 * `Refresh and revocation`: refresh_token_enc is stored, but nothing uses it. Expired tokens, invalid_grant on refresh, and decryption are all still missing.
 * `PKCE`: still undecided. I haven't confirmed that 42 accepts PKCE parameters.
 * `Error UI`: errors from the OAuth routes come back as raw JSON or 400/403 responses. Only link results have a UI so far (a toast on `/profile`).
@@ -122,9 +121,9 @@ Browser                   BFF (web)                 Provider                user
    |                          |                         |                         | else UPDATE oauth
    |                          | {user, totpRequired}    |                         |
    |                          |<--------------------------------------------------|
-   |                          | totp on? -> 403         |                         |
-   |                          | setUserSession          |                         |
+   |                          | totp on? -> pending marker only   |                         |
+   |                          | setUserSession(secure)  |                         |
    |                          |                         |                         |
-7  | 302 /profile + session   |                         |                         |
+7  | 302 /profile or /login?totp=required + session |   |                         |
    |<-------------------------|                         |                         |
 ```

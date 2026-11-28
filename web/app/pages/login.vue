@@ -39,8 +39,11 @@ const totpFields: AuthFormField[] = [
 const totpSchema = z.object({ code: z.string().min(6, "Enter the code") });
 type TotpSchema = z.output<typeof totpSchema>;
 
+const route = useRoute();
+
 const loading = ref(false);
-const totpPending = ref(false);
+// The OAuth callback redirects here with ?totp=required when the account has 2FA enabled
+const totpPending = ref(route.query.totp === "required");
 const useRecovery = ref(false);
 
 async function onSubmit(payload: FormSubmitEvent<Schema>) {

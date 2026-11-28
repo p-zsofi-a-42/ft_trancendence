@@ -107,6 +107,7 @@ etc.).
 
 **BFF (`web/server/`)**
 - `api/auth/login.post.ts` — branches on `totpRequired`
+- `api/auth/oauth/callback.get.ts` — branches on `totpRequired` (OAuth logins)
 - `api/auth/totp/{setup,enable,verify,recovery,disable}.post.ts`
 - `shared/types/auth.d.ts` — `SecureSessionData.pendingTotpUserId`
 
@@ -115,8 +116,8 @@ etc.).
   (currently mounted on `pages/profile.vue`)
 - `components/TwoFactSetupModal.vue` — 3-step wizard (scan QR → confirm code →
   save recovery codes)
-- `pages/login.vue` — branches on `totpRequired`, shows a code/recovery-code
-  entry step before navigating to `/profile`
+- `pages/login.vue` — branches on `totpRequired` (or `?totp=required` after an
+  OAuth login), shows a code/recovery-code entry step before navigating to `/profile`
 
 ## Testing
 
