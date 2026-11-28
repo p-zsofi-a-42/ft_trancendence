@@ -15,17 +15,10 @@
     </template>
 
     <template #players>
-      <UCard
-        title="Players"
-        variant="foyer"
-        :ui="{
-          body: 'text-center',
-          header: 'border-b-2 border-border-accented',
-        }"
-      >
-        <CustomUserList :list="players.map((p: Player) => p.user)" />
-        <p v-if="!players.length">No Players</p>
-      </UCard>
+      <FoyerOverviewPlayers
+        :players="players"
+        :n-players="settingsModel.nPlayers"
+      />
     </template>
 
     <template #invite>
@@ -102,6 +95,9 @@ async function connectWebSocket() {
         `/api/game/${props.gameCode}/players`,
         { method: "GET" },
       );
+    if (payloadEvent.type === "settings_updated") {
+      settingsModel.value = payloadEvent.game;
+    }
   };
 
   // Handle WebSocket close event
