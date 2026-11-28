@@ -121,8 +121,6 @@
 import type { Game, Company, Round, RoundData } from "#shared/types/game";
 import type { SplitterItem, TabsItem } from "@nuxt/ui";
 import { nextTick, useTemplateRef, watch } from "vue";
-import type { isAsync } from "zod/v3";
-import setupPost from "~~/server/api/auth/totp/setup.post";
 
 definePageMeta({ middleware: "auth" });
 
@@ -161,7 +159,7 @@ function syncOverviewGrid() {
 
 const { user } = useUserSession();
 const game = await $fetch<Game>(`/api/game/${code}`, { method: "GET" });
-const isGameOwner = String(game.creatorId) === user.value.id ? true : false;
+const isGameOwner = String(game.creatorId) === user.value.id;
 
 // TODO: provisional redirect
 try {
@@ -183,8 +181,6 @@ let socket: WebSocket | null = null;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let closedByUs = false;
 let timerId: ReturnType<typeof setInterval> | undefined;
-let round: Round | undefined;
-let serverNow = undefined;
 
 const roundData = ref<Round | null>(null);
 const remainingMs = ref(0);
