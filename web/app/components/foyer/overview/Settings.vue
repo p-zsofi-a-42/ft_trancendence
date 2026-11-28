@@ -73,6 +73,8 @@
 import type { FormSubmitEvent } from "@nuxt/ui";
 import * as z from "zod";
 
+const toast = useToast();
+
 const props = defineProps<{
   gameCode: string;
 }>();
@@ -142,12 +144,20 @@ const settingsSchema = z.object({
 });
 
 async function submit(event: FormSubmitEvent<z.infer<typeof settingsSchema>>) {
-  const updated = await $fetch<Game>(`/api/foyer/${props.gameCode}/update`, {
-    method: "PATCH",
-    body: event.data,
-  });
+  try {
+    const updated = await $fetch<Game>(`/api/foyer/${props.gameCode}/update`, {
+      method: "PATCH",
+      body: event.data,
+    });
 
-  settingsModel.value = updated;
-  savedSettings.value = getEditableSettings(updated);
+    settingsModel.value = updated;
+    savedSettings.value = getEditableSettings(updated);
+  } catch (error) {
+    toast.add({
+      title: "Could not save settings",
+      description: getApiErrorMessage(error, "Failed to save game settings."),
+      color: "error",
+    });
+  }
 }
 </script>

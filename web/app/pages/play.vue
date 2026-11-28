@@ -92,21 +92,29 @@ async function create() {
 const codeState = reactive({ code: "" });
 
 async function join(event: FormSubmitEvent<string>) {
-  await $fetch(`/api/company/create`, {
-    method: "POST",
-    body: {
-      name: "",
-      gameCode: event.data.code,
-    },
-  });
+  try {
+    await $fetch(`/api/company/create`, {
+      method: "POST",
+      body: {
+        name: "",
+        gameCode: event.data.code,
+      },
+    });
 
-  toast.add({
-    title: "Success",
-    description: "The Foyer has been created.",
-    color: "success",
-  });
+    toast.add({
+      title: "Success",
+      description: "You joined the foyer.",
+      color: "success",
+    });
 
-  // NAVIGATE TO GAME PAGE
-  await navigateTo(`/foyer/${event.data.code}`);
+    // NAVIGATE TO GAME PAGE
+    await navigateTo(`/foyer/${event.data.code}`);
+  } catch (error) {
+    toast.add({
+      title: "Could not join foyer",
+      description: getApiErrorMessage(error, "Could not join this foyer."),
+      color: "error",
+    });
+  }
 }
 </script>
