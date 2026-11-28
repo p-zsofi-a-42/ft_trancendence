@@ -3,7 +3,6 @@ import type { UserSummary } from "~~/shared/types/friends";
 
 const props = defineProps<{
   user: T;
-  avatarVersion?: number;
   size?:
     | "2xl"
     | "md"
@@ -16,6 +15,13 @@ const props = defineProps<{
     | "3xl"
     | undefined;
 }>();
+
+const { user: me } = useUserSession();
+const avatarVersion = useAvatarVersion();
+const avatarSrc = computed(() => {
+  const isMe = String(me.value?.id) === String(props.user.id);
+  return `/api/users/${props.user.id}/avatar?v=${isMe ? avatarVersion.value : 0}`;
+});
 </script>
 
 <template>
@@ -23,7 +29,7 @@ const props = defineProps<{
     :name="user.name"
     :size="size"
     :avatar="{
-      src: `/api/users/${user.id}/avatar`,
+      src: avatarSrc,
       loading: 'lazy',
       icon: 'i-myOwn-user',
     }"

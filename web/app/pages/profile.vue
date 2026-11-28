@@ -6,7 +6,7 @@
       }"
     >
       <template #header>
-        <CustomUser :user="user" :avatar-version="avatarVersion" size="3xl" />
+        <CustomUser :user="user" size="3xl" />
       </template>
       <UForm v-if="editing" :schema="schema" :state="form" class="pt-2" @submit="saveProfile">
         <div class="pb-2">
@@ -217,7 +217,7 @@ async function savePassword(event: FormSubmitEvent<z.output<typeof passwordSchem
 // Profile picture upload
 const avatarInput = ref<HTMLInputElement | null>(null);
 const uploadingAvatar = ref(false);
-const avatarVersion = ref(0);
+const avatarVersion = useAvatarVersion();
 
 async function uploadAvatar(event: Event) {
   const input = event.target as HTMLInputElement;
@@ -239,6 +239,7 @@ async function uploadAvatar(event: Event) {
   } finally {
     uploadingAvatar.value = false;
     input.value = "";
+    
   }
 }
 
