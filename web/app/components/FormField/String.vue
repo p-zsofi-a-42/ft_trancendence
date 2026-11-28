@@ -7,11 +7,12 @@ const props = withDefaults(
     label?: string;
     required?: boolean;
     placeholder?: string;
+    type?: "text" | "password" | "email";
     orientation?: "horizontal" | "vertical";
     inputUi?: Record<string, string>;
     errorSide?: "right" | "left" | "top" | "bottom";
   }>(),
-  { required: false },
+  { required: false, type: "text" },
 );
 
 const model = defineModel<string>({ required: true });
@@ -29,6 +30,7 @@ const model = defineModel<string>({ required: true });
       <InputErrorTT :error="error">
         <UInput
           v-model="model"
+          :type="type"
           :placeholder="placeholder"
           class="w-full"
           :ui="inputUi"
