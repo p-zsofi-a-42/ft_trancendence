@@ -136,7 +136,6 @@ async function uploadAvatar(event: Event) {
 // Linked providers
 const PROVIDERS = [
   { name: "github", label: "GitHub", icon: "i-myOwn-github" },
-  { name: "42", label: "42", icon: "i-myOwn-42" },
 ];
 
 // Fetch the list of linked OAuth providers for the current user

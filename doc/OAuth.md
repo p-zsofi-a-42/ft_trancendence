@@ -4,8 +4,8 @@
 
 ### First contact (no prior consent, no stored tokens)
 
-1. **Browser → WebApp (BFF)**: user clicks the provider icon. The BFF generates a `state` value (and ideally a PKCE `code_verifier`) and stores them in the session.
-2. **WebApp → Browser**: 302 redirect to the provider's `/authorize` with `client_id`, `redirect_uri`, `scope`, `state`, and the PKCE challenge.
+1. **Browser → WebApp (BFF)**: user clicks the provider icon. The BFF generates a `state` value and a PKCE `code_verifier`, and stores them in the `oauth_state` and `oauth_pkce` cookies.
+2. **WebApp → Browser**: 302 redirect to the provider's `/authorize` with `client_id`, `redirect_uri`, `scope`, `state`, and the PKCE challenge (`code_challenge` and `code_challenge_method=S256`).
 3. **Browser ↔ Provider**: the user logs in at the provider and sees a consent screen, because this app hasn't been granted access before.
 4. **Provider → Browser**: 302 to our `redirect_uri` with a short-lived one-time code and the state.
 5. **Browser → WebApp callback**: the BFF checks that `state` matches the stored value.
@@ -55,10 +55,13 @@ Accounts created this way have no password. Password login rejects them with 401
 - designed for apps that can't keep client secret safe. *Recommended to use sind OAuth 2.1*
 
 **How it works**
-1. **Create the verifier**: the BFF generates a high-entropy random string, 43–128 characters, for this login attempt only.
+1. **Create the verifier**: the BFF generates a high-entropy random string, 43–128 characters, for this login attempt only. It is stored in the one-time `oauth_pkce` cookie (same attributes as `oauth_state`).
 2. **Derive the challenge**: `code_challenge = BASE64URL(SHA256(code_verifier))`. This is the `S256` method.
 3. **Send only the challenge**: the `/authorize` redirect includes `code_challenge` and `code_challenge_method=S256`. The verifier never leaves the BFF at this step.
-4. **Prove possession**: at `/token`, the BFF sends the raw `code_verifier`. The provider hashes it, compares the result with the stored challenge, and issues tokens only if they match.
+4. **Prove possession**: the callback reads `oauth_pkce`, clears it, and sends the raw `code_verifier` to `/token`. The provider hashes it, compares the result with the stored challenge, and issues tokens only if they match. A missing cookie is rejected with 400.
+
+**Provider support**
+- Only GitHub is configured. GitHub documents `code_challenge` and `code_challenge_method=S256` for its web flow.
 
 --- 
 
@@ -66,22 +69,20 @@ Accounts created this way have no password. Password login rejects them with 401
 
 - Browser only sees redirects and cookies. The client_secret, the provider's access token, and the profile fetch all stay between the BFF and the provider.
 - Unlinked accounts are registered on first use (see *Register on first use*), so they no longer stop at step 6.
-- 2FA accounts stop at step 6 too, with 403, until the TOTP step is wired in.
+- 2FA accounts that log in with OAuth get the same TOTP step as password logins: the callback stores the pending marker and redirects to `/login?totp=required`, where the code form is shown.
 - Possible bug in step 4 with GitHub: GitHub's token endpoint can return HTTP 200 with an error body, for example for a bad or reused code. $fetch won't throw in that case, so token.access_token is undefined and encryptToken fails with a 500. Checking for token.error before step 5 would give a clear 400 instead.
 
 ### TODO & TODECIDE
 
 #### Missing features
-* `2FA for OAuth logins`: accounts with TOTP enabled get a 403. The TOTP step has to be added to the redirect flow.
 * `Refresh and revocation`: refresh_token_enc is stored, but nothing uses it. Expired tokens, invalid_grant on refresh, and decryption are all still missing.
-* `PKCE`: still undecided. I haven't confirmed that 42 accepts PKCE parameters.
 * `Error UI`: errors from the OAuth routes come back as raw JSON or 400/403 responses. Only link results have a UI so far (a toast on `/profile`).
 
 ## ASCII DIAGRAM (Flow)
 ```text
 Browser                   BFF (web)                 Provider                user-service
    |                          |                         |                         |
-1  | GET /login?provider=42   |                         |                         |
+1  |GET /login?provider=github|                         |                         |
    |------------------------->|                         |                         |
    |                          | validate provider       |                         |
    |                          | state = random(32)      |                         |
@@ -103,7 +104,7 @@ Browser                   BFF (web)                 Provider                user
    |                          |                         |                         |
 4  |                          | POST token endpoint     |                         |
    |                          |------------------------>|                         |
-   |                          |                         | client_secret used      |
+   |                          |                         | client_secret + PKCE    |
    |                          | access_token            |                         |
    |                          |<------------------------|                         |
    |                          |                         |                         |
@@ -122,9 +123,9 @@ Browser                   BFF (web)                 Provider                user
    |                          |                         |                         | else UPDATE oauth
    |                          | {user, totpRequired}    |                         |
    |                          |<--------------------------------------------------|
-   |                          | totp on? -> 403         |                         |
-   |                          | setUserSession          |                         |
+   |                          | totp on? -> pending marker only   |                         |
+   |                          | setUserSession(secure)  |                         |
    |                          |                         |                         |
-7  | 302 /profile + session   |                         |                         |
+7  | 302 /profile or /login?totp=required + session |   |                         |
    |<-------------------------|                         |                         |
 ```
