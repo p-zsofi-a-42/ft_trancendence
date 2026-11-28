@@ -4,7 +4,7 @@ import z from "zod";
 import { db, games } from "@utils/db";
 
 export const codeParams = z.object({ code: z.string().min(6).max(12) });
-export const idParams = z.object({ id: z.coerce.bigint().min(1) });
+export const idParams = z.object({ id: z.coerce.number().int().min(1).max(Number .MAX_SAFE_INTEGER) });
 
 export async function getGameByCode(code: string) {
 	const [game] = await db.select().from(games).where(eq(games.idCode, code));
